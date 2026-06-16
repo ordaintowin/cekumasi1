@@ -1,0 +1,14 @@
+node_modules
+**/node_modules
+**/dist
+**/.env
+**/.env.*
+!**/.env.example
+**/coverage
+**/*.log
+.git
+.gitignore
+replit.nix
+.replit
+.local
+README.md

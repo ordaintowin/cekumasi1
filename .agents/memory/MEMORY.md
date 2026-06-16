@@ -1,0 +1,1 @@
+- [SSE real-time push](sse-meeting-push.md) — meeting data uses SSE not polling; broadcast optimized to 1 DB row via meetingBus EventEmitter
