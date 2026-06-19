@@ -23,7 +23,7 @@ services:
 
 databases:
   - name: church-db
-    plan: starter
+    plan: free
     region: oregon
     databaseName: church_portal
     user: church_admin
