@@ -2,9 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Link } from "wouter";
-import { Cake, Heart, Video, Bell, ChevronRight, Loader2, X } from "lucide-react";
+import { Cake, Heart, Video, Bell, ChevronRight, Loader2, X, QrCode, ScanLine } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { CameraQRScanner } from "@/components/CameraQRScanner";
 
 const getToken = () => (typeof localStorage !== "undefined" ? localStorage.getItem("token") : null);
 
@@ -103,6 +105,8 @@ export default function Home() {
     JSON.parse(localStorage.getItem("dismissedAnnouncements") || "[]")
   );
 
+  const [showQrScan, setShowQrScan] = useState(false);
+
   const { data, isLoading } = useQuery<any>({
     queryKey: ["/api/home/feed"],
     queryFn: () =>
@@ -113,6 +117,30 @@ export default function Home() {
   const firstName = (user as any)?.memberName?.split(" ")[0] ?? user?.username ?? "Friend";
   const userDob = (user as any)?.dateOfBirth as string | null | undefined;
   const userMemberId = (user as any)?.memberId as number | null | undefined;
+
+  const { data: activeServiceData } = useQuery<any>({
+    queryKey: ["/api/services/active"],
+    queryFn: () =>
+      fetch("/api/services/active", { headers: { Authorization: `Bearer ${getToken()}` } }).then(r => r.json()),
+    refetchInterval: 30_000,
+    enabled: !!userMemberId,
+  });
+  const activeService = activeServiceData?.service ?? null;
+
+  async function handleQrScan(qrData: string): Promise<"success" | "duplicate" | "error"> {
+    try {
+      const res = await fetch("/api/services/self-checkin", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ qrData }),
+      });
+      const json = await res.json();
+      if (!res.ok) return "error";
+      return json.alreadyCheckedIn ? "duplicate" : "success";
+    } catch {
+      return "error";
+    }
+  }
   const birthdayToday = isOwnBirthday(userDob);
 
   const announcements: any[] = data?.announcements ?? [];
@@ -229,6 +257,26 @@ export default function Home() {
               </div>
             </Link>
           ))}
+        </section>
+      )}
+
+      {/* ── QR Self-Registration (member only, when service is active) ── */}
+      {activeService && userMemberId && (
+        <section>
+          <button
+            onClick={() => setShowQrScan(true)}
+            className="w-full flex items-center gap-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 active:scale-[0.98] transition-all rounded-2xl px-5 py-4 shadow-lg cursor-pointer text-left"
+          >
+            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+              <ScanLine className="w-7 h-7 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-white font-extrabold text-sm leading-tight">📋 Register Attendance</p>
+              <p className="text-green-100 text-xs mt-0.5">{activeService.name} · {activeService.date}</p>
+              <p className="text-green-200 text-xs mt-0.5">Tap to scan the service QR code</p>
+            </div>
+            <QrCode className="w-6 h-6 text-green-100 flex-shrink-0" />
+          </button>
         </section>
       )}
 
@@ -429,6 +477,41 @@ export default function Home() {
           </Link>
         </section>
       )}
+
+      {/* ── QR Scan Dialog ─────────────────────────────────────── */}
+      <Dialog open={showQrScan} onOpenChange={setShowQrScan}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ScanLine className="w-5 h-5 text-green-600" />
+              Scan to Register
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            {activeService ? (
+              <>
+                <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-2.5">
+                  <p className="font-semibold text-green-800 text-sm">{activeService.name}</p>
+                  <p className="text-green-600 text-xs">{activeService.date}{activeService.time ? ` · ${activeService.time}` : ""}</p>
+                </div>
+                <CameraQRScanner
+                  active={showQrScan}
+                  onScan={handleQrScan}
+                />
+                <p className="text-xs text-center text-gray-400">
+                  Point your camera at the service QR code displayed at the venue
+                </p>
+              </>
+            ) : (
+              <div className="py-8 text-center text-gray-500">
+                <QrCode className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                <p className="font-medium">No active service</p>
+                <p className="text-sm mt-1">Come back when a service is open</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
     </div>
   );

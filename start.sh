@@ -7,6 +7,9 @@ fuser -k 5000/tcp 2>/dev/null || true
 pkill -f "api-server" 2>/dev/null || true
 sleep 1
 
+echo "Installing dependencies..."
+pnpm install --frozen-lockfile 2>/dev/null || pnpm install
+
 echo "Building frontend..."
 PORT=5000 BASE_PATH=/ pnpm --filter @workspace/church-portal build
 

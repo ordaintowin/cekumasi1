@@ -272,6 +272,11 @@ const authLimiter = rateLimit({
 app.use("/api/auth/login", authLimiter);
 app.use("/api", apiLimiter);
 
+// ── Health check (used by Railway, Fly.io, load balancers) ────────────────────
+app.get("/health", (_req, res) => {
+  res.json({ status: "ok", ts: Date.now() });
+});
+
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.use("/api", router);
 

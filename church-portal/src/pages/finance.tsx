@@ -6,7 +6,6 @@ import {
   useListGivingTypes, getListGivingTypesQueryKey,
   useCreateGivingType, useUpdateGivingType,
   useListMinistryYears, getListMinistryYearsQueryKey,
-  useCreateMinistryYear, useUpdateMinistryYear,
   useGivingSearch,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -19,7 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, ChevronLeft, ChevronRight, Search, Download, Edit2, Trash2, X, Lock, Loader2 } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, Search, Download, Edit2, Trash2, X, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 
@@ -229,26 +228,6 @@ function EditGivingDialog({ giving, givingTypes, ministryYears, onClose, onSave 
   );
 }
 
-function EditMinistryYearDialog({ year, onClose, onSave }: any) {
-  const [form, setForm] = useState({ name: year.name, startDate: year.startDate, endDate: year.endDate });
-  return (
-    <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-sm">
-        <DialogHeader><DialogTitle>Edit Ministry Year</DialogTitle></DialogHeader>
-        <div className="space-y-3 py-2">
-          <div className="space-y-1"><Label>Name</Label><Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></div>
-          <div className="space-y-1"><Label>Start Date</Label><Input type="date" value={form.startDate} onChange={e => setForm(f => ({ ...f, startDate: e.target.value }))} /></div>
-          <div className="space-y-1"><Label>End Date</Label><Input type="date" value={form.endDate} onChange={e => setForm(f => ({ ...f, endDate: e.target.value }))} /></div>
-          <div className="flex gap-2 pt-1">
-            <Button variant="outline" className="flex-1" onClick={onClose}>Cancel</Button>
-            <Button className="flex-1 bg-purple-700 text-white" onClick={() => onSave(form)}>Save</Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 function EditGivingTypeDialog({ givingType, onClose, onSave }: any) {
   const [form, setForm] = useState({ name: givingType.name, description: givingType.description ?? "" });
   return (
@@ -285,10 +264,8 @@ export default function Finance() {
     date: new Date().toISOString().split("T")[0], ministryYearId: "", notes: "",
   });
   const [newGivingType, setNewGivingType] = useState("");
-  const [newMinistryYear, setNewMinistryYear] = useState({ name: "", startDate: "", endDate: "" });
 
   const [editingGiving, setEditingGiving] = useState<any>(null);
-  const [editingYear, setEditingYear] = useState<any>(null);
   const [editingType, setEditingType] = useState<any>(null);
 
   const filterParams = {
@@ -349,19 +326,6 @@ export default function Finance() {
     },
   });
 
-  const createMinistryYear = useCreateMinistryYear({
-    mutation: {
-      onSuccess: () => { queryClient.invalidateQueries({ queryKey: getListMinistryYearsQueryKey() }); setNewMinistryYear({ name: "", startDate: "", endDate: "" }); toast({ title: "Ministry year created" }); },
-    },
-  });
-
-  const updateMinistryYear = useUpdateMinistryYear({
-    mutation: {
-      onSuccess: () => { queryClient.invalidateQueries({ queryKey: getListMinistryYearsQueryKey() }); setEditingYear(null); toast({ title: "Ministry year updated" }); },
-      onError: (e: any) => toast({ title: "Error", description: e?.message, variant: "destructive" }),
-    },
-  });
-
   const handleGivingSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedPerson || !givingForm.givingTypeId || !givingForm.amount || !givingForm.ministryYearId) {
@@ -399,7 +363,6 @@ export default function Finance() {
           <TabsList className="bg-purple-50 w-max">
             <TabsTrigger value="record" className="data-[state=active]:bg-purple-700 data-[state=active]:text-white">Record Giving</TabsTrigger>
             <TabsTrigger value="records" className="data-[state=active]:bg-purple-700 data-[state=active]:text-white">View Records</TabsTrigger>
-            <TabsTrigger value="ministry-years" className="data-[state=active]:bg-purple-700 data-[state=active]:text-white">Ministry Years</TabsTrigger>
             <TabsTrigger value="types" className="data-[state=active]:bg-purple-700 data-[state=active]:text-white">Giving Types</TabsTrigger>
           </TabsList>
         </div>
@@ -446,14 +409,23 @@ export default function Finance() {
 
                 <div className="space-y-1.5">
                   <Label>Ministry Year</Label>
-                  <Select value={givingForm.ministryYearId} onValueChange={(v) => setGivingForm(f => ({ ...f, ministryYearId: v }))}>
-                    <SelectTrigger><SelectValue placeholder="Select year..." /></SelectTrigger>
-                    <SelectContent>
-                      {(ministryYears ?? []).filter((y: any) => !y.isClosed).map((y: any) => (
-                        <SelectItem key={y.id} value={String(y.id)}>{y.name} {(!y.isClosed && new Date().toISOString().split("T")[0] >= y.startDate && new Date().toISOString().split("T")[0] <= y.endDate) ? "(Active)" : ""}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {(() => {
+                    const today = new Date().toISOString().split("T")[0];
+                    const activeYears = (ministryYears ?? []).filter((y: any) => !y.isClosed && today >= y.startDate && today <= y.endDate);
+                    return (
+                      <Select value={givingForm.ministryYearId} onValueChange={(v) => setGivingForm(f => ({ ...f, ministryYearId: v }))}>
+                        <SelectTrigger><SelectValue placeholder="Select year..." /></SelectTrigger>
+                        <SelectContent>
+                          {activeYears.length === 0
+                            ? <div className="px-3 py-3 text-sm text-gray-400">No active ministry year</div>
+                            : activeYears.map((y: any) => (
+                                <SelectItem key={y.id} value={String(y.id)}>{y.name}</SelectItem>
+                              ))
+                          }
+                        </SelectContent>
+                      </Select>
+                    );
+                  })()}
                 </div>
 
                 <div className="space-y-1.5">
@@ -580,76 +552,6 @@ export default function Finance() {
           )}
         </TabsContent>
 
-        {/* ── Ministry Years ── */}
-        <TabsContent value="ministry-years" className="pt-4 space-y-4">
-          <div className="flex flex-wrap items-end gap-3 max-w-2xl">
-            <div className="space-y-1">
-              <Label>Name</Label>
-              <Input placeholder="e.g. 2026/2027" value={newMinistryYear.name} onChange={(e) => setNewMinistryYear(f => ({ ...f, name: e.target.value }))} className="w-36" />
-            </div>
-            <div className="space-y-1">
-              <Label>Start Date</Label>
-              <Input type="date" value={newMinistryYear.startDate} onChange={(e) => setNewMinistryYear(f => ({ ...f, startDate: e.target.value }))} />
-            </div>
-            <div className="space-y-1">
-              <Label>End Date</Label>
-              <Input type="date" value={newMinistryYear.endDate} onChange={(e) => setNewMinistryYear(f => ({ ...f, endDate: e.target.value }))} />
-            </div>
-            <Button className="bg-purple-700 text-white"
-              onClick={() => createMinistryYear.mutate({ data: newMinistryYear })}
-              disabled={!newMinistryYear.name || !newMinistryYear.startDate}>
-              <Plus className="w-4 h-4 mr-1" /> Add
-            </Button>
-          </div>
-          <div className="space-y-2 max-w-2xl">
-            {(() => {
-              const allYears = ministryYears ?? [];
-              const openYears = allYears.filter((y: any) => !y.isClosed);
-              const today = new Date().toISOString().split("T")[0];
-              return openYears.map((y: any) => {
-                const canClose = canEdit && !y.isClosed && y.endDate <= today;
-                return (
-                  <div key={y.id} className="flex items-center gap-3 border rounded-lg px-4 py-3 bg-white">
-                    <div className="flex-1 min-w-0">
-                      <span className="font-medium">{y.name}</span>
-                      <span className="text-sm text-gray-500 ml-3">{y.startDate} → {y.endDate}</span>
-                    </div>
-                    {(() => {
-                      const withinRange = today >= y.startDate && today <= y.endDate;
-                      return withinRange
-                        ? <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-medium">Active</span>
-                        : <span className="bg-gray-100 text-gray-500 text-xs px-2 py-0.5 rounded-full font-medium">Inactive</span>;
-                    })()}
-                    {canEdit && (
-                      <button onClick={() => setEditingYear(y)} className="p-1 text-gray-400 hover:text-blue-600" title="Edit">
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                    )}
-                    {canEdit && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        disabled={!canClose || updateMinistryYear.isPending}
-                        onClick={() => {
-                          if (!canClose) return;
-                          updateMinistryYear.mutate(
-                            { id: y.id, data: { isClosed: true } },
-                            { onSuccess: () => { queryClient.invalidateQueries({ queryKey: getListMinistryYearsQueryKey() }); toast({ title: `"${y.name}" has been closed` }); } }
-                          );
-                        }}
-                        title={!canClose ? `Close button activates when end date (${y.endDate}) has passed` : "Close this ministry year"}
-                        className={canClose ? "border-red-300 text-red-600 hover:bg-red-50" : "opacity-40 cursor-not-allowed"}
-                      >
-                        <Lock className="w-3.5 h-3.5 mr-1" /> Close
-                      </Button>
-                    )}
-                  </div>
-                );
-              });
-            })()}
-          </div>
-        </TabsContent>
-
         {/* ── Giving Types ── */}
         <TabsContent value="types" className="pt-4 space-y-4">
           <div className="flex items-center gap-3 max-w-sm">
@@ -685,13 +587,6 @@ export default function Finance() {
           ministryYears={ministryYears}
           onClose={() => setEditingGiving(null)}
           onSave={(data: any) => updateGiving.mutate({ id: editingGiving.id, data })}
-        />
-      )}
-      {editingYear && (
-        <EditMinistryYearDialog
-          year={editingYear}
-          onClose={() => setEditingYear(null)}
-          onSave={(data: any) => updateMinistryYear.mutate({ id: editingYear.id, data })}
         />
       )}
       {editingType && (

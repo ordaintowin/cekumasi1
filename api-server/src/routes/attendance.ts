@@ -1740,4 +1740,45 @@ router.get("/reports/ct-attendance", async (req, res) => {
   return res.json({ services, members });
 });
 
+// ─── MEMBER SELF CHECK-IN VIA QR ─────────────────────────────────────────────
+// Members scan the service QR and hit this endpoint to register themselves.
+// The QR value format is: CEKSI-SVC-{serviceId}
+router.post("/services/self-checkin", async (req, res) => {
+  const user = (req as any).user;
+  const memberId: number | undefined = user?.memberId;
+  if (!memberId) return res.status(403).json({ error: "Member account required to self check-in" });
+
+  const { qrData } = req.body;
+  if (!qrData || typeof qrData !== "string") return res.status(400).json({ error: "qrData required" });
+
+  const match = qrData.trim().match(/^CEKSI-SVC-(\d+)$/);
+  if (!match) return res.status(400).json({ error: "Invalid QR code — please scan the correct service QR." });
+
+  const serviceId = parseInt(match[1]);
+
+  const [service] = await db.select().from(servicesTable).where(eq(servicesTable.id, serviceId)).limit(1);
+  if (!service || service.status !== "open") {
+    return res.status(400).json({ error: "Service is not active. Registration is closed." });
+  }
+
+  const [member] = await db.select().from(membersTable)
+    .where(and(eq(membersTable.id, memberId), eq(membersTable.isArchived, false))).limit(1);
+  if (!member) return res.status(404).json({ error: "Member record not found" });
+
+  const [existing] = await db.select().from(attendanceRecordsTable)
+    .where(and(eq(attendanceRecordsTable.serviceId, serviceId), eq(attendanceRecordsTable.memberId, memberId)))
+    .limit(1);
+
+  if (existing) return res.json({ success: true, alreadyCheckedIn: true });
+
+  await db.insert(attendanceRecordsTable).values({
+    serviceId,
+    memberId,
+    cellId: member.cellId ?? null,
+    method: "qr",
+  });
+
+  res.json({ success: true, alreadyCheckedIn: false });
+});
+
 export default router;

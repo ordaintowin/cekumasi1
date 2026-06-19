@@ -25,6 +25,8 @@ import OnlinePortal from "@/pages/online-portal";
 import Notifications from "@/pages/notifications";
 import MyNotifications from "@/pages/my-notifications";
 import Home from "@/pages/home";
+import AdminLogs from "@/pages/admin-logs";
+import Help from "@/pages/help";
 import NotFound from "@/pages/not-found";
 import JoinMeeting from "@/pages/join-meeting";
 import { Loader2 } from "lucide-react";
@@ -42,8 +44,8 @@ const ACCESS_MAP: Record<string, string[]> = {
   "3/media":        ["/online-portal", "/attendance", "/notifications", "/reports", "/my-notifications"],
   "3/children":     ["/children", "/teens", "/attendance", "/reports", "/my-notifications"],
   "3/registration": ["/attendance", "/my-notifications"],
-  "4":              ["/members", "/attendance", "/reports", "/profile", "/online-portal", "/departments", "/home", "/my-notifications"],
-  "5":              ["/profile", "/online-portal", "/home", "/my-notifications", "/departments"],
+  "4":              ["/members", "/attendance", "/reports", "/profile", "/online-portal", "/departments", "/home", "/my-notifications", "/help"],
+  "5":              ["/profile", "/online-portal", "/home", "/my-notifications", "/departments", "/help"],
 };
 
 function canAccess(user: any, path: string): boolean {
@@ -127,6 +129,8 @@ function Router() {
       <Route path="/online-portal" component={() => <ProtectedRoute component={OnlinePortal} routePath="/online-portal" />} />
       <Route path="/notifications"    component={() => <ProtectedRoute component={Notifications}    routePath="/notifications" />} />
       <Route path="/my-notifications" component={() => <ProtectedRoute component={MyNotifications} routePath="/my-notifications" />} />
+      <Route path="/admin-logs"       component={() => <ProtectedRoute component={AdminLogs}        routePath="/admin-logs" />} />
+      <Route path="/help"             component={() => <ProtectedRoute component={Help}             routePath="/help" />} />
 
       <Route path="/join/:id">
         {(params: any) => <JoinMeeting meetingId={parseInt(params?.id || "0")} />}

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { usersTable, membersTable } from "@workspace/db";
-import { eq, and, ne } from "drizzle-orm";
+import { usersTable, membersTable, activityLogTable } from "@workspace/db";
+import { eq, and, ne, desc, ilike, or } from "drizzle-orm";
 import { authenticateToken, requireRole } from "../middlewares/auth";
 import crypto from "crypto";
 
@@ -51,6 +51,38 @@ router.patch("/users/:id", requireRole(1), async (req, res) => {
 router.delete("/users/:id", requireRole(1), async (req, res) => {
   const id = parseInt(req.params.id);
   await db.delete(usersTable).where(eq(usersTable.id, id));
+  res.json({ success: true });
+});
+
+router.get("/activity-log", requireRole(1), async (req, res) => {
+  const limit = Math.min(parseInt(String(req.query.limit || "100")), 500);
+  const offset = parseInt(String(req.query.offset || "0"));
+  const search = String(req.query.search || "").trim();
+
+  let query = db.select().from(activityLogTable).$dynamic();
+  if (search) {
+    query = query.where(
+      or(
+        ilike(activityLogTable.description, `%${search}%`),
+        ilike(activityLogTable.type, `%${search}%`),
+        ilike(activityLogTable.memberName, `%${search}%`)
+      )
+    ) as typeof query;
+  }
+  const logs = await query.orderBy(desc(activityLogTable.createdAt)).limit(limit).offset(offset);
+  res.json(logs);
+});
+
+router.post("/activity-log", requireRole(1), async (req, res) => {
+  const { type, description, memberId, memberName } = req.body;
+  if (!type || !description) return res.status(400).json({ error: "type and description required" });
+  const created = await db.insert(activityLogTable).values({ type, description, memberId: memberId ?? null, memberName: memberName ?? null }).returning();
+  res.status(201).json(created[0]);
+});
+
+router.delete("/activity-log/:id", requireRole(1), async (req, res) => {
+  const id = parseInt(req.params.id);
+  await db.delete(activityLogTable).where(eq(activityLogTable.id, id));
   res.json({ success: true });
 });
 

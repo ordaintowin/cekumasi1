@@ -55,6 +55,18 @@ router.post("/ministry-years", requireRole(2), async (req, res) => {
   res.status(201).json(created[0]);
 });
 
+router.delete("/ministry-years/:id", requireRole(2), async (req, res) => {
+  const id = parseInt(req.params.id);
+  const year = await db.select().from(ministryYearsTable).where(eq(ministryYearsTable.id, id)).limit(1);
+  if (!year.length) return res.status(404).json({ error: "Ministry year not found" });
+  const today = new Date().toISOString().split("T")[0];
+  if (year[0].startDate <= today) {
+    return res.status(400).json({ error: "Cannot delete a ministry year that has already started." });
+  }
+  await db.delete(ministryYearsTable).where(eq(ministryYearsTable.id, id));
+  res.json({ success: true });
+});
+
 router.patch("/ministry-years/:id", requireRole(2), async (req, res) => {
   const id = parseInt(req.params.id);
   const { name, startDate, endDate, isActive, isClosed } = req.body;

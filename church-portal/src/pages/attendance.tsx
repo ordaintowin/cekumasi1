@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo, Fragment } from "react";
+import { QRCodeSVG, QRCodeCanvas } from "qrcode.react";
 import { CameraQRScanner } from "@/components/CameraQRScanner";
 import { downloadJsonAsExcel } from "@/utils/excel";
 import {
@@ -20,7 +21,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import {
   CheckCircle2, XCircle, Plus, Search, CalendarCheck, Users,
   Download, ArrowLeft, Scan, Edit2, X, UserPlus, Clock,
-  Baby, Smile, ChevronDown, ChevronRight, ArrowRight, BarChart2, Trash2,
+  Baby, Smile, ChevronDown, ChevronRight, ArrowRight, BarChart2, Trash2, QrCode,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -2205,6 +2206,9 @@ export default function Attendance() {
   const [closeConfirm, setCloseConfirm] = useState(false);
   const [closing, setClosing] = useState(false);
 
+  // QR code dialog
+  const [showQrDialog, setShowQrDialog] = useState(false);
+
   // Cell detail modal
   const [cellDetail, setCellDetail] = useState<any>(null);
 
@@ -2357,6 +2361,14 @@ export default function Attendance() {
               )}
             </div>
             <div className="flex items-center gap-2">
+              {/* QR code button — always visible when service is active */}
+              <button
+                onClick={() => setShowQrDialog(true)}
+                className="p-1.5 hover:bg-white/20 rounded-lg text-white/80 hover:text-white flex items-center gap-1.5"
+                title="Show QR code for member self-registration"
+              >
+                <QrCode className="w-5 h-5" />
+              </button>
               {isAdmin && !isRegisterOnly && (
                 <button onClick={openEditDialog} className="p-1.5 hover:bg-white/20 rounded-lg text-white/80 hover:text-white" title="Edit service">
                   <Edit2 className="w-4 h-4" />
@@ -2513,6 +2525,59 @@ export default function Attendance() {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* ── Service QR Code Dialog ────────────────────────────────────────── */}
+      <Dialog open={showQrDialog} onOpenChange={setShowQrDialog}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <QrCode className="w-5 h-5 text-purple-600" />
+              Service QR Code
+            </DialogTitle>
+          </DialogHeader>
+          {activeService && (
+            <div className="space-y-4">
+              <div className="text-center">
+                <p className="font-semibold text-gray-800">{activeService.name}</p>
+                <p className="text-sm text-gray-500">{activeService.date}{activeService.time ? ` · ${activeService.time}` : ""}</p>
+              </div>
+              <div className="flex justify-center p-4 bg-white border-2 border-purple-100 rounded-2xl">
+                <QRCodeSVG
+                  value={`CEKSI-SVC-${activeService.id}`}
+                  size={220}
+                  level="H"
+                  includeMargin
+                />
+              </div>
+              {/* Hidden canvas for PNG download */}
+              <QRCodeCanvas
+                id="service-qr-dl-canvas"
+                value={`CEKSI-SVC-${activeService.id}`}
+                size={512}
+                level="H"
+                includeMargin
+                style={{ display: "none" }}
+              />
+              <p className="text-xs text-center text-gray-500">
+                Members can scan this with their church portal app to register themselves
+              </p>
+              <Button
+                className="w-full bg-purple-700 hover:bg-purple-800 text-white"
+                onClick={() => {
+                  const canvas = document.getElementById("service-qr-dl-canvas") as HTMLCanvasElement;
+                  if (!canvas) return;
+                  const link = document.createElement("a");
+                  link.href = canvas.toDataURL("image/png");
+                  link.download = `${activeService.name}-${activeService.date}-QR.png`;
+                  link.click();
+                }}
+              >
+                <Download className="w-4 h-4 mr-2" /> Download QR Code (PNG)
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* ── Close confirmation ────────────────────────────────────────────── */}
       <Dialog open={closeConfirm} onOpenChange={setCloseConfirm}>

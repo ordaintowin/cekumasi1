@@ -868,6 +868,14 @@ export function useDeleteAdminUser(options?: { mutation?: { onSuccess?: (data: a
   });
 }
 
+export function useDeleteMinistryYear(options?: { mutation?: { onSuccess?: (data: any) => void; onError?: (err: any) => void } }) {
+  return useMutation({
+    mutationFn: ({ id }: { id: number }) =>
+      apiFetch(`/ministry-years/${id}`, { method: "DELETE" }),
+    ...options?.mutation,
+  });
+}
+
 export function useUpdateMinistryYear(options?: { mutation?: { onSuccess?: (data: any) => void; onError?: (err: any) => void } }) {
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: { name?: string; startDate?: string; endDate?: string; isActive?: boolean; isClosed?: boolean } }) =>

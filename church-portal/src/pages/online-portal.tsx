@@ -1715,14 +1715,22 @@ export default function OnlinePortal() {
         </button>
       </div>
 
-      {/* VideoConferenceTab renders when on the conference tab.
-          The active meeting is managed globally in MeetingContext so it persists
-          across all pages as a floating PiP window. */}
+      {/* Video Conferencing — Coming Soon */}
       <div style={{ display: activePortalTab === "conference" ? "block" : "none" }}>
-        <VideoConferenceTab
-          canManage={canManage}
-          user={user}
-        />
+        <div className="flex flex-col items-center justify-center py-20 px-6 text-center space-y-5">
+          <div className="w-20 h-20 rounded-full bg-purple-100 flex items-center justify-center">
+            <Video className="w-10 h-10 text-purple-400" />
+          </div>
+          <div className="space-y-2">
+            <span className="inline-block text-xs font-bold tracking-widest text-purple-500 uppercase bg-purple-50 border border-purple-200 rounded-full px-3 py-1">
+              Coming Soon
+            </span>
+            <h2 className="text-xl font-bold text-gray-800 mt-2">Video Conferencing</h2>
+            <p className="text-sm text-gray-500 max-w-sm">
+              Live video meetings for the church community are on the way. Check back soon!
+            </p>
+          </div>
+        </div>
       </div>
 
       {activePortalTab !== "conference" && <>

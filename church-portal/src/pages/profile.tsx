@@ -352,7 +352,14 @@ export default function Profile() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
-  const [editForm, setEditForm] = useState({ email: "", phone1: "", phone2: "" });
+  const [editForm, setEditForm] = useState({
+    email: "",
+    phone1: "",
+    phone2: "",
+    occupation: "",
+    residentialAddress: "",
+    isBaptized: false,
+  });
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [photoEnlarged, setPhotoEnlarged] = useState(false);
@@ -460,7 +467,14 @@ export default function Profile() {
   }[user?.roleLevel ?? 5] ?? "User";
 
   const openEdit = () => {
-    setEditForm({ email: m?.email ?? "", phone1: m?.phone1 ?? "", phone2: m?.phone2 ?? "" });
+    setEditForm({
+      email: m?.email ?? "",
+      phone1: m?.phone1 ?? "",
+      phone2: m?.phone2 ?? "",
+      occupation: m?.occupation ?? "",
+      residentialAddress: m?.residentialAddress ?? "",
+      isBaptized: m?.isBaptized ?? false,
+    });
     setEditOpen(true);
   };
 
@@ -472,11 +486,18 @@ export default function Profile() {
       const res = await fetch(`/api/members/${user.memberId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
-        body: JSON.stringify({ email: editForm.email || null, phone1: editForm.phone1, phone2: editForm.phone2 || null }),
+        body: JSON.stringify({
+          email: editForm.email || null,
+          phone1: editForm.phone1,
+          phone2: editForm.phone2 || null,
+          occupation: editForm.occupation || "",
+          residentialAddress: editForm.residentialAddress || "",
+          isBaptized: editForm.isBaptized,
+        }),
       });
       if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
       queryClient.invalidateQueries({ queryKey: getGetMemberQueryKey(user.memberId) });
-      toast({ title: "Contact info updated" });
+      toast({ title: "Profile updated successfully" });
       setEditOpen(false);
     } catch (err: any) {
       toast({ title: "Error", description: err?.message || "Failed to save", variant: "destructive" });
@@ -672,24 +693,60 @@ export default function Profile() {
       {(user as any)?.roleLevel === 4 && <LeaderFellowshipWidget user={user} />}
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader><DialogTitle>Edit Contact Info</DialogTitle></DialogHeader>
-          <form onSubmit={handleSaveContact} className="space-y-4 pt-2">
-            <div className="space-y-1.5">
-              <Label>Email Address</Label>
-              <Input type="email" value={editForm.email} onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))} placeholder="your@email.com" />
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Edit My Profile</DialogTitle></DialogHeader>
+          <form onSubmit={handleSaveContact} className="space-y-5 pt-2">
+
+            {/* ── Contact ── */}
+            <div className="space-y-3">
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Contact</p>
+              <div className="space-y-1.5">
+                <Label>Email Address</Label>
+                <Input type="email" value={editForm.email} onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))} placeholder="your@email.com" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Primary Phone <span className="text-red-500">*</span></Label>
+                <Input value={editForm.phone1} onChange={e => setEditForm(f => ({ ...f, phone1: e.target.value }))} placeholder="0XX XXX XXXX" required />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Secondary Phone</Label>
+                <Input value={editForm.phone2} onChange={e => setEditForm(f => ({ ...f, phone2: e.target.value }))} placeholder="Optional" />
+              </div>
             </div>
-            <div className="space-y-1.5">
-              <Label>Primary Phone <span className="text-red-500">*</span></Label>
-              <Input value={editForm.phone1} onChange={e => setEditForm(f => ({ ...f, phone1: e.target.value }))} placeholder="0XX XXX XXXX" required />
+
+            {/* ── Work & Residence ── */}
+            <div className="space-y-3">
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Work &amp; Residence</p>
+              <div className="space-y-1.5">
+                <Label>Occupation</Label>
+                <Input value={editForm.occupation} onChange={e => setEditForm(f => ({ ...f, occupation: e.target.value }))} placeholder="e.g. Teacher, Engineer, Student" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Residential Address</Label>
+                <Input value={editForm.residentialAddress} onChange={e => setEditForm(f => ({ ...f, residentialAddress: e.target.value }))} placeholder="e.g. East Legon, Accra" />
+              </div>
             </div>
-            <div className="space-y-1.5">
-              <Label>Secondary Phone</Label>
-              <Input value={editForm.phone2} onChange={e => setEditForm(f => ({ ...f, phone2: e.target.value }))} placeholder="Optional" />
+
+            {/* ── Church ── */}
+            <div className="space-y-3">
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Church</p>
+              <label className="flex items-center gap-3 cursor-pointer select-none">
+                <div
+                  onClick={() => setEditForm(f => ({ ...f, isBaptized: !f.isBaptized }))}
+                  className={`w-10 h-6 rounded-full transition-colors flex items-center px-1 flex-shrink-0 ${editForm.isBaptized ? "bg-purple-600" : "bg-gray-300"}`}
+                >
+                  <div className={`w-4 h-4 rounded-full bg-white shadow transition-transform ${editForm.isBaptized ? "translate-x-4" : "translate-x-0"}`} />
+                </div>
+                <span className="text-sm text-gray-700">I have been baptized</span>
+              </label>
             </div>
-            <Button type="submit" className="w-full bg-purple-700 text-white" disabled={isSaving}>
-              {isSaving ? "Saving..." : "Save Changes"}
-            </Button>
+
+            <div className="flex gap-3 pt-1">
+              <Button type="button" variant="outline" className="flex-1" onClick={() => setEditOpen(false)}>Cancel</Button>
+              <Button type="submit" className="flex-1 bg-purple-700 hover:bg-purple-800 text-white" disabled={isSaving}>
+                {isSaving ? "Saving..." : "Save Changes"}
+              </Button>
+            </div>
           </form>
         </DialogContent>
       </Dialog>

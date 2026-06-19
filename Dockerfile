@@ -45,4 +45,4 @@ EXPOSE 3000
 
 ENV PORT=3000
 
-CMD ["node", "--enable-source-maps", "api-server/dist/index.mjs"]
+CMD ["node", "api-server/dist/index.mjs"]

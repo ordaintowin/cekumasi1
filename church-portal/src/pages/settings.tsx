@@ -5,20 +5,22 @@ import {
   useUpdateAdminUser,
   useDeleteAdminUser,
   useListMembers, getListMembersQueryKey,
+  useListMinistryYears, getListMinistryYearsQueryKey,
+  useCreateMinistryYear, useUpdateMinistryYear, useDeleteMinistryYear,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Search, Trash2, KeyRound, Megaphone, Send, Clock } from "lucide-react";
+import { Plus, Search, Trash2, KeyRound, Megaphone, Send, Clock, CalendarRange, Edit2, Lock, AlertTriangle, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 
@@ -55,10 +57,70 @@ function getRoleLabel(roleLevel: number, roleSubtype?: string | null) {
 
 const EMOJIS = ["📢", "🎉", "🙏", "✝️", "❤️", "🔔", "📌", "🌟", "🎂", "💍"];
 
+function EditMinistryYearDialog({ year, allYears, started, onClose, onSave }: { year: any; allYears: any[]; started: boolean; onClose: () => void; onSave: (data: any) => void }) {
+  const today = new Date().toISOString().split("T")[0];
+  const [form, setForm] = useState({ name: year.name, startDate: year.startDate, endDate: year.endDate });
+  const [errors, setErrors] = useState<{ name?: string; endDate?: string }>({});
+
+  const validate = () => {
+    const errs: { name?: string; endDate?: string } = {};
+    if (!started) {
+      const trimmed = form.name.trim();
+      const duplicate = allYears.some(y => y.id !== year.id && y.name.trim().toLowerCase() === trimmed.toLowerCase());
+      if (duplicate) errs.name = "A ministry year with this name already exists.";
+    }
+    if (form.endDate && form.endDate < today) errs.endDate = "End date cannot be in the past.";
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  return (
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader><DialogTitle>Edit Ministry Year</DialogTitle></DialogHeader>
+        <div className="space-y-3 py-2">
+          {started && (
+            <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2.5">
+              <Info className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-blue-700">This ministry year has already started. Only the dates can be edited.</p>
+            </div>
+          )}
+          <div className="space-y-1.5">
+            <Label>Name</Label>
+            <Input
+              value={form.name}
+              disabled={started}
+              onChange={e => { setForm(f => ({ ...f, name: e.target.value })); setErrors(er => ({ ...er, name: undefined })); }}
+              placeholder="e.g. 2026/2027"
+              className={started ? "bg-gray-50 text-gray-500 cursor-not-allowed" : ""}
+            />
+            {errors.name && <p className="text-xs text-red-500">{errors.name}</p>}
+          </div>
+          <div className="space-y-1.5">
+            <Label>Start Date</Label>
+            <Input type="date" value={form.startDate} onChange={e => setForm(f => ({ ...f, startDate: e.target.value }))} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>End Date</Label>
+            <Input type="date" value={form.endDate} min={today} onChange={e => { setForm(f => ({ ...f, endDate: e.target.value })); setErrors(er => ({ ...er, endDate: undefined })); }} />
+            {errors.endDate && <p className="text-xs text-red-500">{errors.endDate}</p>}
+          </div>
+          <div className="flex gap-2 pt-1">
+            <Button variant="outline" className="flex-1" onClick={onClose}>Cancel</Button>
+            <Button className="flex-1 bg-purple-700 text-white" onClick={() => { if (validate()) onSave(started ? { startDate: form.startDate, endDate: form.endDate } : form); }}>Save Changes</Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function Settings() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { user: authUser } = useAuth();
+  const canEditFinance = (authUser?.roleLevel ?? 5) <= 2;
+
   const [createOpen, setCreateOpen] = useState(false);
   const [memberSearch, setMemberSearch] = useState("");
   const [selectedMember, setSelectedMember] = useState<any>(null);
@@ -70,6 +132,10 @@ export default function Settings() {
   const [announceForm, setAnnounceForm] = useState({ title: "", message: "", emoji: "📢", expiresInHours: "24" });
   const [isSending, setIsSending] = useState(false);
   const [activeAnnouncements, setActiveAnnouncements] = useState<any[]>([]);
+
+  const [newYearOpen, setNewYearOpen] = useState(false);
+  const [newMinistryYear, setNewMinistryYear] = useState({ name: "", startDate: "", endDate: "" });
+  const [editingYear, setEditingYear] = useState<any>(null);
 
   const fetchAnnouncements = useCallback(async () => {
     const token = getToken();
@@ -160,6 +226,72 @@ export default function Settings() {
       onError: (e: any) => toast({ title: "Error", description: e?.message, variant: "destructive" }),
     },
   });
+
+  const { data: ministryYears, isLoading: yearsLoading } = useListMinistryYears(
+    {},
+    { query: { queryKey: getListMinistryYearsQueryKey() } }
+  );
+
+  const createMinistryYear = useCreateMinistryYear({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListMinistryYearsQueryKey() });
+        setNewMinistryYear({ name: "", startDate: "", endDate: "" });
+        setNewYearOpen(false);
+        toast({ title: "Ministry year created" });
+      },
+      onError: (e: any) => toast({ title: "Error", description: e?.message, variant: "destructive" }),
+    },
+  });
+
+  const updateMinistryYear = useUpdateMinistryYear({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListMinistryYearsQueryKey() });
+        setEditingYear(null);
+        toast({ title: "Ministry year updated" });
+      },
+      onError: (e: any) => toast({ title: "Error", description: e?.message, variant: "destructive" }),
+    },
+  });
+
+  const deleteMinistryYear = useDeleteMinistryYear({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListMinistryYearsQueryKey() });
+        toast({ title: "Ministry year deleted" });
+      },
+      onError: (e: any) => toast({ title: "Error", description: e?.message, variant: "destructive" }),
+    },
+  });
+
+  const handleCreateMinistryYear = () => {
+    const today = new Date().toISOString().split("T")[0];
+    if (!newMinistryYear.name || !newMinistryYear.startDate || !newMinistryYear.endDate) {
+      toast({ title: "Please fill all fields", variant: "destructive" });
+      return;
+    }
+    if (newMinistryYear.endDate < today) {
+      toast({ title: "Invalid end date", description: "End date cannot be in the past.", variant: "destructive" });
+      return;
+    }
+    const allYears = (ministryYears ?? []) as any[];
+    const duplicate = allYears.some(y => y.name.trim().toLowerCase() === newMinistryYear.name.trim().toLowerCase());
+    if (duplicate) {
+      toast({ title: "Duplicate name", description: "A ministry year with this name already exists.", variant: "destructive" });
+      return;
+    }
+    const openYears = allYears.filter(y => !y.isClosed);
+    if (openYears.length > 0) {
+      toast({
+        title: "Cannot create a new ministry year",
+        description: `"${openYears[0].name}" is still open. Please close it before creating a new one.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    createMinistryYear.mutate({ data: newMinistryYear });
+  };
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -499,6 +631,171 @@ export default function Settings() {
           )}
         </CardContent>
       </Card>
+
+      {/* ── Ministry Years ──────────────────────────────────────── */}
+      <Card>
+        <CardHeader className="flex flex-row items-start justify-between pb-3">
+          <div>
+            <CardTitle className="text-base flex items-center gap-2">
+              <CalendarRange className="w-4 h-4 text-purple-600" /> Ministry Years
+            </CardTitle>
+            <CardDescription className="mt-1">
+              Manage financial ministry year periods. Only one ministry year can be open at a time.
+            </CardDescription>
+          </div>
+          {canEditFinance && (
+            <Dialog open={newYearOpen} onOpenChange={setNewYearOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" className="bg-purple-700 hover:bg-purple-800 text-white flex-shrink-0">
+                  <Plus className="w-4 h-4 mr-1" /> New Year
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-sm">
+                <DialogHeader>
+                  <DialogTitle>Create Ministry Year</DialogTitle>
+                </DialogHeader>
+                {(() => {
+                  const openYears = (ministryYears ?? []).filter((y: any) => !y.isClosed);
+                  if (openYears.length > 0) {
+                    return (
+                      <div className="py-4 space-y-3">
+                        <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
+                          <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                          <div>
+                            <p className="font-semibold text-amber-800 text-sm">Active ministry year exists</p>
+                            <p className="text-xs text-amber-700 mt-1">
+                              <span className="font-medium">"{openYears[0].name}"</span> is currently open.
+                              You must close it before creating a new ministry year.
+                            </p>
+                          </div>
+                        </div>
+                        <Button variant="outline" className="w-full" onClick={() => setNewYearOpen(false)}>OK, Got It</Button>
+                      </div>
+                    );
+                  }
+                  return (
+                    <div className="space-y-4 pt-2">
+                      <div className="space-y-1.5">
+                        <Label>Name</Label>
+                        <Input
+                          placeholder="e.g. 2026/2027"
+                          value={newMinistryYear.name}
+                          onChange={e => setNewMinistryYear(f => ({ ...f, name: e.target.value }))}
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <Label>Start Date</Label>
+                          <Input type="date" value={newMinistryYear.startDate} onChange={e => setNewMinistryYear(f => ({ ...f, startDate: e.target.value }))} />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label>End Date</Label>
+                          <Input type="date" value={newMinistryYear.endDate} min={new Date().toISOString().split("T")[0]} onChange={e => setNewMinistryYear(f => ({ ...f, endDate: e.target.value }))} />
+                        </div>
+                      </div>
+                      <Button
+                        className="w-full bg-purple-700 hover:bg-purple-800 text-white"
+                        onClick={handleCreateMinistryYear}
+                        disabled={!newMinistryYear.name || !newMinistryYear.startDate || !newMinistryYear.endDate || createMinistryYear.isPending}
+                      >
+                        {createMinistryYear.isPending ? "Creating…" : "Create Ministry Year"}
+                      </Button>
+                    </div>
+                  );
+                })()}
+              </DialogContent>
+            </Dialog>
+          )}
+        </CardHeader>
+        <CardContent className="pt-0">
+          {yearsLoading ? (
+            <div className="space-y-2">{Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}</div>
+          ) : ((ministryYears ?? []) as any[]).filter(y => !y.isClosed).length === 0 ? (
+            <div className="text-center py-8 text-gray-400">
+              <CalendarRange className="w-8 h-8 mx-auto mb-2 opacity-30" />
+              <p className="text-sm">No open ministry years</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {(() => {
+                const today = new Date().toISOString().split("T")[0];
+                const open = ((ministryYears ?? []) as any[]).filter(y => !y.isClosed);
+                return open.map((y: any) => {
+                  const started = y.startDate <= today;
+                  const isActive = started && today <= y.endDate;
+                  const canClose = canEditFinance && y.endDate <= today;
+                  const canDelete = canEditFinance && !started;
+                  return (
+                    <div key={y.id} className="flex items-center gap-3 rounded-xl border border-purple-100 bg-gradient-to-r from-purple-50 to-white px-4 py-3 shadow-sm">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-semibold text-gray-800">{y.name}</span>
+                          {isActive
+                            ? <span className="bg-green-100 text-green-700 text-[11px] px-2 py-0.5 rounded-full font-medium">Active</span>
+                            : started
+                              ? <span className="bg-gray-100 text-gray-500 text-[11px] px-2 py-0.5 rounded-full font-medium">Inactive</span>
+                              : <span className="bg-amber-100 text-amber-700 text-[11px] px-2 py-0.5 rounded-full font-medium">Upcoming</span>}
+                        </div>
+                        <p className="text-xs text-gray-400 mt-0.5">{y.startDate} → {y.endDate}</p>
+                      </div>
+                      {canEditFinance && (
+                        <button
+                          onClick={() => setEditingYear(y)}
+                          className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          title={started ? "Edit dates only" : "Edit"}
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                      {canDelete && (
+                        <button
+                          onClick={() => {
+                            if (confirm(`Delete "${y.name}"? This cannot be undone.`))
+                              deleteMinistryYear.mutate({ id: y.id });
+                          }}
+                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Delete (not yet started)"
+                          disabled={deleteMinistryYear.isPending}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                      {canEditFinance && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={!canClose || updateMinistryYear.isPending}
+                          onClick={() => {
+                            if (!canClose) return;
+                            updateMinistryYear.mutate(
+                              { id: y.id, data: { isClosed: true } },
+                              { onSuccess: () => toast({ title: `"${y.name}" has been closed` }) }
+                            );
+                          }}
+                          title={!canClose ? `Close activates after end date (${y.endDate})` : "Close this ministry year"}
+                          className={canClose ? "border-red-300 text-red-600 hover:bg-red-50 text-xs" : "opacity-40 cursor-not-allowed text-xs"}
+                        >
+                          <Lock className="w-3 h-3 mr-1" /> Close
+                        </Button>
+                      )}
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {editingYear && (
+        <EditMinistryYearDialog
+          year={editingYear}
+          allYears={(ministryYears ?? []) as any[]}
+          started={editingYear.startDate <= new Date().toISOString().split("T")[0]}
+          onClose={() => setEditingYear(null)}
+          onSave={(data: any) => updateMinistryYear.mutate({ id: editingYear.id, data })}
+        />
+      )}
 
     </div>
   );

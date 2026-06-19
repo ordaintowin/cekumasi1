@@ -35,6 +35,8 @@ import {
   Building2,
   Globe,
   Bell,
+  ClipboardList,
+  HelpCircle,
 } from "lucide-react";
 import { Button } from "./ui/button";
 
@@ -222,6 +224,8 @@ export default function Layout({ children }: { children: ReactNode }) {
         showFinance && { href: "/finance", label: "Finance", icon: <Banknote className="w-4 h-4" /> },
         showArchives && { href: "/archives", label: "Archives", icon: <Archive className="w-4 h-4" /> },
         showSettings && { href: "/settings", label: "Settings", icon: <Settings className="w-4 h-4" /> },
+        isLevel1 && { href: "/admin-logs", label: "Activity Log", icon: <ClipboardList className="w-4 h-4" /> },
+        (isLevel4 || isLevel5) && { href: "/help", label: "Help & Support", icon: <HelpCircle className="w-4 h-4" /> },
         showNotifications && { href: "/notifications", label: "Notifications", icon: <Bell className="w-4 h-4" />, badge: notifCount > 0 ? notifCount : undefined },
       ].filter(Boolean) as NavItem[],
     },

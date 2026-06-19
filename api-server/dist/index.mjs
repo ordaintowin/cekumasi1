@@ -49503,6 +49503,31 @@ router8.get("/reports/ct-attendance", async (req, res) => {
   const members = Array.from(entityMap.values()).sort((a, b2) => a.name.localeCompare(b2.name));
   return res.json({ services, members });
 });
+router8.post("/services/self-checkin", async (req, res) => {
+  const user = req.user;
+  const memberId = user?.memberId;
+  if (!memberId) return res.status(403).json({ error: "Member account required to self check-in" });
+  const { qrData } = req.body;
+  if (!qrData || typeof qrData !== "string") return res.status(400).json({ error: "qrData required" });
+  const match = qrData.trim().match(/^CEKSI-SVC-(\d+)$/);
+  if (!match) return res.status(400).json({ error: "Invalid QR code \u2014 please scan the correct service QR." });
+  const serviceId = parseInt(match[1]);
+  const [service] = await db.select().from(servicesTable).where(eq(servicesTable.id, serviceId)).limit(1);
+  if (!service || service.status !== "open") {
+    return res.status(400).json({ error: "Service is not active. Registration is closed." });
+  }
+  const [member] = await db.select().from(membersTable).where(and(eq(membersTable.id, memberId), eq(membersTable.isArchived, false))).limit(1);
+  if (!member) return res.status(404).json({ error: "Member record not found" });
+  const [existing] = await db.select().from(attendanceRecordsTable).where(and(eq(attendanceRecordsTable.serviceId, serviceId), eq(attendanceRecordsTable.memberId, memberId))).limit(1);
+  if (existing) return res.json({ success: true, alreadyCheckedIn: true });
+  await db.insert(attendanceRecordsTable).values({
+    serviceId,
+    memberId,
+    cellId: member.cellId ?? null,
+    method: "qr"
+  });
+  res.json({ success: true, alreadyCheckedIn: false });
+});
 var attendance_default = router8;
 
 // src/routes/finance.ts
@@ -49545,6 +49570,17 @@ router9.post("/ministry-years", requireRole(2), async (req, res) => {
   await db.update(ministryYearsTable).set({ isActive: false });
   const created = await db.insert(ministryYearsTable).values({ name, startDate, endDate, isActive: true }).returning();
   res.status(201).json(created[0]);
+});
+router9.delete("/ministry-years/:id", requireRole(2), async (req, res) => {
+  const id = parseInt(req.params.id);
+  const year2 = await db.select().from(ministryYearsTable).where(eq(ministryYearsTable.id, id)).limit(1);
+  if (!year2.length) return res.status(404).json({ error: "Ministry year not found" });
+  const today = (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
+  if (year2[0].startDate <= today) {
+    return res.status(400).json({ error: "Cannot delete a ministry year that has already started." });
+  }
+  await db.delete(ministryYearsTable).where(eq(ministryYearsTable.id, id));
+  res.json({ success: true });
 });
 router9.patch("/ministry-years/:id", requireRole(2), async (req, res) => {
   const id = parseInt(req.params.id);
@@ -49919,6 +49955,34 @@ router11.patch("/users/:id", requireRole(1), async (req, res) => {
 router11.delete("/users/:id", requireRole(1), async (req, res) => {
   const id = parseInt(req.params.id);
   await db.delete(usersTable).where(eq(usersTable.id, id));
+  res.json({ success: true });
+});
+router11.get("/activity-log", requireRole(1), async (req, res) => {
+  const limit = Math.min(parseInt(String(req.query.limit || "100")), 500);
+  const offset = parseInt(String(req.query.offset || "0"));
+  const search = String(req.query.search || "").trim();
+  let query = db.select().from(activityLogTable).$dynamic();
+  if (search) {
+    query = query.where(
+      or(
+        ilike(activityLogTable.description, `%${search}%`),
+        ilike(activityLogTable.type, `%${search}%`),
+        ilike(activityLogTable.memberName, `%${search}%`)
+      )
+    );
+  }
+  const logs = await query.orderBy(desc(activityLogTable.createdAt)).limit(limit).offset(offset);
+  res.json(logs);
+});
+router11.post("/activity-log", requireRole(1), async (req, res) => {
+  const { type, description, memberId, memberName } = req.body;
+  if (!type || !description) return res.status(400).json({ error: "type and description required" });
+  const created = await db.insert(activityLogTable).values({ type, description, memberId: memberId ?? null, memberName: memberName ?? null }).returning();
+  res.status(201).json(created[0]);
+});
+router11.delete("/activity-log/:id", requireRole(1), async (req, res) => {
+  const id = parseInt(req.params.id);
+  await db.delete(activityLogTable).where(eq(activityLogTable.id, id));
   res.json({ success: true });
 });
 var admin_default = router11;
@@ -55542,6 +55606,9 @@ var authLimiter = rate_limit_default({
 });
 app.use("/api/auth/login", authLimiter);
 app.use("/api", apiLimiter);
+app.get("/health", (_req, res) => {
+  res.json({ status: "ok", ts: Date.now() });
+});
 app.use("/api", routes_default);
 var frontendDist = path.resolve(__dirname2, "../../church-portal/dist/public");
 if (fs2.existsSync(frontendDist)) {
@@ -55915,4 +55982,3 @@ compression/index.js:
    * MIT Licensed
    *)
 */
-//# sourceMappingURL=index.mjs.map

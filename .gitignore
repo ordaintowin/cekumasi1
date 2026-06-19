@@ -1,0 +1,29 @@
+# Dependencies — reinstalled automatically by the host
+node_modules/
+
+# Build output — rebuilt automatically by the host
+dist/
+church-portal/dist/
+api-server/dist/
+
+# Environment secrets — never commit these
+.env
+.env.local
+.env.production
+
+# Editor and OS clutter
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Replit-specific
+.replit
+replit.nix
+.config/
+.upm/
