@@ -5,7 +5,7 @@ services:
     region: oregon
     plan: starter
     rootDir: .
-    buildCommand: npm install -g pnpm@10 && pnpm install --frozen-lockfile && PORT=3000 BASE_PATH=/ pnpm --filter @workspace/church-portal build && pnpm --filter @workspace/api-server build
+    buildCommand: corepack enable && corepack prepare pnpm@10.0.0 --activate && pnpm install --frozen-lockfile && PORT=3000 BASE_PATH=/ pnpm --filter @workspace/church-portal build && pnpm --filter @workspace/api-server build
     startCommand: node api-server/dist/index.mjs
     healthCheckPath: /health
     autoDeploy: true
