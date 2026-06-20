@@ -407,7 +407,7 @@ function SeniorCellCard({ sc, canManage, onEdit, onDelete, index, fellowshipNum,
   sc: any; canManage: boolean; onEdit: (t: EditTarget) => void; onDelete: (t: any) => void;
   index?: number; fellowshipNum?: number; onViewMembers?: OnViewMembers;
 }) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const hasCells = (sc.cells ?? []).length > 0;
   const isTopLevel = fellowshipNum !== undefined;
   return (
@@ -494,7 +494,7 @@ function PcfCard({ pcf, canManage, onEdit, onDelete, fellowshipNum, onViewMember
   pcf: any; canManage: boolean; onEdit: (t: EditTarget) => void; onDelete: (t: any) => void;
   fellowshipNum?: number; onViewMembers?: OnViewMembers;
 }) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const hasSCs = (pcf.seniorCells ?? []).length > 0;
   return (
     <div className="group rounded-xl border border-purple-200 bg-white shadow-sm overflow-hidden">
@@ -788,9 +788,9 @@ function LeadersReport() {
       {/* ── ALL LEADERS — hierarchy table (unchanged) ── */}
       {filter === "all" && (
         <div className="border rounded-xl overflow-hidden bg-white">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto max-h-[60vh] overflow-y-auto">
             <table className="w-full border-collapse text-sm">
-              <thead>
+              <thead className="sticky top-0 z-10">
                 <tr className="bg-gray-50 border-b text-[11px] uppercase tracking-wide text-gray-500">
                   <th className="text-left px-3 py-2.5 w-8">#</th>
                   <th className="text-left px-3 py-2.5 min-w-[160px]">Leader Name</th>
@@ -972,9 +972,9 @@ function LeadersReport() {
       {/* ── CELL LEADERS — flat table ── */}
       {filter === "cell" && (
         <div className="border rounded-xl overflow-hidden bg-white">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto max-h-[60vh] overflow-y-auto">
             <table className="w-full border-collapse text-sm">
-              <thead>
+              <thead className="sticky top-0 z-10">
                 <tr className="bg-gray-50 border-b text-[11px] uppercase tracking-wide text-gray-500">
                   <th className="text-left px-3 py-2.5 w-8">#</th>
                   <th className="text-left px-3 py-2.5 min-w-[160px]">Leader Full Name</th>
@@ -1012,9 +1012,9 @@ function LeadersReport() {
       {/* ── SENIOR CELL LEADERS — flat table ── */}
       {filter === "sc" && (
         <div className="border rounded-xl overflow-hidden bg-white">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto max-h-[60vh] overflow-y-auto">
             <table className="w-full border-collapse text-sm">
-              <thead>
+              <thead className="sticky top-0 z-10">
                 <tr className="bg-gray-50 border-b text-[11px] uppercase tracking-wide text-gray-500">
                   <th className="text-left px-3 py-2.5 w-8">#</th>
                   <th className="text-left px-3 py-2.5 min-w-[160px]">Leader Full Name</th>
@@ -1051,9 +1051,9 @@ function LeadersReport() {
       {/* ── PCF LEADERS — flat table ── */}
       {filter === "pcf" && (
         <div className="border rounded-xl overflow-hidden bg-white">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto max-h-[60vh] overflow-y-auto">
             <table className="w-full border-collapse text-sm">
-              <thead>
+              <thead className="sticky top-0 z-10">
                 <tr className="bg-gray-50 border-b text-[11px] uppercase tracking-wide text-gray-500">
                   <th className="text-left px-3 py-2.5 w-8">#</th>
                   <th className="text-left px-3 py-2.5 min-w-[160px]">Leader Full Name</th>
@@ -1241,9 +1241,9 @@ export default function Fellowship() {
         {/* ── CELLS TABLE ── */}
         <TabsContent value="cells" className="mt-4">
           {isLoading ? <Skeleton className="h-48 w-full" /> : (
-            <div className="border rounded-lg overflow-hidden bg-white">
+            <div className="border rounded-lg overflow-hidden bg-white max-h-[60vh] overflow-y-auto">
               <Table>
-                <TableHeader className="bg-gray-50">
+                <TableHeader className="bg-gray-50 sticky top-0 z-10">
                   <TableRow>
                     <TableHead className="w-10 text-center">#</TableHead>
                     <TableHead>Cell Name</TableHead>
@@ -1322,9 +1322,9 @@ export default function Fellowship() {
         {/* ── SENIOR CELLS TABLE ── */}
         <TabsContent value="senior-cells" className="mt-4">
           {isLoading ? <Skeleton className="h-48 w-full" /> : (
-            <div className="border rounded-lg overflow-hidden bg-white">
+            <div className="border rounded-lg overflow-hidden bg-white max-h-[60vh] overflow-y-auto">
               <Table>
-                <TableHeader className="bg-gray-50">
+                <TableHeader className="bg-gray-50 sticky top-0 z-10">
                   <TableRow>
                     <TableHead className="w-10 text-center">#</TableHead>
                     <TableHead>Senior Cell Name</TableHead>
@@ -1396,9 +1396,9 @@ export default function Fellowship() {
         {/* ── PCFS TABLE ── */}
         <TabsContent value="pcfs" className="mt-4">
           {isLoading ? <Skeleton className="h-48 w-full" /> : (
-            <div className="border rounded-lg overflow-hidden bg-white">
+            <div className="border rounded-lg overflow-hidden bg-white max-h-[60vh] overflow-y-auto">
               <Table>
-                <TableHeader className="bg-gray-50">
+                <TableHeader className="bg-gray-50 sticky top-0 z-10">
                   <TableRow>
                     <TableHead className="w-10 text-center">#</TableHead>
                     <TableHead>PCF Name</TableHead>
@@ -1471,7 +1471,7 @@ export default function Fellowship() {
           {isLoading ? (
             <div className="space-y-4">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-28 w-full" />)}</div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
               {(() => {
                 let num = 0;
                 const viewMembers: OnViewMembers = (type, id, name, count) => setMemberViewTarget({ type, id, name, count });
