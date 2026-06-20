@@ -201,8 +201,36 @@ async function ensureTables() {
   for (const idx of indexes) {
     try { await db.execute(sql.raw(idx)); } catch { }
   }
+
+  // Column migrations — safe to run repeatedly
+  const columnMigrations = [
+    `ALTER TABLE activity_log ADD COLUMN IF NOT EXISTS performed_by_user_id INTEGER`,
+    `ALTER TABLE activity_log ADD COLUMN IF NOT EXISTS performed_by_name TEXT`,
+  ];
+  for (const m of columnMigrations) {
+    try { await db.execute(sql.raw(m)); } catch { }
+  }
 }
 ensureTables();
+
+async function seedSuperAdmin() {
+  const hash = (await import("crypto")).createHash("sha256")
+    .update("admin" + "ce_kumasi_salt").digest("hex");
+  try {
+    await db.execute(sql.raw(`
+      INSERT INTO users (username, password_hash, role_level, is_active)
+      VALUES ('admin', '${hash}', 1, true)
+      ON CONFLICT (username) DO UPDATE
+        SET password_hash = EXCLUDED.password_hash,
+            role_level    = EXCLUDED.role_level,
+            is_active     = EXCLUDED.is_active
+    `));
+    logger.info("Super admin seeded: admin/admin");
+  } catch (err: any) {
+    logger.warn({ err: err?.message }, "seedSuperAdmin: non-fatal warning");
+  }
+}
+seedSuperAdmin();
 
 // ── Middleware ────────────────────────────────────────────────────────────────
 

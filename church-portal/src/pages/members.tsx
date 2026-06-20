@@ -28,7 +28,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Search, ChevronLeft, ChevronRight, UserCheck, Trash2, Phone, Mail, MapPin, Briefcase, Calendar, Users, ArrowRight, Download, QrCode, X, Camera, Edit2, Eye, EyeOff, KeyRound, RefreshCw, Gift, Home, Crown, Baby, Smile } from "lucide-react";
+import { Plus, Search, ChevronLeft, ChevronRight, UserCheck, Trash2, Phone, Mail, MapPin, Briefcase, Calendar, Users, ArrowRight, Download, QrCode, X, Camera, Edit2, Eye, EyeOff, KeyRound, RefreshCw, Gift, Home, Crown, Baby, Smile, Link2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 
@@ -1317,7 +1317,15 @@ export default function Members() {
           <h1 className="text-2xl font-bold text-gray-900">Members</h1>
           <p className="text-sm text-gray-500 mt-0.5">{total} record{total !== 1 ? "s" : ""} found</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" size="sm"
+            onClick={() => {
+              const url = `${window.location.origin}/register`;
+              navigator.clipboard.writeText(url).then(() => toast({ title: "Registration link copied!", description: url }));
+            }}
+            className="border-purple-300 text-purple-700 hover:bg-purple-50">
+            <Link2 className="w-4 h-4 mr-1.5" /> Share Reg. Link
+          </Button>
           {!isLeader && (
             <Button variant="outline" size="sm" onClick={handleExport} disabled={exporting} className="border-green-300 text-green-700 hover:bg-green-50">
               <Download className="w-4 h-4 mr-1.5" /> {exporting ? "Exporting..." : "Export Excel"}

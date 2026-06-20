@@ -29,6 +29,7 @@ import AdminLogs from "@/pages/admin-logs";
 import Help from "@/pages/help";
 import NotFound from "@/pages/not-found";
 import JoinMeeting from "@/pages/join-meeting";
+import PublicRegister from "@/pages/public-register";
 import { Loader2 } from "lucide-react";
 import PWAInstallBanner from "@/components/PWAInstallBanner";
 import { useState, useEffect } from "react";
@@ -131,6 +132,8 @@ function Router() {
       <Route path="/my-notifications" component={() => <ProtectedRoute component={MyNotifications} routePath="/my-notifications" />} />
       <Route path="/admin-logs"       component={() => <ProtectedRoute component={AdminLogs}        routePath="/admin-logs" />} />
       <Route path="/help"             component={() => <ProtectedRoute component={Help}             routePath="/help" />} />
+
+      <Route path="/register" component={() => <PublicRegister />} />
 
       <Route path="/join/:id">
         {(params: any) => <JoinMeeting meetingId={parseInt(params?.id || "0")} />}

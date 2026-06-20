@@ -760,8 +760,8 @@ var require_depd = __commonJS({
       return deprecate;
     }
     function eehaslisteners(emitter, type) {
-      var count = typeof emitter.listenerCount !== "function" ? emitter.listeners(type).length : emitter.listenerCount(type);
-      return count > 0;
+      var count2 = typeof emitter.listenerCount !== "function" ? emitter.listeners(type).length : emitter.listenerCount(type);
+      return count2 > 0;
     }
     function isignored(namespace) {
       if (process.noDeprecation) {
@@ -18483,14 +18483,14 @@ var require_urlencoded = __commonJS({
       };
     }
     function parameterCount(body, limit) {
-      let count = 0;
+      let count2 = 0;
       let index = -1;
       do {
-        count++;
-        if (count > limit) return void 0;
+        count2++;
+        if (count2 > limit) return void 0;
         index = body.indexOf("&", index + 1);
       } while (index !== -1);
-      return count;
+      return count2;
     }
   }
 });
@@ -18921,14 +18921,14 @@ var require_etag = __commonJS({
   "../node_modules/.pnpm/etag@1.8.1/node_modules/etag/index.js"(exports, module) {
     "use strict";
     module.exports = etag;
-    var crypto10 = __require("crypto");
+    var crypto11 = __require("crypto");
     var Stats = __require("fs").Stats;
     var toString = Object.prototype.toString;
     function entitytag(entity) {
       if (entity.length === 0) {
         return '"0-2jmj7l5rSw0yVb/vlWAYkK/YBwk"';
       }
-      var hash = crypto10.createHash("sha1").update(entity, "utf8").digest("base64").substring(0, 27);
+      var hash = crypto11.createHash("sha1").update(entity, "utf8").digest("base64").substring(0, 27);
       var len = typeof entity === "string" ? Buffer.byteLength(entity, "utf8") : entity.length;
       return '"' + len.toString(16) + "-" + hash + '"';
     }
@@ -20651,27 +20651,27 @@ var require_router = __commonJS({
     var slice = Array.prototype.slice;
     var flatten = Array.prototype.flat;
     var methods = METHODS.map((method) => method.toLowerCase());
-    module.exports = Router19;
+    module.exports = Router20;
     module.exports.Route = Route;
-    function Router19(options) {
-      if (!(this instanceof Router19)) {
-        return new Router19(options);
+    function Router20(options) {
+      if (!(this instanceof Router20)) {
+        return new Router20(options);
       }
       const opts = options || {};
-      function router19(req, res, next) {
-        router19.handle(req, res, next);
+      function router20(req, res, next) {
+        router20.handle(req, res, next);
       }
-      Object.setPrototypeOf(router19, this);
-      router19.caseSensitive = opts.caseSensitive;
-      router19.mergeParams = opts.mergeParams;
-      router19.params = {};
-      router19.strict = opts.strict;
-      router19.stack = [];
-      return router19;
+      Object.setPrototypeOf(router20, this);
+      router20.caseSensitive = opts.caseSensitive;
+      router20.mergeParams = opts.mergeParams;
+      router20.params = {};
+      router20.strict = opts.strict;
+      router20.stack = [];
+      return router20;
     }
-    Router19.prototype = function() {
+    Router20.prototype = function() {
     };
-    Router19.prototype.param = function param(name, fn) {
+    Router20.prototype.param = function param(name, fn) {
       if (!name) {
         throw new TypeError("argument name is required");
       }
@@ -20691,7 +20691,7 @@ var require_router = __commonJS({
       params.push(fn);
       return this;
     };
-    Router19.prototype.handle = function handle(req, res, callback) {
+    Router20.prototype.handle = function handle(req, res, callback) {
       if (!callback) {
         throw new TypeError("argument callback is required");
       }
@@ -20818,7 +20818,7 @@ var require_router = __commonJS({
         }
       }
     };
-    Router19.prototype.use = function use(handler) {
+    Router20.prototype.use = function use(handler) {
       let offset = 0;
       let path2 = "/";
       if (typeof handler !== "function") {
@@ -20851,7 +20851,7 @@ var require_router = __commonJS({
       }
       return this;
     };
-    Router19.prototype.route = function route(path2) {
+    Router20.prototype.route = function route(path2) {
       const route2 = new Route(path2);
       const layer = new Layer(path2, {
         sensitive: this.caseSensitive,
@@ -20866,7 +20866,7 @@ var require_router = __commonJS({
       return route2;
     };
     methods.concat("all").forEach(function(method) {
-      Router19.prototype[method] = function(path2) {
+      Router20.prototype[method] = function(path2) {
         const route = this.route(path2);
         route[method].apply(route, slice.call(arguments, 1));
         return this;
@@ -21049,13 +21049,13 @@ var require_application = __commonJS({
     var compileTrust = require_utils3().compileTrust;
     var resolve = __require("node:path").resolve;
     var once = require_once();
-    var Router19 = require_router();
+    var Router20 = require_router();
     var slice = Array.prototype.slice;
     var flatten = Array.prototype.flat;
     var app2 = exports = module.exports = {};
     var trustProxyDefaultSymbol = "@@symbol:trust_proxy_default";
     app2.init = function init() {
-      var router19 = null;
+      var router20 = null;
       this.cache = /* @__PURE__ */ Object.create(null);
       this.engines = /* @__PURE__ */ Object.create(null);
       this.settings = /* @__PURE__ */ Object.create(null);
@@ -21064,13 +21064,13 @@ var require_application = __commonJS({
         configurable: true,
         enumerable: true,
         get: function getrouter() {
-          if (router19 === null) {
-            router19 = new Router19({
+          if (router20 === null) {
+            router20 = new Router20({
               caseSensitive: this.enabled("case sensitive routing"),
               strict: this.enabled("strict routing")
             });
           }
-          return router19;
+          return router20;
         }
       });
     };
@@ -21141,15 +21141,15 @@ var require_application = __commonJS({
       if (fns.length === 0) {
         throw new TypeError("app.use() requires a middleware function");
       }
-      var router19 = this.router;
+      var router20 = this.router;
       fns.forEach(function(fn2) {
         if (!fn2 || !fn2.handle || !fn2.set) {
-          return router19.use(path2, fn2);
+          return router20.use(path2, fn2);
         }
         debug(".use app under %s", path2);
         fn2.mountpath = path2;
         fn2.parent = this;
-        router19.use(path2, function mounted_app(req, res, next) {
+        router20.use(path2, function mounted_app(req, res, next) {
           var orig = req.app;
           fn2.handle(req, res, function(err) {
             Object.setPrototypeOf(req, orig.request);
@@ -21703,13 +21703,13 @@ var require_mediaType = __commonJS({
       return spec.q > 0;
     }
     function quoteCount(string) {
-      var count = 0;
+      var count2 = 0;
       var index = 0;
       while ((index = string.indexOf('"', index)) !== -1) {
-        count++;
+        count2++;
         index++;
       }
-      return count;
+      return count2;
     }
     function splitKeyValuePair(str) {
       var index = str.indexOf("=");
@@ -22403,17 +22403,17 @@ var require_content_disposition = __commonJS({
 // ../node_modules/.pnpm/cookie-signature@1.2.2/node_modules/cookie-signature/index.js
 var require_cookie_signature = __commonJS({
   "../node_modules/.pnpm/cookie-signature@1.2.2/node_modules/cookie-signature/index.js"(exports) {
-    var crypto10 = __require("crypto");
+    var crypto11 = __require("crypto");
     exports.sign = function(val, secret) {
       if ("string" != typeof val) throw new TypeError("Cookie value must be provided as a string.");
       if (null == secret) throw new TypeError("Secret key must be provided.");
-      return val + "." + crypto10.createHmac("sha256", secret).update(val).digest("base64").replace(/\=+$/, "");
+      return val + "." + crypto11.createHmac("sha256", secret).update(val).digest("base64").replace(/\=+$/, "");
     };
     exports.unsign = function(input, secret) {
       if ("string" != typeof input) throw new TypeError("Signed cookie string must be provided.");
       if (null == secret) throw new TypeError("Secret key must be provided.");
       var tentativeValue = input.slice(0, input.lastIndexOf(".")), expectedInput = exports.sign(tentativeValue, secret), expectedBuffer = Buffer.from(expectedInput), inputBuffer = Buffer.from(input);
-      return expectedBuffer.length === inputBuffer.length && crypto10.timingSafeEqual(expectedBuffer, inputBuffer) ? tentativeValue : false;
+      return expectedBuffer.length === inputBuffer.length && crypto11.timingSafeEqual(expectedBuffer, inputBuffer) ? tentativeValue : false;
     };
   }
 });
@@ -23014,8 +23014,8 @@ var require_send = __commonJS({
       }
     }
     function hasListeners(emitter, type) {
-      var count = typeof emitter.listenerCount !== "function" ? emitter.listeners(type).length : emitter.listenerCount(type);
-      return count > 0;
+      var count2 = typeof emitter.listenerCount !== "function" ? emitter.listeners(type).length : emitter.listenerCount(type);
+      return count2 > 0;
     }
     function normalizeList(val, name) {
       var list = [].concat(val || []);
@@ -23722,7 +23722,7 @@ var require_express = __commonJS({
     var EventEmitter2 = __require("node:events").EventEmitter;
     var mixin = require_merge_descriptors();
     var proto = require_application();
-    var Router19 = require_router();
+    var Router20 = require_router();
     var req = require_request();
     var res = require_response();
     exports = module.exports = createApplication;
@@ -23744,8 +23744,8 @@ var require_express = __commonJS({
     exports.application = proto;
     exports.request = req;
     exports.response = res;
-    exports.Route = Router19.Route;
-    exports.Router = Router19;
+    exports.Route = Router20.Route;
+    exports.Router = Router20;
     exports.json = bodyParser.json;
     exports.raw = bodyParser.raw;
     exports.static = require_serve_static();
@@ -24447,13 +24447,13 @@ var require_mediaType2 = __commonJS({
       return spec.q > 0;
     }
     function quoteCount(string) {
-      var count = 0;
+      var count2 = 0;
       var index = 0;
       while ((index = string.indexOf('"', index)) !== -1) {
-        count++;
+        count2++;
         index++;
       }
-      return count;
+      return count2;
     }
     function splitKeyValuePair(str) {
       var index = str.indexOf("=");
@@ -27244,4571 +27244,8 @@ var require_ip_address = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/pino-std-serializers@7.1.0/node_modules/pino-std-serializers/lib/err-helpers.js
-var require_err_helpers = __commonJS({
-  "../node_modules/.pnpm/pino-std-serializers@7.1.0/node_modules/pino-std-serializers/lib/err-helpers.js"(exports, module) {
-    "use strict";
-    var isErrorLike = (err) => {
-      return err && typeof err.message === "string";
-    };
-    var getErrorCause = (err) => {
-      if (!err) return;
-      const cause = err.cause;
-      if (typeof cause === "function") {
-        const causeResult = err.cause();
-        return isErrorLike(causeResult) ? causeResult : void 0;
-      } else {
-        return isErrorLike(cause) ? cause : void 0;
-      }
-    };
-    var _stackWithCauses = (err, seen) => {
-      if (!isErrorLike(err)) return "";
-      const stack = err.stack || "";
-      if (seen.has(err)) {
-        return stack + "\ncauses have become circular...";
-      }
-      const cause = getErrorCause(err);
-      if (cause) {
-        seen.add(err);
-        return stack + "\ncaused by: " + _stackWithCauses(cause, seen);
-      } else {
-        return stack;
-      }
-    };
-    var stackWithCauses = (err) => _stackWithCauses(err, /* @__PURE__ */ new Set());
-    var _messageWithCauses = (err, seen, skip) => {
-      if (!isErrorLike(err)) return "";
-      const message2 = skip ? "" : err.message || "";
-      if (seen.has(err)) {
-        return message2 + ": ...";
-      }
-      const cause = getErrorCause(err);
-      if (cause) {
-        seen.add(err);
-        const skipIfVErrorStyleCause = typeof err.cause === "function";
-        return message2 + (skipIfVErrorStyleCause ? "" : ": ") + _messageWithCauses(cause, seen, skipIfVErrorStyleCause);
-      } else {
-        return message2;
-      }
-    };
-    var messageWithCauses = (err) => _messageWithCauses(err, /* @__PURE__ */ new Set());
-    module.exports = {
-      isErrorLike,
-      getErrorCause,
-      stackWithCauses,
-      messageWithCauses
-    };
-  }
-});
-
-// ../node_modules/.pnpm/pino-std-serializers@7.1.0/node_modules/pino-std-serializers/lib/err-proto.js
-var require_err_proto = __commonJS({
-  "../node_modules/.pnpm/pino-std-serializers@7.1.0/node_modules/pino-std-serializers/lib/err-proto.js"(exports, module) {
-    "use strict";
-    var seen = /* @__PURE__ */ Symbol("circular-ref-tag");
-    var rawSymbol = /* @__PURE__ */ Symbol("pino-raw-err-ref");
-    var pinoErrProto = Object.create({}, {
-      type: {
-        enumerable: true,
-        writable: true,
-        value: void 0
-      },
-      message: {
-        enumerable: true,
-        writable: true,
-        value: void 0
-      },
-      stack: {
-        enumerable: true,
-        writable: true,
-        value: void 0
-      },
-      aggregateErrors: {
-        enumerable: true,
-        writable: true,
-        value: void 0
-      },
-      raw: {
-        enumerable: false,
-        get: function() {
-          return this[rawSymbol];
-        },
-        set: function(val) {
-          this[rawSymbol] = val;
-        }
-      }
-    });
-    Object.defineProperty(pinoErrProto, rawSymbol, {
-      writable: true,
-      value: {}
-    });
-    module.exports = {
-      pinoErrProto,
-      pinoErrorSymbols: {
-        seen,
-        rawSymbol
-      }
-    };
-  }
-});
-
-// ../node_modules/.pnpm/pino-std-serializers@7.1.0/node_modules/pino-std-serializers/lib/err.js
-var require_err = __commonJS({
-  "../node_modules/.pnpm/pino-std-serializers@7.1.0/node_modules/pino-std-serializers/lib/err.js"(exports, module) {
-    "use strict";
-    module.exports = errSerializer;
-    var { messageWithCauses, stackWithCauses, isErrorLike } = require_err_helpers();
-    var { pinoErrProto, pinoErrorSymbols } = require_err_proto();
-    var { seen } = pinoErrorSymbols;
-    var { toString } = Object.prototype;
-    function errSerializer(err) {
-      if (!isErrorLike(err)) {
-        return err;
-      }
-      err[seen] = void 0;
-      const _err = Object.create(pinoErrProto);
-      _err.type = toString.call(err.constructor) === "[object Function]" ? err.constructor.name : err.name;
-      _err.message = messageWithCauses(err);
-      _err.stack = stackWithCauses(err);
-      if (Array.isArray(err.errors)) {
-        _err.aggregateErrors = err.errors.map((err2) => errSerializer(err2));
-      }
-      for (const key in err) {
-        if (_err[key] === void 0) {
-          const val = err[key];
-          if (isErrorLike(val)) {
-            if (key !== "cause" && !Object.prototype.hasOwnProperty.call(val, seen)) {
-              _err[key] = errSerializer(val);
-            }
-          } else {
-            _err[key] = val;
-          }
-        }
-      }
-      delete err[seen];
-      _err.raw = err;
-      return _err;
-    }
-  }
-});
-
-// ../node_modules/.pnpm/pino-std-serializers@7.1.0/node_modules/pino-std-serializers/lib/err-with-cause.js
-var require_err_with_cause = __commonJS({
-  "../node_modules/.pnpm/pino-std-serializers@7.1.0/node_modules/pino-std-serializers/lib/err-with-cause.js"(exports, module) {
-    "use strict";
-    module.exports = errWithCauseSerializer;
-    var { isErrorLike } = require_err_helpers();
-    var { pinoErrProto, pinoErrorSymbols } = require_err_proto();
-    var { seen } = pinoErrorSymbols;
-    var { toString } = Object.prototype;
-    function errWithCauseSerializer(err) {
-      if (!isErrorLike(err)) {
-        return err;
-      }
-      err[seen] = void 0;
-      const _err = Object.create(pinoErrProto);
-      _err.type = toString.call(err.constructor) === "[object Function]" ? err.constructor.name : err.name;
-      _err.message = err.message;
-      _err.stack = err.stack;
-      if (Array.isArray(err.errors)) {
-        _err.aggregateErrors = err.errors.map((err2) => errWithCauseSerializer(err2));
-      }
-      if (isErrorLike(err.cause) && !Object.prototype.hasOwnProperty.call(err.cause, seen)) {
-        _err.cause = errWithCauseSerializer(err.cause);
-      }
-      for (const key in err) {
-        if (_err[key] === void 0) {
-          const val = err[key];
-          if (isErrorLike(val)) {
-            if (!Object.prototype.hasOwnProperty.call(val, seen)) {
-              _err[key] = errWithCauseSerializer(val);
-            }
-          } else {
-            _err[key] = val;
-          }
-        }
-      }
-      delete err[seen];
-      _err.raw = err;
-      return _err;
-    }
-  }
-});
-
-// ../node_modules/.pnpm/pino-std-serializers@7.1.0/node_modules/pino-std-serializers/lib/req.js
-var require_req = __commonJS({
-  "../node_modules/.pnpm/pino-std-serializers@7.1.0/node_modules/pino-std-serializers/lib/req.js"(exports, module) {
-    "use strict";
-    module.exports = {
-      mapHttpRequest,
-      reqSerializer
-    };
-    var rawSymbol = /* @__PURE__ */ Symbol("pino-raw-req-ref");
-    var pinoReqProto = Object.create({}, {
-      id: {
-        enumerable: true,
-        writable: true,
-        value: ""
-      },
-      method: {
-        enumerable: true,
-        writable: true,
-        value: ""
-      },
-      url: {
-        enumerable: true,
-        writable: true,
-        value: ""
-      },
-      query: {
-        enumerable: true,
-        writable: true,
-        value: ""
-      },
-      params: {
-        enumerable: true,
-        writable: true,
-        value: ""
-      },
-      headers: {
-        enumerable: true,
-        writable: true,
-        value: {}
-      },
-      remoteAddress: {
-        enumerable: true,
-        writable: true,
-        value: ""
-      },
-      remotePort: {
-        enumerable: true,
-        writable: true,
-        value: ""
-      },
-      raw: {
-        enumerable: false,
-        get: function() {
-          return this[rawSymbol];
-        },
-        set: function(val) {
-          this[rawSymbol] = val;
-        }
-      }
-    });
-    Object.defineProperty(pinoReqProto, rawSymbol, {
-      writable: true,
-      value: {}
-    });
-    function reqSerializer(req) {
-      const connection2 = req.info || req.socket;
-      const _req = Object.create(pinoReqProto);
-      _req.id = typeof req.id === "function" ? req.id() : req.id || (req.info ? req.info.id : void 0);
-      _req.method = req.method;
-      if (req.originalUrl) {
-        _req.url = req.originalUrl;
-      } else {
-        const path2 = req.path;
-        _req.url = typeof path2 === "string" ? path2 : req.url ? req.url.path || req.url : void 0;
-      }
-      if (req.query) {
-        _req.query = req.query;
-      }
-      if (req.params) {
-        _req.params = req.params;
-      }
-      _req.headers = req.headers;
-      _req.remoteAddress = connection2 && connection2.remoteAddress;
-      _req.remotePort = connection2 && connection2.remotePort;
-      _req.raw = req.raw || req;
-      return _req;
-    }
-    function mapHttpRequest(req) {
-      return {
-        req: reqSerializer(req)
-      };
-    }
-  }
-});
-
-// ../node_modules/.pnpm/pino-std-serializers@7.1.0/node_modules/pino-std-serializers/lib/res.js
-var require_res = __commonJS({
-  "../node_modules/.pnpm/pino-std-serializers@7.1.0/node_modules/pino-std-serializers/lib/res.js"(exports, module) {
-    "use strict";
-    module.exports = {
-      mapHttpResponse,
-      resSerializer
-    };
-    var rawSymbol = /* @__PURE__ */ Symbol("pino-raw-res-ref");
-    var pinoResProto = Object.create({}, {
-      statusCode: {
-        enumerable: true,
-        writable: true,
-        value: 0
-      },
-      headers: {
-        enumerable: true,
-        writable: true,
-        value: ""
-      },
-      raw: {
-        enumerable: false,
-        get: function() {
-          return this[rawSymbol];
-        },
-        set: function(val) {
-          this[rawSymbol] = val;
-        }
-      }
-    });
-    Object.defineProperty(pinoResProto, rawSymbol, {
-      writable: true,
-      value: {}
-    });
-    function resSerializer(res) {
-      const _res = Object.create(pinoResProto);
-      _res.statusCode = res.headersSent ? res.statusCode : null;
-      _res.headers = res.getHeaders ? res.getHeaders() : res._headers;
-      _res.raw = res;
-      return _res;
-    }
-    function mapHttpResponse(res) {
-      return {
-        res: resSerializer(res)
-      };
-    }
-  }
-});
-
-// ../node_modules/.pnpm/pino-std-serializers@7.1.0/node_modules/pino-std-serializers/index.js
-var require_pino_std_serializers = __commonJS({
-  "../node_modules/.pnpm/pino-std-serializers@7.1.0/node_modules/pino-std-serializers/index.js"(exports, module) {
-    "use strict";
-    var errSerializer = require_err();
-    var errWithCauseSerializer = require_err_with_cause();
-    var reqSerializers = require_req();
-    var resSerializers = require_res();
-    module.exports = {
-      err: errSerializer,
-      errWithCause: errWithCauseSerializer,
-      mapHttpRequest: reqSerializers.mapHttpRequest,
-      mapHttpResponse: resSerializers.mapHttpResponse,
-      req: reqSerializers.reqSerializer,
-      res: resSerializers.resSerializer,
-      wrapErrorSerializer: function wrapErrorSerializer(customSerializer) {
-        if (customSerializer === errSerializer) return customSerializer;
-        return function wrapErrSerializer(err) {
-          return customSerializer(errSerializer(err));
-        };
-      },
-      wrapRequestSerializer: function wrapRequestSerializer(customSerializer) {
-        if (customSerializer === reqSerializers.reqSerializer) return customSerializer;
-        return function wrappedReqSerializer(req) {
-          return customSerializer(reqSerializers.reqSerializer(req));
-        };
-      },
-      wrapResponseSerializer: function wrapResponseSerializer(customSerializer) {
-        if (customSerializer === resSerializers.resSerializer) return customSerializer;
-        return function wrappedResSerializer(res) {
-          return customSerializer(resSerializers.resSerializer(res));
-        };
-      }
-    };
-  }
-});
-
-// ../node_modules/.pnpm/pino@9.14.0/node_modules/pino/lib/caller.js
-var require_caller = __commonJS({
-  "../node_modules/.pnpm/pino@9.14.0/node_modules/pino/lib/caller.js"(exports, module) {
-    "use strict";
-    function noOpPrepareStackTrace(_, stack) {
-      return stack;
-    }
-    module.exports = function getCallers() {
-      const originalPrepare = Error.prepareStackTrace;
-      Error.prepareStackTrace = noOpPrepareStackTrace;
-      const stack = new Error().stack;
-      Error.prepareStackTrace = originalPrepare;
-      if (!Array.isArray(stack)) {
-        return void 0;
-      }
-      const entries = stack.slice(2);
-      const fileNames = [];
-      for (const entry of entries) {
-        if (!entry) {
-          continue;
-        }
-        fileNames.push(entry.getFileName());
-      }
-      return fileNames;
-    };
-  }
-});
-
-// ../node_modules/.pnpm/@pinojs+redact@0.4.0/node_modules/@pinojs/redact/index.js
-var require_redact = __commonJS({
-  "../node_modules/.pnpm/@pinojs+redact@0.4.0/node_modules/@pinojs/redact/index.js"(exports, module) {
-    "use strict";
-    function deepClone(obj) {
-      if (obj === null || typeof obj !== "object") {
-        return obj;
-      }
-      if (obj instanceof Date) {
-        return new Date(obj.getTime());
-      }
-      if (obj instanceof Array) {
-        const cloned = [];
-        for (let i = 0; i < obj.length; i++) {
-          cloned[i] = deepClone(obj[i]);
-        }
-        return cloned;
-      }
-      if (typeof obj === "object") {
-        const cloned = Object.create(Object.getPrototypeOf(obj));
-        for (const key in obj) {
-          if (Object.prototype.hasOwnProperty.call(obj, key)) {
-            cloned[key] = deepClone(obj[key]);
-          }
-        }
-        return cloned;
-      }
-      return obj;
-    }
-    function parsePath(path2) {
-      const parts = [];
-      let current = "";
-      let inBrackets = false;
-      let inQuotes = false;
-      let quoteChar = "";
-      for (let i = 0; i < path2.length; i++) {
-        const char2 = path2[i];
-        if (!inBrackets && char2 === ".") {
-          if (current) {
-            parts.push(current);
-            current = "";
-          }
-        } else if (char2 === "[") {
-          if (current) {
-            parts.push(current);
-            current = "";
-          }
-          inBrackets = true;
-        } else if (char2 === "]" && inBrackets) {
-          parts.push(current);
-          current = "";
-          inBrackets = false;
-          inQuotes = false;
-        } else if ((char2 === '"' || char2 === "'") && inBrackets) {
-          if (!inQuotes) {
-            inQuotes = true;
-            quoteChar = char2;
-          } else if (char2 === quoteChar) {
-            inQuotes = false;
-            quoteChar = "";
-          } else {
-            current += char2;
-          }
-        } else {
-          current += char2;
-        }
-      }
-      if (current) {
-        parts.push(current);
-      }
-      return parts;
-    }
-    function setValue(obj, parts, value) {
-      let current = obj;
-      for (let i = 0; i < parts.length - 1; i++) {
-        const key = parts[i];
-        if (typeof current !== "object" || current === null || !(key in current)) {
-          return false;
-        }
-        if (typeof current[key] !== "object" || current[key] === null) {
-          return false;
-        }
-        current = current[key];
-      }
-      const lastKey = parts[parts.length - 1];
-      if (lastKey === "*") {
-        if (Array.isArray(current)) {
-          for (let i = 0; i < current.length; i++) {
-            current[i] = value;
-          }
-        } else if (typeof current === "object" && current !== null) {
-          for (const key in current) {
-            if (Object.prototype.hasOwnProperty.call(current, key)) {
-              current[key] = value;
-            }
-          }
-        }
-      } else {
-        if (typeof current === "object" && current !== null && lastKey in current && Object.prototype.hasOwnProperty.call(current, lastKey)) {
-          current[lastKey] = value;
-        }
-      }
-      return true;
-    }
-    function removeKey(obj, parts) {
-      let current = obj;
-      for (let i = 0; i < parts.length - 1; i++) {
-        const key = parts[i];
-        if (typeof current !== "object" || current === null || !(key in current)) {
-          return false;
-        }
-        if (typeof current[key] !== "object" || current[key] === null) {
-          return false;
-        }
-        current = current[key];
-      }
-      const lastKey = parts[parts.length - 1];
-      if (lastKey === "*") {
-        if (Array.isArray(current)) {
-          for (let i = 0; i < current.length; i++) {
-            current[i] = void 0;
-          }
-        } else if (typeof current === "object" && current !== null) {
-          for (const key in current) {
-            if (Object.prototype.hasOwnProperty.call(current, key)) {
-              delete current[key];
-            }
-          }
-        }
-      } else {
-        if (typeof current === "object" && current !== null && lastKey in current && Object.prototype.hasOwnProperty.call(current, lastKey)) {
-          delete current[lastKey];
-        }
-      }
-      return true;
-    }
-    var PATH_NOT_FOUND = /* @__PURE__ */ Symbol("PATH_NOT_FOUND");
-    function getValueIfExists(obj, parts) {
-      let current = obj;
-      for (const part of parts) {
-        if (current === null || current === void 0) {
-          return PATH_NOT_FOUND;
-        }
-        if (typeof current !== "object" || current === null) {
-          return PATH_NOT_FOUND;
-        }
-        if (!(part in current)) {
-          return PATH_NOT_FOUND;
-        }
-        current = current[part];
-      }
-      return current;
-    }
-    function getValue(obj, parts) {
-      let current = obj;
-      for (const part of parts) {
-        if (current === null || current === void 0) {
-          return void 0;
-        }
-        if (typeof current !== "object" || current === null) {
-          return void 0;
-        }
-        current = current[part];
-      }
-      return current;
-    }
-    function redactPaths(obj, paths, censor, remove = false) {
-      for (const path2 of paths) {
-        const parts = parsePath(path2);
-        if (parts.includes("*")) {
-          redactWildcardPath(obj, parts, censor, path2, remove);
-        } else {
-          if (remove) {
-            removeKey(obj, parts);
-          } else {
-            const value = getValueIfExists(obj, parts);
-            if (value === PATH_NOT_FOUND) {
-              continue;
-            }
-            const actualCensor = typeof censor === "function" ? censor(value, parts) : censor;
-            setValue(obj, parts, actualCensor);
-          }
-        }
-      }
-    }
-    function redactWildcardPath(obj, parts, censor, originalPath, remove = false) {
-      const wildcardIndex = parts.indexOf("*");
-      if (wildcardIndex === parts.length - 1) {
-        const parentParts = parts.slice(0, -1);
-        let current = obj;
-        for (const part of parentParts) {
-          if (current === null || current === void 0) return;
-          if (typeof current !== "object" || current === null) return;
-          current = current[part];
-        }
-        if (Array.isArray(current)) {
-          if (remove) {
-            for (let i = 0; i < current.length; i++) {
-              current[i] = void 0;
-            }
-          } else {
-            for (let i = 0; i < current.length; i++) {
-              const indexPath = [...parentParts, i.toString()];
-              const actualCensor = typeof censor === "function" ? censor(current[i], indexPath) : censor;
-              current[i] = actualCensor;
-            }
-          }
-        } else if (typeof current === "object" && current !== null) {
-          if (remove) {
-            const keysToDelete = [];
-            for (const key in current) {
-              if (Object.prototype.hasOwnProperty.call(current, key)) {
-                keysToDelete.push(key);
-              }
-            }
-            for (const key of keysToDelete) {
-              delete current[key];
-            }
-          } else {
-            for (const key in current) {
-              const keyPath = [...parentParts, key];
-              const actualCensor = typeof censor === "function" ? censor(current[key], keyPath) : censor;
-              current[key] = actualCensor;
-            }
-          }
-        }
-      } else {
-        redactIntermediateWildcard(obj, parts, censor, wildcardIndex, originalPath, remove);
-      }
-    }
-    function redactIntermediateWildcard(obj, parts, censor, wildcardIndex, originalPath, remove = false) {
-      const beforeWildcard = parts.slice(0, wildcardIndex);
-      const afterWildcard = parts.slice(wildcardIndex + 1);
-      const pathArray = [];
-      function traverse(current, pathLength) {
-        if (pathLength === beforeWildcard.length) {
-          if (Array.isArray(current)) {
-            for (let i = 0; i < current.length; i++) {
-              pathArray[pathLength] = i.toString();
-              traverse(current[i], pathLength + 1);
-            }
-          } else if (typeof current === "object" && current !== null) {
-            for (const key in current) {
-              pathArray[pathLength] = key;
-              traverse(current[key], pathLength + 1);
-            }
-          }
-        } else if (pathLength < beforeWildcard.length) {
-          const nextKey = beforeWildcard[pathLength];
-          if (current && typeof current === "object" && current !== null && nextKey in current) {
-            pathArray[pathLength] = nextKey;
-            traverse(current[nextKey], pathLength + 1);
-          }
-        } else {
-          if (afterWildcard.includes("*")) {
-            const wrappedCensor = typeof censor === "function" ? (value, path2) => {
-              const fullPath = [...pathArray.slice(0, pathLength), ...path2];
-              return censor(value, fullPath);
-            } : censor;
-            redactWildcardPath(current, afterWildcard, wrappedCensor, originalPath, remove);
-          } else {
-            if (remove) {
-              removeKey(current, afterWildcard);
-            } else {
-              const actualCensor = typeof censor === "function" ? censor(getValue(current, afterWildcard), [...pathArray.slice(0, pathLength), ...afterWildcard]) : censor;
-              setValue(current, afterWildcard, actualCensor);
-            }
-          }
-        }
-      }
-      if (beforeWildcard.length === 0) {
-        traverse(obj, 0);
-      } else {
-        let current = obj;
-        for (let i = 0; i < beforeWildcard.length; i++) {
-          const part = beforeWildcard[i];
-          if (current === null || current === void 0) return;
-          if (typeof current !== "object" || current === null) return;
-          current = current[part];
-          pathArray[i] = part;
-        }
-        if (current !== null && current !== void 0) {
-          traverse(current, beforeWildcard.length);
-        }
-      }
-    }
-    function buildPathStructure(pathsToClone) {
-      if (pathsToClone.length === 0) {
-        return null;
-      }
-      const pathStructure = /* @__PURE__ */ new Map();
-      for (const path2 of pathsToClone) {
-        const parts = parsePath(path2);
-        let current = pathStructure;
-        for (let i = 0; i < parts.length; i++) {
-          const part = parts[i];
-          if (!current.has(part)) {
-            current.set(part, /* @__PURE__ */ new Map());
-          }
-          current = current.get(part);
-        }
-      }
-      return pathStructure;
-    }
-    function selectiveClone(obj, pathStructure) {
-      if (!pathStructure) {
-        return obj;
-      }
-      function cloneSelectively(source, pathMap, depth = 0) {
-        if (!pathMap || pathMap.size === 0) {
-          return source;
-        }
-        if (source === null || typeof source !== "object") {
-          return source;
-        }
-        if (source instanceof Date) {
-          return new Date(source.getTime());
-        }
-        if (Array.isArray(source)) {
-          const cloned2 = [];
-          for (let i = 0; i < source.length; i++) {
-            const indexStr = i.toString();
-            if (pathMap.has(indexStr) || pathMap.has("*")) {
-              cloned2[i] = cloneSelectively(source[i], pathMap.get(indexStr) || pathMap.get("*"));
-            } else {
-              cloned2[i] = source[i];
-            }
-          }
-          return cloned2;
-        }
-        const cloned = Object.create(Object.getPrototypeOf(source));
-        for (const key in source) {
-          if (Object.prototype.hasOwnProperty.call(source, key)) {
-            if (pathMap.has(key) || pathMap.has("*")) {
-              cloned[key] = cloneSelectively(source[key], pathMap.get(key) || pathMap.get("*"));
-            } else {
-              cloned[key] = source[key];
-            }
-          }
-        }
-        return cloned;
-      }
-      return cloneSelectively(obj, pathStructure);
-    }
-    function validatePath(path2) {
-      if (typeof path2 !== "string") {
-        throw new Error("Paths must be (non-empty) strings");
-      }
-      if (path2 === "") {
-        throw new Error("Invalid redaction path ()");
-      }
-      if (path2.includes("..")) {
-        throw new Error(`Invalid redaction path (${path2})`);
-      }
-      if (path2.includes(",")) {
-        throw new Error(`Invalid redaction path (${path2})`);
-      }
-      let bracketCount = 0;
-      let inQuotes = false;
-      let quoteChar = "";
-      for (let i = 0; i < path2.length; i++) {
-        const char2 = path2[i];
-        if ((char2 === '"' || char2 === "'") && bracketCount > 0) {
-          if (!inQuotes) {
-            inQuotes = true;
-            quoteChar = char2;
-          } else if (char2 === quoteChar) {
-            inQuotes = false;
-            quoteChar = "";
-          }
-        } else if (char2 === "[" && !inQuotes) {
-          bracketCount++;
-        } else if (char2 === "]" && !inQuotes) {
-          bracketCount--;
-          if (bracketCount < 0) {
-            throw new Error(`Invalid redaction path (${path2})`);
-          }
-        }
-      }
-      if (bracketCount !== 0) {
-        throw new Error(`Invalid redaction path (${path2})`);
-      }
-    }
-    function validatePaths(paths) {
-      if (!Array.isArray(paths)) {
-        throw new TypeError("paths must be an array");
-      }
-      for (const path2 of paths) {
-        validatePath(path2);
-      }
-    }
-    function slowRedact(options = {}) {
-      const {
-        paths = [],
-        censor = "[REDACTED]",
-        serialize = JSON.stringify,
-        strict = true,
-        remove = false
-      } = options;
-      validatePaths(paths);
-      const pathStructure = buildPathStructure(paths);
-      return function redact(obj) {
-        if (strict && (obj === null || typeof obj !== "object")) {
-          if (obj === null || obj === void 0) {
-            return serialize ? serialize(obj) : obj;
-          }
-          if (typeof obj !== "object") {
-            return serialize ? serialize(obj) : obj;
-          }
-        }
-        const cloned = selectiveClone(obj, pathStructure);
-        const original = obj;
-        let actualCensor = censor;
-        if (typeof censor === "function") {
-          actualCensor = censor;
-        }
-        redactPaths(cloned, paths, actualCensor, remove);
-        if (serialize === false) {
-          cloned.restore = function() {
-            return deepClone(original);
-          };
-          return cloned;
-        }
-        if (typeof serialize === "function") {
-          return serialize(cloned);
-        }
-        return JSON.stringify(cloned);
-      };
-    }
-    module.exports = slowRedact;
-  }
-});
-
-// ../node_modules/.pnpm/pino@9.14.0/node_modules/pino/lib/symbols.js
-var require_symbols = __commonJS({
-  "../node_modules/.pnpm/pino@9.14.0/node_modules/pino/lib/symbols.js"(exports, module) {
-    "use strict";
-    var setLevelSym = /* @__PURE__ */ Symbol("pino.setLevel");
-    var getLevelSym = /* @__PURE__ */ Symbol("pino.getLevel");
-    var levelValSym = /* @__PURE__ */ Symbol("pino.levelVal");
-    var levelCompSym = /* @__PURE__ */ Symbol("pino.levelComp");
-    var useLevelLabelsSym = /* @__PURE__ */ Symbol("pino.useLevelLabels");
-    var useOnlyCustomLevelsSym = /* @__PURE__ */ Symbol("pino.useOnlyCustomLevels");
-    var mixinSym = /* @__PURE__ */ Symbol("pino.mixin");
-    var lsCacheSym = /* @__PURE__ */ Symbol("pino.lsCache");
-    var chindingsSym = /* @__PURE__ */ Symbol("pino.chindings");
-    var asJsonSym = /* @__PURE__ */ Symbol("pino.asJson");
-    var writeSym = /* @__PURE__ */ Symbol("pino.write");
-    var redactFmtSym = /* @__PURE__ */ Symbol("pino.redactFmt");
-    var timeSym = /* @__PURE__ */ Symbol("pino.time");
-    var timeSliceIndexSym = /* @__PURE__ */ Symbol("pino.timeSliceIndex");
-    var streamSym = /* @__PURE__ */ Symbol("pino.stream");
-    var stringifySym = /* @__PURE__ */ Symbol("pino.stringify");
-    var stringifySafeSym = /* @__PURE__ */ Symbol("pino.stringifySafe");
-    var stringifiersSym = /* @__PURE__ */ Symbol("pino.stringifiers");
-    var endSym = /* @__PURE__ */ Symbol("pino.end");
-    var formatOptsSym = /* @__PURE__ */ Symbol("pino.formatOpts");
-    var messageKeySym = /* @__PURE__ */ Symbol("pino.messageKey");
-    var errorKeySym = /* @__PURE__ */ Symbol("pino.errorKey");
-    var nestedKeySym = /* @__PURE__ */ Symbol("pino.nestedKey");
-    var nestedKeyStrSym = /* @__PURE__ */ Symbol("pino.nestedKeyStr");
-    var mixinMergeStrategySym = /* @__PURE__ */ Symbol("pino.mixinMergeStrategy");
-    var msgPrefixSym = /* @__PURE__ */ Symbol("pino.msgPrefix");
-    var wildcardFirstSym = /* @__PURE__ */ Symbol("pino.wildcardFirst");
-    var serializersSym = /* @__PURE__ */ Symbol.for("pino.serializers");
-    var formattersSym = /* @__PURE__ */ Symbol.for("pino.formatters");
-    var hooksSym = /* @__PURE__ */ Symbol.for("pino.hooks");
-    var needsMetadataGsym = /* @__PURE__ */ Symbol.for("pino.metadata");
-    module.exports = {
-      setLevelSym,
-      getLevelSym,
-      levelValSym,
-      levelCompSym,
-      useLevelLabelsSym,
-      mixinSym,
-      lsCacheSym,
-      chindingsSym,
-      asJsonSym,
-      writeSym,
-      serializersSym,
-      redactFmtSym,
-      timeSym,
-      timeSliceIndexSym,
-      streamSym,
-      stringifySym,
-      stringifySafeSym,
-      stringifiersSym,
-      endSym,
-      formatOptsSym,
-      messageKeySym,
-      errorKeySym,
-      nestedKeySym,
-      wildcardFirstSym,
-      needsMetadataGsym,
-      useOnlyCustomLevelsSym,
-      formattersSym,
-      hooksSym,
-      nestedKeyStrSym,
-      mixinMergeStrategySym,
-      msgPrefixSym
-    };
-  }
-});
-
-// ../node_modules/.pnpm/pino@9.14.0/node_modules/pino/lib/redaction.js
-var require_redaction = __commonJS({
-  "../node_modules/.pnpm/pino@9.14.0/node_modules/pino/lib/redaction.js"(exports, module) {
-    "use strict";
-    var Redact = require_redact();
-    var { redactFmtSym, wildcardFirstSym } = require_symbols();
-    var rx = /[^.[\]]+|\[([^[\]]*?)\]/g;
-    var CENSOR = "[Redacted]";
-    var strict = false;
-    function redaction(opts, serialize) {
-      const { paths, censor, remove } = handle(opts);
-      const shape = paths.reduce((o, str) => {
-        rx.lastIndex = 0;
-        const first = rx.exec(str);
-        const next = rx.exec(str);
-        let ns = first[1] !== void 0 ? first[1].replace(/^(?:"|'|`)(.*)(?:"|'|`)$/, "$1") : first[0];
-        if (ns === "*") {
-          ns = wildcardFirstSym;
-        }
-        if (next === null) {
-          o[ns] = null;
-          return o;
-        }
-        if (o[ns] === null) {
-          return o;
-        }
-        const { index } = next;
-        const nextPath = `${str.substr(index, str.length - 1)}`;
-        o[ns] = o[ns] || [];
-        if (ns !== wildcardFirstSym && o[ns].length === 0) {
-          o[ns].push(...o[wildcardFirstSym] || []);
-        }
-        if (ns === wildcardFirstSym) {
-          Object.keys(o).forEach(function(k) {
-            if (o[k]) {
-              o[k].push(nextPath);
-            }
-          });
-        }
-        o[ns].push(nextPath);
-        return o;
-      }, {});
-      const result = {
-        [redactFmtSym]: Redact({ paths, censor, serialize, strict, remove })
-      };
-      const topCensor = (...args) => {
-        return typeof censor === "function" ? serialize(censor(...args)) : serialize(censor);
-      };
-      return [...Object.keys(shape), ...Object.getOwnPropertySymbols(shape)].reduce((o, k) => {
-        if (shape[k] === null) {
-          o[k] = (value) => topCensor(value, [k]);
-        } else {
-          const wrappedCensor = typeof censor === "function" ? (value, path2) => {
-            return censor(value, [k, ...path2]);
-          } : censor;
-          o[k] = Redact({
-            paths: shape[k],
-            censor: wrappedCensor,
-            serialize,
-            strict,
-            remove
-          });
-        }
-        return o;
-      }, result);
-    }
-    function handle(opts) {
-      if (Array.isArray(opts)) {
-        opts = { paths: opts, censor: CENSOR };
-        return opts;
-      }
-      let { paths, censor = CENSOR, remove } = opts;
-      if (Array.isArray(paths) === false) {
-        throw Error("pino \u2013 redact must contain an array of strings");
-      }
-      if (remove === true) censor = void 0;
-      return { paths, censor, remove };
-    }
-    module.exports = redaction;
-  }
-});
-
-// ../node_modules/.pnpm/pino@9.14.0/node_modules/pino/lib/time.js
-var require_time = __commonJS({
-  "../node_modules/.pnpm/pino@9.14.0/node_modules/pino/lib/time.js"(exports, module) {
-    "use strict";
-    var nullTime = () => "";
-    var epochTime = () => `,"time":${Date.now()}`;
-    var unixTime = () => `,"time":${Math.round(Date.now() / 1e3)}`;
-    var isoTime = () => `,"time":"${new Date(Date.now()).toISOString()}"`;
-    var NS_PER_MS = 1000000n;
-    var NS_PER_SEC = 1000000000n;
-    var startWallTimeNs = BigInt(Date.now()) * NS_PER_MS;
-    var startHrTime = process.hrtime.bigint();
-    var isoTimeNano = () => {
-      const elapsedNs = process.hrtime.bigint() - startHrTime;
-      const currentTimeNs = startWallTimeNs + elapsedNs;
-      const secondsSinceEpoch = currentTimeNs / NS_PER_SEC;
-      const nanosWithinSecond = currentTimeNs % NS_PER_SEC;
-      const msSinceEpoch = Number(secondsSinceEpoch * 1000n + nanosWithinSecond / 1000000n);
-      const date2 = new Date(msSinceEpoch);
-      const year2 = date2.getUTCFullYear();
-      const month = (date2.getUTCMonth() + 1).toString().padStart(2, "0");
-      const day2 = date2.getUTCDate().toString().padStart(2, "0");
-      const hours = date2.getUTCHours().toString().padStart(2, "0");
-      const minutes = date2.getUTCMinutes().toString().padStart(2, "0");
-      const seconds = date2.getUTCSeconds().toString().padStart(2, "0");
-      return `,"time":"${year2}-${month}-${day2}T${hours}:${minutes}:${seconds}.${nanosWithinSecond.toString().padStart(9, "0")}Z"`;
-    };
-    module.exports = { nullTime, epochTime, unixTime, isoTime, isoTimeNano };
-  }
-});
-
-// ../node_modules/.pnpm/quick-format-unescaped@4.0.4/node_modules/quick-format-unescaped/index.js
-var require_quick_format_unescaped = __commonJS({
-  "../node_modules/.pnpm/quick-format-unescaped@4.0.4/node_modules/quick-format-unescaped/index.js"(exports, module) {
-    "use strict";
-    function tryStringify(o) {
-      try {
-        return JSON.stringify(o);
-      } catch (e) {
-        return '"[Circular]"';
-      }
-    }
-    module.exports = format;
-    function format(f, args, opts) {
-      var ss = opts && opts.stringify || tryStringify;
-      var offset = 1;
-      if (typeof f === "object" && f !== null) {
-        var len = args.length + offset;
-        if (len === 1) return f;
-        var objects = new Array(len);
-        objects[0] = ss(f);
-        for (var index = 1; index < len; index++) {
-          objects[index] = ss(args[index]);
-        }
-        return objects.join(" ");
-      }
-      if (typeof f !== "string") {
-        return f;
-      }
-      var argLen = args.length;
-      if (argLen === 0) return f;
-      var str = "";
-      var a = 1 - offset;
-      var lastPos = -1;
-      var flen = f && f.length || 0;
-      for (var i = 0; i < flen; ) {
-        if (f.charCodeAt(i) === 37 && i + 1 < flen) {
-          lastPos = lastPos > -1 ? lastPos : 0;
-          switch (f.charCodeAt(i + 1)) {
-            case 100:
-            // 'd'
-            case 102:
-              if (a >= argLen)
-                break;
-              if (args[a] == null) break;
-              if (lastPos < i)
-                str += f.slice(lastPos, i);
-              str += Number(args[a]);
-              lastPos = i + 2;
-              i++;
-              break;
-            case 105:
-              if (a >= argLen)
-                break;
-              if (args[a] == null) break;
-              if (lastPos < i)
-                str += f.slice(lastPos, i);
-              str += Math.floor(Number(args[a]));
-              lastPos = i + 2;
-              i++;
-              break;
-            case 79:
-            // 'O'
-            case 111:
-            // 'o'
-            case 106:
-              if (a >= argLen)
-                break;
-              if (args[a] === void 0) break;
-              if (lastPos < i)
-                str += f.slice(lastPos, i);
-              var type = typeof args[a];
-              if (type === "string") {
-                str += "'" + args[a] + "'";
-                lastPos = i + 2;
-                i++;
-                break;
-              }
-              if (type === "function") {
-                str += args[a].name || "<anonymous>";
-                lastPos = i + 2;
-                i++;
-                break;
-              }
-              str += ss(args[a]);
-              lastPos = i + 2;
-              i++;
-              break;
-            case 115:
-              if (a >= argLen)
-                break;
-              if (lastPos < i)
-                str += f.slice(lastPos, i);
-              str += String(args[a]);
-              lastPos = i + 2;
-              i++;
-              break;
-            case 37:
-              if (lastPos < i)
-                str += f.slice(lastPos, i);
-              str += "%";
-              lastPos = i + 2;
-              i++;
-              a--;
-              break;
-          }
-          ++a;
-        }
-        ++i;
-      }
-      if (lastPos === -1)
-        return f;
-      else if (lastPos < flen) {
-        str += f.slice(lastPos);
-      }
-      return str;
-    }
-  }
-});
-
-// ../node_modules/.pnpm/atomic-sleep@1.0.0/node_modules/atomic-sleep/index.js
-var require_atomic_sleep = __commonJS({
-  "../node_modules/.pnpm/atomic-sleep@1.0.0/node_modules/atomic-sleep/index.js"(exports, module) {
-    "use strict";
-    if (typeof SharedArrayBuffer !== "undefined" && typeof Atomics !== "undefined") {
-      let sleep = function(ms) {
-        const valid = ms > 0 && ms < Infinity;
-        if (valid === false) {
-          if (typeof ms !== "number" && typeof ms !== "bigint") {
-            throw TypeError("sleep: ms must be a number");
-          }
-          throw RangeError("sleep: ms must be a number that is greater than 0 but less than Infinity");
-        }
-        Atomics.wait(nil, 0, 0, Number(ms));
-      };
-      const nil = new Int32Array(new SharedArrayBuffer(4));
-      module.exports = sleep;
-    } else {
-      let sleep = function(ms) {
-        const valid = ms > 0 && ms < Infinity;
-        if (valid === false) {
-          if (typeof ms !== "number" && typeof ms !== "bigint") {
-            throw TypeError("sleep: ms must be a number");
-          }
-          throw RangeError("sleep: ms must be a number that is greater than 0 but less than Infinity");
-        }
-        const target = Date.now() + Number(ms);
-        while (target > Date.now()) {
-        }
-      };
-      module.exports = sleep;
-    }
-  }
-});
-
-// ../node_modules/.pnpm/sonic-boom@4.2.1/node_modules/sonic-boom/index.js
-var require_sonic_boom = __commonJS({
-  "../node_modules/.pnpm/sonic-boom@4.2.1/node_modules/sonic-boom/index.js"(exports, module) {
-    "use strict";
-    var fs3 = __require("fs");
-    var EventEmitter2 = __require("events");
-    var inherits = __require("util").inherits;
-    var path2 = __require("path");
-    var sleep = require_atomic_sleep();
-    var assert2 = __require("assert");
-    var BUSY_WRITE_TIMEOUT = 100;
-    var kEmptyBuffer = Buffer.allocUnsafe(0);
-    var MAX_WRITE = 16 * 1024;
-    var kContentModeBuffer = "buffer";
-    var kContentModeUtf8 = "utf8";
-    var [major, minor] = (process.versions.node || "0.0").split(".").map(Number);
-    var kCopyBuffer = major >= 22 && minor >= 7;
-    function openFile(file, sonic) {
-      sonic._opening = true;
-      sonic._writing = true;
-      sonic._asyncDrainScheduled = false;
-      function fileOpened(err, fd) {
-        if (err) {
-          sonic._reopening = false;
-          sonic._writing = false;
-          sonic._opening = false;
-          if (sonic.sync) {
-            process.nextTick(() => {
-              if (sonic.listenerCount("error") > 0) {
-                sonic.emit("error", err);
-              }
-            });
-          } else {
-            sonic.emit("error", err);
-          }
-          return;
-        }
-        const reopening = sonic._reopening;
-        sonic.fd = fd;
-        sonic.file = file;
-        sonic._reopening = false;
-        sonic._opening = false;
-        sonic._writing = false;
-        if (sonic.sync) {
-          process.nextTick(() => sonic.emit("ready"));
-        } else {
-          sonic.emit("ready");
-        }
-        if (sonic.destroyed) {
-          return;
-        }
-        if (!sonic._writing && sonic._len > sonic.minLength || sonic._flushPending) {
-          sonic._actualWrite();
-        } else if (reopening) {
-          process.nextTick(() => sonic.emit("drain"));
-        }
-      }
-      const flags = sonic.append ? "a" : "w";
-      const mode = sonic.mode;
-      if (sonic.sync) {
-        try {
-          if (sonic.mkdir) fs3.mkdirSync(path2.dirname(file), { recursive: true });
-          const fd = fs3.openSync(file, flags, mode);
-          fileOpened(null, fd);
-        } catch (err) {
-          fileOpened(err);
-          throw err;
-        }
-      } else if (sonic.mkdir) {
-        fs3.mkdir(path2.dirname(file), { recursive: true }, (err) => {
-          if (err) return fileOpened(err);
-          fs3.open(file, flags, mode, fileOpened);
-        });
-      } else {
-        fs3.open(file, flags, mode, fileOpened);
-      }
-    }
-    function SonicBoom(opts) {
-      if (!(this instanceof SonicBoom)) {
-        return new SonicBoom(opts);
-      }
-      let { fd, dest, minLength, maxLength, maxWrite, periodicFlush, sync, append = true, mkdir, retryEAGAIN, fsync, contentMode, mode } = opts || {};
-      fd = fd || dest;
-      this._len = 0;
-      this.fd = -1;
-      this._bufs = [];
-      this._lens = [];
-      this._writing = false;
-      this._ending = false;
-      this._reopening = false;
-      this._asyncDrainScheduled = false;
-      this._flushPending = false;
-      this._hwm = Math.max(minLength || 0, 16387);
-      this.file = null;
-      this.destroyed = false;
-      this.minLength = minLength || 0;
-      this.maxLength = maxLength || 0;
-      this.maxWrite = maxWrite || MAX_WRITE;
-      this._periodicFlush = periodicFlush || 0;
-      this._periodicFlushTimer = void 0;
-      this.sync = sync || false;
-      this.writable = true;
-      this._fsync = fsync || false;
-      this.append = append || false;
-      this.mode = mode;
-      this.retryEAGAIN = retryEAGAIN || (() => true);
-      this.mkdir = mkdir || false;
-      let fsWriteSync;
-      let fsWrite;
-      if (contentMode === kContentModeBuffer) {
-        this._writingBuf = kEmptyBuffer;
-        this.write = writeBuffer;
-        this.flush = flushBuffer;
-        this.flushSync = flushBufferSync;
-        this._actualWrite = actualWriteBuffer;
-        fsWriteSync = () => fs3.writeSync(this.fd, this._writingBuf);
-        fsWrite = () => fs3.write(this.fd, this._writingBuf, this.release);
-      } else if (contentMode === void 0 || contentMode === kContentModeUtf8) {
-        this._writingBuf = "";
-        this.write = write;
-        this.flush = flush;
-        this.flushSync = flushSync;
-        this._actualWrite = actualWrite;
-        fsWriteSync = () => {
-          if (Buffer.isBuffer(this._writingBuf)) {
-            return fs3.writeSync(this.fd, this._writingBuf);
-          }
-          return fs3.writeSync(this.fd, this._writingBuf, "utf8");
-        };
-        fsWrite = () => {
-          if (Buffer.isBuffer(this._writingBuf)) {
-            return fs3.write(this.fd, this._writingBuf, this.release);
-          }
-          return fs3.write(this.fd, this._writingBuf, "utf8", this.release);
-        };
-      } else {
-        throw new Error(`SonicBoom supports "${kContentModeUtf8}" and "${kContentModeBuffer}", but passed ${contentMode}`);
-      }
-      if (typeof fd === "number") {
-        this.fd = fd;
-        process.nextTick(() => this.emit("ready"));
-      } else if (typeof fd === "string") {
-        openFile(fd, this);
-      } else {
-        throw new Error("SonicBoom supports only file descriptors and files");
-      }
-      if (this.minLength >= this.maxWrite) {
-        throw new Error(`minLength should be smaller than maxWrite (${this.maxWrite})`);
-      }
-      this.release = (err, n) => {
-        if (err) {
-          if ((err.code === "EAGAIN" || err.code === "EBUSY") && this.retryEAGAIN(err, this._writingBuf.length, this._len - this._writingBuf.length)) {
-            if (this.sync) {
-              try {
-                sleep(BUSY_WRITE_TIMEOUT);
-                this.release(void 0, 0);
-              } catch (err2) {
-                this.release(err2);
-              }
-            } else {
-              setTimeout(fsWrite, BUSY_WRITE_TIMEOUT);
-            }
-          } else {
-            this._writing = false;
-            this.emit("error", err);
-          }
-          return;
-        }
-        this.emit("write", n);
-        const releasedBufObj = releaseWritingBuf(this._writingBuf, this._len, n);
-        this._len = releasedBufObj.len;
-        this._writingBuf = releasedBufObj.writingBuf;
-        if (this._writingBuf.length) {
-          if (!this.sync) {
-            fsWrite();
-            return;
-          }
-          try {
-            do {
-              const n2 = fsWriteSync();
-              const releasedBufObj2 = releaseWritingBuf(this._writingBuf, this._len, n2);
-              this._len = releasedBufObj2.len;
-              this._writingBuf = releasedBufObj2.writingBuf;
-            } while (this._writingBuf.length);
-          } catch (err2) {
-            this.release(err2);
-            return;
-          }
-        }
-        if (this._fsync) {
-          fs3.fsyncSync(this.fd);
-        }
-        const len = this._len;
-        if (this._reopening) {
-          this._writing = false;
-          this._reopening = false;
-          this.reopen();
-        } else if (len > this.minLength) {
-          this._actualWrite();
-        } else if (this._ending) {
-          if (len > 0) {
-            this._actualWrite();
-          } else {
-            this._writing = false;
-            actualClose(this);
-          }
-        } else {
-          this._writing = false;
-          if (this.sync) {
-            if (!this._asyncDrainScheduled) {
-              this._asyncDrainScheduled = true;
-              process.nextTick(emitDrain, this);
-            }
-          } else {
-            this.emit("drain");
-          }
-        }
-      };
-      this.on("newListener", function(name) {
-        if (name === "drain") {
-          this._asyncDrainScheduled = false;
-        }
-      });
-      if (this._periodicFlush !== 0) {
-        this._periodicFlushTimer = setInterval(() => this.flush(null), this._periodicFlush);
-        this._periodicFlushTimer.unref();
-      }
-    }
-    function releaseWritingBuf(writingBuf, len, n) {
-      if (typeof writingBuf === "string") {
-        writingBuf = Buffer.from(writingBuf);
-      }
-      len = Math.max(len - n, 0);
-      writingBuf = writingBuf.subarray(n);
-      return { writingBuf, len };
-    }
-    function emitDrain(sonic) {
-      const hasListeners = sonic.listenerCount("drain") > 0;
-      if (!hasListeners) return;
-      sonic._asyncDrainScheduled = false;
-      sonic.emit("drain");
-    }
-    inherits(SonicBoom, EventEmitter2);
-    function mergeBuf(bufs, len) {
-      if (bufs.length === 0) {
-        return kEmptyBuffer;
-      }
-      if (bufs.length === 1) {
-        return bufs[0];
-      }
-      return Buffer.concat(bufs, len);
-    }
-    function write(data) {
-      if (this.destroyed) {
-        throw new Error("SonicBoom destroyed");
-      }
-      data = "" + data;
-      const dataLen = Buffer.byteLength(data);
-      const len = this._len + dataLen;
-      const bufs = this._bufs;
-      if (this.maxLength && len > this.maxLength) {
-        this.emit("drop", data);
-        return this._len < this._hwm;
-      }
-      if (bufs.length === 0 || Buffer.byteLength(bufs[bufs.length - 1]) + dataLen > this.maxWrite) {
-        bufs.push(data);
-      } else {
-        bufs[bufs.length - 1] += data;
-      }
-      this._len = len;
-      if (!this._writing && this._len >= this.minLength) {
-        this._actualWrite();
-      }
-      return this._len < this._hwm;
-    }
-    function writeBuffer(data) {
-      if (this.destroyed) {
-        throw new Error("SonicBoom destroyed");
-      }
-      const len = this._len + data.length;
-      const bufs = this._bufs;
-      const lens = this._lens;
-      if (this.maxLength && len > this.maxLength) {
-        this.emit("drop", data);
-        return this._len < this._hwm;
-      }
-      if (bufs.length === 0 || lens[lens.length - 1] + data.length > this.maxWrite) {
-        bufs.push([data]);
-        lens.push(data.length);
-      } else {
-        bufs[bufs.length - 1].push(data);
-        lens[lens.length - 1] += data.length;
-      }
-      this._len = len;
-      if (!this._writing && this._len >= this.minLength) {
-        this._actualWrite();
-      }
-      return this._len < this._hwm;
-    }
-    function callFlushCallbackOnDrain(cb) {
-      this._flushPending = true;
-      const onDrain = () => {
-        if (!this._fsync) {
-          try {
-            fs3.fsync(this.fd, (err) => {
-              this._flushPending = false;
-              cb(err);
-            });
-          } catch (err) {
-            cb(err);
-          }
-        } else {
-          this._flushPending = false;
-          cb();
-        }
-        this.off("error", onError);
-      };
-      const onError = (err) => {
-        this._flushPending = false;
-        cb(err);
-        this.off("drain", onDrain);
-      };
-      this.once("drain", onDrain);
-      this.once("error", onError);
-    }
-    function flush(cb) {
-      if (cb != null && typeof cb !== "function") {
-        throw new Error("flush cb must be a function");
-      }
-      if (this.destroyed) {
-        const error = new Error("SonicBoom destroyed");
-        if (cb) {
-          cb(error);
-          return;
-        }
-        throw error;
-      }
-      if (this.minLength <= 0) {
-        cb?.();
-        return;
-      }
-      if (cb) {
-        callFlushCallbackOnDrain.call(this, cb);
-      }
-      if (this._writing) {
-        return;
-      }
-      if (this._bufs.length === 0) {
-        this._bufs.push("");
-      }
-      this._actualWrite();
-    }
-    function flushBuffer(cb) {
-      if (cb != null && typeof cb !== "function") {
-        throw new Error("flush cb must be a function");
-      }
-      if (this.destroyed) {
-        const error = new Error("SonicBoom destroyed");
-        if (cb) {
-          cb(error);
-          return;
-        }
-        throw error;
-      }
-      if (this.minLength <= 0) {
-        cb?.();
-        return;
-      }
-      if (cb) {
-        callFlushCallbackOnDrain.call(this, cb);
-      }
-      if (this._writing) {
-        return;
-      }
-      if (this._bufs.length === 0) {
-        this._bufs.push([]);
-        this._lens.push(0);
-      }
-      this._actualWrite();
-    }
-    SonicBoom.prototype.reopen = function(file) {
-      if (this.destroyed) {
-        throw new Error("SonicBoom destroyed");
-      }
-      if (this._opening) {
-        this.once("ready", () => {
-          this.reopen(file);
-        });
-        return;
-      }
-      if (this._ending) {
-        return;
-      }
-      if (!this.file) {
-        throw new Error("Unable to reopen a file descriptor, you must pass a file to SonicBoom");
-      }
-      if (file) {
-        this.file = file;
-      }
-      this._reopening = true;
-      if (this._writing) {
-        return;
-      }
-      const fd = this.fd;
-      this.once("ready", () => {
-        if (fd !== this.fd) {
-          fs3.close(fd, (err) => {
-            if (err) {
-              return this.emit("error", err);
-            }
-          });
-        }
-      });
-      openFile(this.file, this);
-    };
-    SonicBoom.prototype.end = function() {
-      if (this.destroyed) {
-        throw new Error("SonicBoom destroyed");
-      }
-      if (this._opening) {
-        this.once("ready", () => {
-          this.end();
-        });
-        return;
-      }
-      if (this._ending) {
-        return;
-      }
-      this._ending = true;
-      if (this._writing) {
-        return;
-      }
-      if (this._len > 0 && this.fd >= 0) {
-        this._actualWrite();
-      } else {
-        actualClose(this);
-      }
-    };
-    function flushSync() {
-      if (this.destroyed) {
-        throw new Error("SonicBoom destroyed");
-      }
-      if (this.fd < 0) {
-        throw new Error("sonic boom is not ready yet");
-      }
-      if (!this._writing && this._writingBuf.length > 0) {
-        this._bufs.unshift(this._writingBuf);
-        this._writingBuf = "";
-      }
-      let buf = "";
-      while (this._bufs.length || buf.length) {
-        if (buf.length <= 0) {
-          buf = this._bufs[0];
-        }
-        try {
-          const n = Buffer.isBuffer(buf) ? fs3.writeSync(this.fd, buf) : fs3.writeSync(this.fd, buf, "utf8");
-          const releasedBufObj = releaseWritingBuf(buf, this._len, n);
-          buf = releasedBufObj.writingBuf;
-          this._len = releasedBufObj.len;
-          if (buf.length <= 0) {
-            this._bufs.shift();
-          }
-        } catch (err) {
-          const shouldRetry = err.code === "EAGAIN" || err.code === "EBUSY";
-          if (shouldRetry && !this.retryEAGAIN(err, buf.length, this._len - buf.length)) {
-            throw err;
-          }
-          sleep(BUSY_WRITE_TIMEOUT);
-        }
-      }
-      try {
-        fs3.fsyncSync(this.fd);
-      } catch {
-      }
-    }
-    function flushBufferSync() {
-      if (this.destroyed) {
-        throw new Error("SonicBoom destroyed");
-      }
-      if (this.fd < 0) {
-        throw new Error("sonic boom is not ready yet");
-      }
-      if (!this._writing && this._writingBuf.length > 0) {
-        this._bufs.unshift([this._writingBuf]);
-        this._writingBuf = kEmptyBuffer;
-      }
-      let buf = kEmptyBuffer;
-      while (this._bufs.length || buf.length) {
-        if (buf.length <= 0) {
-          buf = mergeBuf(this._bufs[0], this._lens[0]);
-        }
-        try {
-          const n = fs3.writeSync(this.fd, buf);
-          buf = buf.subarray(n);
-          this._len = Math.max(this._len - n, 0);
-          if (buf.length <= 0) {
-            this._bufs.shift();
-            this._lens.shift();
-          }
-        } catch (err) {
-          const shouldRetry = err.code === "EAGAIN" || err.code === "EBUSY";
-          if (shouldRetry && !this.retryEAGAIN(err, buf.length, this._len - buf.length)) {
-            throw err;
-          }
-          sleep(BUSY_WRITE_TIMEOUT);
-        }
-      }
-    }
-    SonicBoom.prototype.destroy = function() {
-      if (this.destroyed) {
-        return;
-      }
-      actualClose(this);
-    };
-    function actualWrite() {
-      const release = this.release;
-      this._writing = true;
-      this._writingBuf = this._writingBuf.length ? this._writingBuf : this._bufs.shift() || "";
-      if (this.sync) {
-        try {
-          const written = Buffer.isBuffer(this._writingBuf) ? fs3.writeSync(this.fd, this._writingBuf) : fs3.writeSync(this.fd, this._writingBuf, "utf8");
-          release(null, written);
-        } catch (err) {
-          release(err);
-        }
-      } else {
-        fs3.write(this.fd, this._writingBuf, release);
-      }
-    }
-    function actualWriteBuffer() {
-      const release = this.release;
-      this._writing = true;
-      this._writingBuf = this._writingBuf.length ? this._writingBuf : mergeBuf(this._bufs.shift(), this._lens.shift());
-      if (this.sync) {
-        try {
-          const written = fs3.writeSync(this.fd, this._writingBuf);
-          release(null, written);
-        } catch (err) {
-          release(err);
-        }
-      } else {
-        if (kCopyBuffer) {
-          this._writingBuf = Buffer.from(this._writingBuf);
-        }
-        fs3.write(this.fd, this._writingBuf, release);
-      }
-    }
-    function actualClose(sonic) {
-      if (sonic.fd === -1) {
-        sonic.once("ready", actualClose.bind(null, sonic));
-        return;
-      }
-      if (sonic._periodicFlushTimer !== void 0) {
-        clearInterval(sonic._periodicFlushTimer);
-      }
-      sonic.destroyed = true;
-      sonic._bufs = [];
-      sonic._lens = [];
-      assert2(typeof sonic.fd === "number", `sonic.fd must be a number, got ${typeof sonic.fd}`);
-      try {
-        fs3.fsync(sonic.fd, closeWrapped);
-      } catch {
-      }
-      function closeWrapped() {
-        if (sonic.fd !== 1 && sonic.fd !== 2) {
-          fs3.close(sonic.fd, done);
-        } else {
-          done();
-        }
-      }
-      function done(err) {
-        if (err) {
-          sonic.emit("error", err);
-          return;
-        }
-        if (sonic._ending && !sonic._writing) {
-          sonic.emit("finish");
-        }
-        sonic.emit("close");
-      }
-    }
-    SonicBoom.SonicBoom = SonicBoom;
-    SonicBoom.default = SonicBoom;
-    module.exports = SonicBoom;
-  }
-});
-
-// ../node_modules/.pnpm/on-exit-leak-free@2.1.2/node_modules/on-exit-leak-free/index.js
-var require_on_exit_leak_free = __commonJS({
-  "../node_modules/.pnpm/on-exit-leak-free@2.1.2/node_modules/on-exit-leak-free/index.js"(exports, module) {
-    "use strict";
-    var refs = {
-      exit: [],
-      beforeExit: []
-    };
-    var functions = {
-      exit: onExit,
-      beforeExit: onBeforeExit
-    };
-    var registry;
-    function ensureRegistry() {
-      if (registry === void 0) {
-        registry = new FinalizationRegistry(clear);
-      }
-    }
-    function install(event) {
-      if (refs[event].length > 0) {
-        return;
-      }
-      process.on(event, functions[event]);
-    }
-    function uninstall(event) {
-      if (refs[event].length > 0) {
-        return;
-      }
-      process.removeListener(event, functions[event]);
-      if (refs.exit.length === 0 && refs.beforeExit.length === 0) {
-        registry = void 0;
-      }
-    }
-    function onExit() {
-      callRefs("exit");
-    }
-    function onBeforeExit() {
-      callRefs("beforeExit");
-    }
-    function callRefs(event) {
-      for (const ref of refs[event]) {
-        const obj = ref.deref();
-        const fn = ref.fn;
-        if (obj !== void 0) {
-          fn(obj, event);
-        }
-      }
-      refs[event] = [];
-    }
-    function clear(ref) {
-      for (const event of ["exit", "beforeExit"]) {
-        const index = refs[event].indexOf(ref);
-        refs[event].splice(index, index + 1);
-        uninstall(event);
-      }
-    }
-    function _register(event, obj, fn) {
-      if (obj === void 0) {
-        throw new Error("the object can't be undefined");
-      }
-      install(event);
-      const ref = new WeakRef(obj);
-      ref.fn = fn;
-      ensureRegistry();
-      registry.register(obj, ref);
-      refs[event].push(ref);
-    }
-    function register(obj, fn) {
-      _register("exit", obj, fn);
-    }
-    function registerBeforeExit(obj, fn) {
-      _register("beforeExit", obj, fn);
-    }
-    function unregister(obj) {
-      if (registry === void 0) {
-        return;
-      }
-      registry.unregister(obj);
-      for (const event of ["exit", "beforeExit"]) {
-        refs[event] = refs[event].filter((ref) => {
-          const _obj = ref.deref();
-          return _obj && _obj !== obj;
-        });
-        uninstall(event);
-      }
-    }
-    module.exports = {
-      register,
-      registerBeforeExit,
-      unregister
-    };
-  }
-});
-
-// ../node_modules/.pnpm/thread-stream@3.1.0/node_modules/thread-stream/package.json
-var require_package = __commonJS({
-  "../node_modules/.pnpm/thread-stream@3.1.0/node_modules/thread-stream/package.json"(exports, module) {
-    module.exports = {
-      name: "thread-stream",
-      version: "3.1.0",
-      description: "A streaming way to send data to a Node.js Worker Thread",
-      main: "index.js",
-      types: "index.d.ts",
-      dependencies: {
-        "real-require": "^0.2.0"
-      },
-      devDependencies: {
-        "@types/node": "^20.1.0",
-        "@types/tap": "^15.0.0",
-        "@yao-pkg/pkg": "^5.11.5",
-        desm: "^1.3.0",
-        fastbench: "^1.0.1",
-        husky: "^9.0.6",
-        "pino-elasticsearch": "^8.0.0",
-        "sonic-boom": "^4.0.1",
-        standard: "^17.0.0",
-        tap: "^16.2.0",
-        "ts-node": "^10.8.0",
-        typescript: "^5.3.2",
-        "why-is-node-running": "^2.2.2"
-      },
-      scripts: {
-        build: "tsc --noEmit",
-        test: 'standard && npm run build && npm run transpile && tap "test/**/*.test.*js" && tap --ts test/*.test.*ts',
-        "test:ci": "standard && npm run transpile && npm run test:ci:js && npm run test:ci:ts",
-        "test:ci:js": 'tap --no-check-coverage --timeout=120 --coverage-report=lcovonly "test/**/*.test.*js"',
-        "test:ci:ts": 'tap --ts --no-check-coverage --coverage-report=lcovonly "test/**/*.test.*ts"',
-        "test:yarn": 'npm run transpile && tap "test/**/*.test.js" --no-check-coverage',
-        transpile: "sh ./test/ts/transpile.sh",
-        prepare: "husky install"
-      },
-      standard: {
-        ignore: [
-          "test/ts/**/*",
-          "test/syntax-error.mjs"
-        ]
-      },
-      repository: {
-        type: "git",
-        url: "git+https://github.com/mcollina/thread-stream.git"
-      },
-      keywords: [
-        "worker",
-        "thread",
-        "threads",
-        "stream"
-      ],
-      author: "Matteo Collina <hello@matteocollina.com>",
-      license: "MIT",
-      bugs: {
-        url: "https://github.com/mcollina/thread-stream/issues"
-      },
-      homepage: "https://github.com/mcollina/thread-stream#readme"
-    };
-  }
-});
-
-// ../node_modules/.pnpm/thread-stream@3.1.0/node_modules/thread-stream/lib/wait.js
-var require_wait = __commonJS({
-  "../node_modules/.pnpm/thread-stream@3.1.0/node_modules/thread-stream/lib/wait.js"(exports, module) {
-    "use strict";
-    var MAX_TIMEOUT = 1e3;
-    function wait(state, index, expected, timeout, done) {
-      const max = Date.now() + timeout;
-      let current = Atomics.load(state, index);
-      if (current === expected) {
-        done(null, "ok");
-        return;
-      }
-      let prior = current;
-      const check = (backoff2) => {
-        if (Date.now() > max) {
-          done(null, "timed-out");
-        } else {
-          setTimeout(() => {
-            prior = current;
-            current = Atomics.load(state, index);
-            if (current === prior) {
-              check(backoff2 >= MAX_TIMEOUT ? MAX_TIMEOUT : backoff2 * 2);
-            } else {
-              if (current === expected) done(null, "ok");
-              else done(null, "not-equal");
-            }
-          }, backoff2);
-        }
-      };
-      check(1);
-    }
-    function waitDiff(state, index, expected, timeout, done) {
-      const max = Date.now() + timeout;
-      let current = Atomics.load(state, index);
-      if (current !== expected) {
-        done(null, "ok");
-        return;
-      }
-      const check = (backoff2) => {
-        if (Date.now() > max) {
-          done(null, "timed-out");
-        } else {
-          setTimeout(() => {
-            current = Atomics.load(state, index);
-            if (current !== expected) {
-              done(null, "ok");
-            } else {
-              check(backoff2 >= MAX_TIMEOUT ? MAX_TIMEOUT : backoff2 * 2);
-            }
-          }, backoff2);
-        }
-      };
-      check(1);
-    }
-    module.exports = { wait, waitDiff };
-  }
-});
-
-// ../node_modules/.pnpm/thread-stream@3.1.0/node_modules/thread-stream/lib/indexes.js
-var require_indexes = __commonJS({
-  "../node_modules/.pnpm/thread-stream@3.1.0/node_modules/thread-stream/lib/indexes.js"(exports, module) {
-    "use strict";
-    var WRITE_INDEX = 4;
-    var READ_INDEX = 8;
-    module.exports = {
-      WRITE_INDEX,
-      READ_INDEX
-    };
-  }
-});
-
-// ../node_modules/.pnpm/thread-stream@3.1.0/node_modules/thread-stream/index.js
-var require_thread_stream = __commonJS({
-  "../node_modules/.pnpm/thread-stream@3.1.0/node_modules/thread-stream/index.js"(exports, module) {
-    "use strict";
-    var { version: version2 } = require_package();
-    var { EventEmitter: EventEmitter2 } = __require("events");
-    var { Worker } = __require("worker_threads");
-    var { join } = __require("path");
-    var { pathToFileURL } = __require("url");
-    var { wait } = require_wait();
-    var {
-      WRITE_INDEX,
-      READ_INDEX
-    } = require_indexes();
-    var buffer2 = __require("buffer");
-    var assert2 = __require("assert");
-    var kImpl = /* @__PURE__ */ Symbol("kImpl");
-    var MAX_STRING = buffer2.constants.MAX_STRING_LENGTH;
-    var FakeWeakRef = class {
-      constructor(value) {
-        this._value = value;
-      }
-      deref() {
-        return this._value;
-      }
-    };
-    var FakeFinalizationRegistry = class {
-      register() {
-      }
-      unregister() {
-      }
-    };
-    var FinalizationRegistry2 = process.env.NODE_V8_COVERAGE ? FakeFinalizationRegistry : global.FinalizationRegistry || FakeFinalizationRegistry;
-    var WeakRef2 = process.env.NODE_V8_COVERAGE ? FakeWeakRef : global.WeakRef || FakeWeakRef;
-    var registry = new FinalizationRegistry2((worker) => {
-      if (worker.exited) {
-        return;
-      }
-      worker.terminate();
-    });
-    function createWorker(stream, opts) {
-      const { filename, workerData } = opts;
-      const bundlerOverrides = "__bundlerPathsOverrides" in globalThis ? globalThis.__bundlerPathsOverrides : {};
-      const toExecute = bundlerOverrides["thread-stream-worker"] || join(__dirname, "lib", "worker.js");
-      const worker = new Worker(toExecute, {
-        ...opts.workerOpts,
-        trackUnmanagedFds: false,
-        workerData: {
-          filename: filename.indexOf("file://") === 0 ? filename : pathToFileURL(filename).href,
-          dataBuf: stream[kImpl].dataBuf,
-          stateBuf: stream[kImpl].stateBuf,
-          workerData: {
-            $context: {
-              threadStreamVersion: version2
-            },
-            ...workerData
-          }
-        }
-      });
-      worker.stream = new FakeWeakRef(stream);
-      worker.on("message", onWorkerMessage);
-      worker.on("exit", onWorkerExit);
-      registry.register(stream, worker);
-      return worker;
-    }
-    function drain(stream) {
-      assert2(!stream[kImpl].sync);
-      if (stream[kImpl].needDrain) {
-        stream[kImpl].needDrain = false;
-        stream.emit("drain");
-      }
-    }
-    function nextFlush(stream) {
-      const writeIndex = Atomics.load(stream[kImpl].state, WRITE_INDEX);
-      let leftover = stream[kImpl].data.length - writeIndex;
-      if (leftover > 0) {
-        if (stream[kImpl].buf.length === 0) {
-          stream[kImpl].flushing = false;
-          if (stream[kImpl].ending) {
-            end(stream);
-          } else if (stream[kImpl].needDrain) {
-            process.nextTick(drain, stream);
-          }
-          return;
-        }
-        let toWrite = stream[kImpl].buf.slice(0, leftover);
-        let toWriteBytes = Buffer.byteLength(toWrite);
-        if (toWriteBytes <= leftover) {
-          stream[kImpl].buf = stream[kImpl].buf.slice(leftover);
-          write(stream, toWrite, nextFlush.bind(null, stream));
-        } else {
-          stream.flush(() => {
-            if (stream.destroyed) {
-              return;
-            }
-            Atomics.store(stream[kImpl].state, READ_INDEX, 0);
-            Atomics.store(stream[kImpl].state, WRITE_INDEX, 0);
-            while (toWriteBytes > stream[kImpl].data.length) {
-              leftover = leftover / 2;
-              toWrite = stream[kImpl].buf.slice(0, leftover);
-              toWriteBytes = Buffer.byteLength(toWrite);
-            }
-            stream[kImpl].buf = stream[kImpl].buf.slice(leftover);
-            write(stream, toWrite, nextFlush.bind(null, stream));
-          });
-        }
-      } else if (leftover === 0) {
-        if (writeIndex === 0 && stream[kImpl].buf.length === 0) {
-          return;
-        }
-        stream.flush(() => {
-          Atomics.store(stream[kImpl].state, READ_INDEX, 0);
-          Atomics.store(stream[kImpl].state, WRITE_INDEX, 0);
-          nextFlush(stream);
-        });
-      } else {
-        destroy(stream, new Error("overwritten"));
-      }
-    }
-    function onWorkerMessage(msg) {
-      const stream = this.stream.deref();
-      if (stream === void 0) {
-        this.exited = true;
-        this.terminate();
-        return;
-      }
-      switch (msg.code) {
-        case "READY":
-          this.stream = new WeakRef2(stream);
-          stream.flush(() => {
-            stream[kImpl].ready = true;
-            stream.emit("ready");
-          });
-          break;
-        case "ERROR":
-          destroy(stream, msg.err);
-          break;
-        case "EVENT":
-          if (Array.isArray(msg.args)) {
-            stream.emit(msg.name, ...msg.args);
-          } else {
-            stream.emit(msg.name, msg.args);
-          }
-          break;
-        case "WARNING":
-          process.emitWarning(msg.err);
-          break;
-        default:
-          destroy(stream, new Error("this should not happen: " + msg.code));
-      }
-    }
-    function onWorkerExit(code) {
-      const stream = this.stream.deref();
-      if (stream === void 0) {
-        return;
-      }
-      registry.unregister(stream);
-      stream.worker.exited = true;
-      stream.worker.off("exit", onWorkerExit);
-      destroy(stream, code !== 0 ? new Error("the worker thread exited") : null);
-    }
-    var ThreadStream = class extends EventEmitter2 {
-      constructor(opts = {}) {
-        super();
-        if (opts.bufferSize < 4) {
-          throw new Error("bufferSize must at least fit a 4-byte utf-8 char");
-        }
-        this[kImpl] = {};
-        this[kImpl].stateBuf = new SharedArrayBuffer(128);
-        this[kImpl].state = new Int32Array(this[kImpl].stateBuf);
-        this[kImpl].dataBuf = new SharedArrayBuffer(opts.bufferSize || 4 * 1024 * 1024);
-        this[kImpl].data = Buffer.from(this[kImpl].dataBuf);
-        this[kImpl].sync = opts.sync || false;
-        this[kImpl].ending = false;
-        this[kImpl].ended = false;
-        this[kImpl].needDrain = false;
-        this[kImpl].destroyed = false;
-        this[kImpl].flushing = false;
-        this[kImpl].ready = false;
-        this[kImpl].finished = false;
-        this[kImpl].errored = null;
-        this[kImpl].closed = false;
-        this[kImpl].buf = "";
-        this.worker = createWorker(this, opts);
-        this.on("message", (message2, transferList) => {
-          this.worker.postMessage(message2, transferList);
-        });
-      }
-      write(data) {
-        if (this[kImpl].destroyed) {
-          error(this, new Error("the worker has exited"));
-          return false;
-        }
-        if (this[kImpl].ending) {
-          error(this, new Error("the worker is ending"));
-          return false;
-        }
-        if (this[kImpl].flushing && this[kImpl].buf.length + data.length >= MAX_STRING) {
-          try {
-            writeSync(this);
-            this[kImpl].flushing = true;
-          } catch (err) {
-            destroy(this, err);
-            return false;
-          }
-        }
-        this[kImpl].buf += data;
-        if (this[kImpl].sync) {
-          try {
-            writeSync(this);
-            return true;
-          } catch (err) {
-            destroy(this, err);
-            return false;
-          }
-        }
-        if (!this[kImpl].flushing) {
-          this[kImpl].flushing = true;
-          setImmediate(nextFlush, this);
-        }
-        this[kImpl].needDrain = this[kImpl].data.length - this[kImpl].buf.length - Atomics.load(this[kImpl].state, WRITE_INDEX) <= 0;
-        return !this[kImpl].needDrain;
-      }
-      end() {
-        if (this[kImpl].destroyed) {
-          return;
-        }
-        this[kImpl].ending = true;
-        end(this);
-      }
-      flush(cb) {
-        if (this[kImpl].destroyed) {
-          if (typeof cb === "function") {
-            process.nextTick(cb, new Error("the worker has exited"));
-          }
-          return;
-        }
-        const writeIndex = Atomics.load(this[kImpl].state, WRITE_INDEX);
-        wait(this[kImpl].state, READ_INDEX, writeIndex, Infinity, (err, res) => {
-          if (err) {
-            destroy(this, err);
-            process.nextTick(cb, err);
-            return;
-          }
-          if (res === "not-equal") {
-            this.flush(cb);
-            return;
-          }
-          process.nextTick(cb);
-        });
-      }
-      flushSync() {
-        if (this[kImpl].destroyed) {
-          return;
-        }
-        writeSync(this);
-        flushSync(this);
-      }
-      unref() {
-        this.worker.unref();
-      }
-      ref() {
-        this.worker.ref();
-      }
-      get ready() {
-        return this[kImpl].ready;
-      }
-      get destroyed() {
-        return this[kImpl].destroyed;
-      }
-      get closed() {
-        return this[kImpl].closed;
-      }
-      get writable() {
-        return !this[kImpl].destroyed && !this[kImpl].ending;
-      }
-      get writableEnded() {
-        return this[kImpl].ending;
-      }
-      get writableFinished() {
-        return this[kImpl].finished;
-      }
-      get writableNeedDrain() {
-        return this[kImpl].needDrain;
-      }
-      get writableObjectMode() {
-        return false;
-      }
-      get writableErrored() {
-        return this[kImpl].errored;
-      }
-    };
-    function error(stream, err) {
-      setImmediate(() => {
-        stream.emit("error", err);
-      });
-    }
-    function destroy(stream, err) {
-      if (stream[kImpl].destroyed) {
-        return;
-      }
-      stream[kImpl].destroyed = true;
-      if (err) {
-        stream[kImpl].errored = err;
-        error(stream, err);
-      }
-      if (!stream.worker.exited) {
-        stream.worker.terminate().catch(() => {
-        }).then(() => {
-          stream[kImpl].closed = true;
-          stream.emit("close");
-        });
-      } else {
-        setImmediate(() => {
-          stream[kImpl].closed = true;
-          stream.emit("close");
-        });
-      }
-    }
-    function write(stream, data, cb) {
-      const current = Atomics.load(stream[kImpl].state, WRITE_INDEX);
-      const length = Buffer.byteLength(data);
-      stream[kImpl].data.write(data, current);
-      Atomics.store(stream[kImpl].state, WRITE_INDEX, current + length);
-      Atomics.notify(stream[kImpl].state, WRITE_INDEX);
-      cb();
-      return true;
-    }
-    function end(stream) {
-      if (stream[kImpl].ended || !stream[kImpl].ending || stream[kImpl].flushing) {
-        return;
-      }
-      stream[kImpl].ended = true;
-      try {
-        stream.flushSync();
-        let readIndex = Atomics.load(stream[kImpl].state, READ_INDEX);
-        Atomics.store(stream[kImpl].state, WRITE_INDEX, -1);
-        Atomics.notify(stream[kImpl].state, WRITE_INDEX);
-        let spins = 0;
-        while (readIndex !== -1) {
-          Atomics.wait(stream[kImpl].state, READ_INDEX, readIndex, 1e3);
-          readIndex = Atomics.load(stream[kImpl].state, READ_INDEX);
-          if (readIndex === -2) {
-            destroy(stream, new Error("end() failed"));
-            return;
-          }
-          if (++spins === 10) {
-            destroy(stream, new Error("end() took too long (10s)"));
-            return;
-          }
-        }
-        process.nextTick(() => {
-          stream[kImpl].finished = true;
-          stream.emit("finish");
-        });
-      } catch (err) {
-        destroy(stream, err);
-      }
-    }
-    function writeSync(stream) {
-      const cb = () => {
-        if (stream[kImpl].ending) {
-          end(stream);
-        } else if (stream[kImpl].needDrain) {
-          process.nextTick(drain, stream);
-        }
-      };
-      stream[kImpl].flushing = false;
-      while (stream[kImpl].buf.length !== 0) {
-        const writeIndex = Atomics.load(stream[kImpl].state, WRITE_INDEX);
-        let leftover = stream[kImpl].data.length - writeIndex;
-        if (leftover === 0) {
-          flushSync(stream);
-          Atomics.store(stream[kImpl].state, READ_INDEX, 0);
-          Atomics.store(stream[kImpl].state, WRITE_INDEX, 0);
-          continue;
-        } else if (leftover < 0) {
-          throw new Error("overwritten");
-        }
-        let toWrite = stream[kImpl].buf.slice(0, leftover);
-        let toWriteBytes = Buffer.byteLength(toWrite);
-        if (toWriteBytes <= leftover) {
-          stream[kImpl].buf = stream[kImpl].buf.slice(leftover);
-          write(stream, toWrite, cb);
-        } else {
-          flushSync(stream);
-          Atomics.store(stream[kImpl].state, READ_INDEX, 0);
-          Atomics.store(stream[kImpl].state, WRITE_INDEX, 0);
-          while (toWriteBytes > stream[kImpl].buf.length) {
-            leftover = leftover / 2;
-            toWrite = stream[kImpl].buf.slice(0, leftover);
-            toWriteBytes = Buffer.byteLength(toWrite);
-          }
-          stream[kImpl].buf = stream[kImpl].buf.slice(leftover);
-          write(stream, toWrite, cb);
-        }
-      }
-    }
-    function flushSync(stream) {
-      if (stream[kImpl].flushing) {
-        throw new Error("unable to flush while flushing");
-      }
-      const writeIndex = Atomics.load(stream[kImpl].state, WRITE_INDEX);
-      let spins = 0;
-      while (true) {
-        const readIndex = Atomics.load(stream[kImpl].state, READ_INDEX);
-        if (readIndex === -2) {
-          throw Error("_flushSync failed");
-        }
-        if (readIndex !== writeIndex) {
-          Atomics.wait(stream[kImpl].state, READ_INDEX, readIndex, 1e3);
-        } else {
-          break;
-        }
-        if (++spins === 10) {
-          throw new Error("_flushSync took too long (10s)");
-        }
-      }
-    }
-    module.exports = ThreadStream;
-  }
-});
-
-// ../node_modules/.pnpm/pino@9.14.0/node_modules/pino/lib/transport.js
-var require_transport = __commonJS({
-  "../node_modules/.pnpm/pino@9.14.0/node_modules/pino/lib/transport.js"(exports, module) {
-    "use strict";
-    var { createRequire } = __require("module");
-    var getCallers = require_caller();
-    var { join, isAbsolute, sep } = __require("node:path");
-    var sleep = require_atomic_sleep();
-    var onExit = require_on_exit_leak_free();
-    var ThreadStream = require_thread_stream();
-    function setupOnExit(stream) {
-      onExit.register(stream, autoEnd);
-      onExit.registerBeforeExit(stream, flush);
-      stream.on("close", function() {
-        onExit.unregister(stream);
-      });
-    }
-    function buildStream(filename, workerData, workerOpts, sync) {
-      const stream = new ThreadStream({
-        filename,
-        workerData,
-        workerOpts,
-        sync
-      });
-      stream.on("ready", onReady);
-      stream.on("close", function() {
-        process.removeListener("exit", onExit2);
-      });
-      process.on("exit", onExit2);
-      function onReady() {
-        process.removeListener("exit", onExit2);
-        stream.unref();
-        if (workerOpts.autoEnd !== false) {
-          setupOnExit(stream);
-        }
-      }
-      function onExit2() {
-        if (stream.closed) {
-          return;
-        }
-        stream.flushSync();
-        sleep(100);
-        stream.end();
-      }
-      return stream;
-    }
-    function autoEnd(stream) {
-      stream.ref();
-      stream.flushSync();
-      stream.end();
-      stream.once("close", function() {
-        stream.unref();
-      });
-    }
-    function flush(stream) {
-      stream.flushSync();
-    }
-    function transport(fullOptions) {
-      const { pipeline, targets, levels, dedupe, worker = {}, caller = getCallers(), sync = false } = fullOptions;
-      const options = {
-        ...fullOptions.options
-      };
-      const callers = typeof caller === "string" ? [caller] : caller;
-      const bundlerOverrides = "__bundlerPathsOverrides" in globalThis ? globalThis.__bundlerPathsOverrides : {};
-      let target = fullOptions.target;
-      if (target && targets) {
-        throw new Error("only one of target or targets can be specified");
-      }
-      if (targets) {
-        target = bundlerOverrides["pino-worker"] || join(__dirname, "worker.js");
-        options.targets = targets.filter((dest) => dest.target).map((dest) => {
-          return {
-            ...dest,
-            target: fixTarget(dest.target)
-          };
-        });
-        options.pipelines = targets.filter((dest) => dest.pipeline).map((dest) => {
-          return dest.pipeline.map((t) => {
-            return {
-              ...t,
-              level: dest.level,
-              // duplicate the pipeline `level` property defined in the upper level
-              target: fixTarget(t.target)
-            };
-          });
-        });
-      } else if (pipeline) {
-        target = bundlerOverrides["pino-worker"] || join(__dirname, "worker.js");
-        options.pipelines = [pipeline.map((dest) => {
-          return {
-            ...dest,
-            target: fixTarget(dest.target)
-          };
-        })];
-      }
-      if (levels) {
-        options.levels = levels;
-      }
-      if (dedupe) {
-        options.dedupe = dedupe;
-      }
-      options.pinoWillSendConfig = true;
-      return buildStream(fixTarget(target), options, worker, sync);
-      function fixTarget(origin) {
-        origin = bundlerOverrides[origin] || origin;
-        if (isAbsolute(origin) || origin.indexOf("file://") === 0) {
-          return origin;
-        }
-        if (origin === "pino/file") {
-          return join(__dirname, "..", "file.js");
-        }
-        let fixTarget2;
-        for (const filePath of callers) {
-          try {
-            const context = filePath === "node:repl" ? process.cwd() + sep : filePath;
-            fixTarget2 = createRequire(context).resolve(origin);
-            break;
-          } catch (err) {
-            continue;
-          }
-        }
-        if (!fixTarget2) {
-          throw new Error(`unable to determine transport target for "${origin}"`);
-        }
-        return fixTarget2;
-      }
-    }
-    module.exports = transport;
-  }
-});
-
-// ../node_modules/.pnpm/pino@9.14.0/node_modules/pino/lib/tools.js
-var require_tools = __commonJS({
-  "../node_modules/.pnpm/pino@9.14.0/node_modules/pino/lib/tools.js"(exports, module) {
-    "use strict";
-    var diagChan = __require("node:diagnostics_channel");
-    var format = require_quick_format_unescaped();
-    var { mapHttpRequest, mapHttpResponse } = require_pino_std_serializers();
-    var SonicBoom = require_sonic_boom();
-    var onExit = require_on_exit_leak_free();
-    var {
-      lsCacheSym,
-      chindingsSym,
-      writeSym,
-      serializersSym,
-      formatOptsSym,
-      endSym,
-      stringifiersSym,
-      stringifySym,
-      stringifySafeSym,
-      wildcardFirstSym,
-      nestedKeySym,
-      formattersSym,
-      messageKeySym,
-      errorKeySym,
-      nestedKeyStrSym,
-      msgPrefixSym
-    } = require_symbols();
-    var { isMainThread } = __require("worker_threads");
-    var transport = require_transport();
-    var asJsonChan;
-    if (typeof diagChan.tracingChannel === "function") {
-      asJsonChan = diagChan.tracingChannel("pino_asJson");
-    } else {
-      asJsonChan = {
-        hasSubscribers: false,
-        traceSync(fn, store, thisArg, ...args) {
-          return fn.call(thisArg, ...args);
-        }
-      };
-    }
-    function noop3() {
-    }
-    function genLog(level, hook) {
-      if (!hook) return LOG;
-      return function hookWrappedLog(...args) {
-        hook.call(this, args, LOG, level);
-      };
-      function LOG(o, ...n) {
-        if (typeof o === "object") {
-          let msg = o;
-          if (o !== null) {
-            if (o.method && o.headers && o.socket) {
-              o = mapHttpRequest(o);
-            } else if (typeof o.setHeader === "function") {
-              o = mapHttpResponse(o);
-            }
-          }
-          let formatParams;
-          if (msg === null && n.length === 0) {
-            formatParams = [null];
-          } else {
-            msg = n.shift();
-            formatParams = n;
-          }
-          if (typeof this[msgPrefixSym] === "string" && msg !== void 0 && msg !== null) {
-            msg = this[msgPrefixSym] + msg;
-          }
-          this[writeSym](o, format(msg, formatParams, this[formatOptsSym]), level);
-        } else {
-          let msg = o === void 0 ? n.shift() : o;
-          if (typeof this[msgPrefixSym] === "string" && msg !== void 0 && msg !== null) {
-            msg = this[msgPrefixSym] + msg;
-          }
-          this[writeSym](null, format(msg, n, this[formatOptsSym]), level);
-        }
-      }
-    }
-    function asString(str) {
-      let result = "";
-      let last = 0;
-      let found = false;
-      let point2 = 255;
-      const l = str.length;
-      if (l > 100) {
-        return JSON.stringify(str);
-      }
-      for (var i = 0; i < l && point2 >= 32; i++) {
-        point2 = str.charCodeAt(i);
-        if (point2 === 34 || point2 === 92) {
-          result += str.slice(last, i) + "\\";
-          last = i;
-          found = true;
-        }
-      }
-      if (!found) {
-        result = str;
-      } else {
-        result += str.slice(last);
-      }
-      return point2 < 32 ? JSON.stringify(str) : '"' + result + '"';
-    }
-    function asJson(obj, msg, num, time2) {
-      if (asJsonChan.hasSubscribers === false) {
-        return _asJson.call(this, obj, msg, num, time2);
-      }
-      const store = { instance: this, arguments };
-      return asJsonChan.traceSync(_asJson, store, this, obj, msg, num, time2);
-    }
-    function _asJson(obj, msg, num, time2) {
-      const stringify3 = this[stringifySym];
-      const stringifySafe = this[stringifySafeSym];
-      const stringifiers = this[stringifiersSym];
-      const end = this[endSym];
-      const chindings = this[chindingsSym];
-      const serializers2 = this[serializersSym];
-      const formatters = this[formattersSym];
-      const messageKey = this[messageKeySym];
-      const errorKey = this[errorKeySym];
-      let data = this[lsCacheSym][num] + time2;
-      data = data + chindings;
-      let value;
-      if (formatters.log) {
-        obj = formatters.log(obj);
-      }
-      const wildcardStringifier = stringifiers[wildcardFirstSym];
-      let propStr = "";
-      for (const key in obj) {
-        value = obj[key];
-        if (Object.prototype.hasOwnProperty.call(obj, key) && value !== void 0) {
-          if (serializers2[key]) {
-            value = serializers2[key](value);
-          } else if (key === errorKey && serializers2.err) {
-            value = serializers2.err(value);
-          }
-          const stringifier = stringifiers[key] || wildcardStringifier;
-          switch (typeof value) {
-            case "undefined":
-            case "function":
-              continue;
-            case "number":
-              if (Number.isFinite(value) === false) {
-                value = null;
-              }
-            // this case explicitly falls through to the next one
-            case "boolean":
-              if (stringifier) value = stringifier(value);
-              break;
-            case "string":
-              value = (stringifier || asString)(value);
-              break;
-            default:
-              value = (stringifier || stringify3)(value, stringifySafe);
-          }
-          if (value === void 0) continue;
-          const strKey = asString(key);
-          propStr += "," + strKey + ":" + value;
-        }
-      }
-      let msgStr = "";
-      if (msg !== void 0) {
-        value = serializers2[messageKey] ? serializers2[messageKey](msg) : msg;
-        const stringifier = stringifiers[messageKey] || wildcardStringifier;
-        switch (typeof value) {
-          case "function":
-            break;
-          case "number":
-            if (Number.isFinite(value) === false) {
-              value = null;
-            }
-          // this case explicitly falls through to the next one
-          case "boolean":
-            if (stringifier) value = stringifier(value);
-            msgStr = ',"' + messageKey + '":' + value;
-            break;
-          case "string":
-            value = (stringifier || asString)(value);
-            msgStr = ',"' + messageKey + '":' + value;
-            break;
-          default:
-            value = (stringifier || stringify3)(value, stringifySafe);
-            msgStr = ',"' + messageKey + '":' + value;
-        }
-      }
-      if (this[nestedKeySym] && propStr) {
-        return data + this[nestedKeyStrSym] + propStr.slice(1) + "}" + msgStr + end;
-      } else {
-        return data + propStr + msgStr + end;
-      }
-    }
-    function asChindings(instance, bindings) {
-      let value;
-      let data = instance[chindingsSym];
-      const stringify3 = instance[stringifySym];
-      const stringifySafe = instance[stringifySafeSym];
-      const stringifiers = instance[stringifiersSym];
-      const wildcardStringifier = stringifiers[wildcardFirstSym];
-      const serializers2 = instance[serializersSym];
-      const formatter = instance[formattersSym].bindings;
-      bindings = formatter(bindings);
-      for (const key in bindings) {
-        value = bindings[key];
-        const valid = (key.length < 5 || key !== "level" && key !== "serializers" && key !== "formatters" && key !== "customLevels") && bindings.hasOwnProperty(key) && value !== void 0;
-        if (valid === true) {
-          value = serializers2[key] ? serializers2[key](value) : value;
-          value = (stringifiers[key] || wildcardStringifier || stringify3)(value, stringifySafe);
-          if (value === void 0) continue;
-          data += ',"' + key + '":' + value;
-        }
-      }
-      return data;
-    }
-    function hasBeenTampered(stream) {
-      return stream.write !== stream.constructor.prototype.write;
-    }
-    function buildSafeSonicBoom(opts) {
-      const stream = new SonicBoom(opts);
-      stream.on("error", filterBrokenPipe);
-      if (!opts.sync && isMainThread) {
-        onExit.register(stream, autoEnd);
-        stream.on("close", function() {
-          onExit.unregister(stream);
-        });
-      }
-      return stream;
-      function filterBrokenPipe(err) {
-        if (err.code === "EPIPE") {
-          stream.write = noop3;
-          stream.end = noop3;
-          stream.flushSync = noop3;
-          stream.destroy = noop3;
-          return;
-        }
-        stream.removeListener("error", filterBrokenPipe);
-        stream.emit("error", err);
-      }
-    }
-    function autoEnd(stream, eventName) {
-      if (stream.destroyed) {
-        return;
-      }
-      if (eventName === "beforeExit") {
-        stream.flush();
-        stream.on("drain", function() {
-          stream.end();
-        });
-      } else {
-        stream.flushSync();
-      }
-    }
-    function createArgsNormalizer(defaultOptions) {
-      return function normalizeArgs(instance, caller, opts = {}, stream) {
-        if (typeof opts === "string") {
-          stream = buildSafeSonicBoom({ dest: opts });
-          opts = {};
-        } else if (typeof stream === "string") {
-          if (opts && opts.transport) {
-            throw Error("only one of option.transport or stream can be specified");
-          }
-          stream = buildSafeSonicBoom({ dest: stream });
-        } else if (opts instanceof SonicBoom || opts.writable || opts._writableState) {
-          stream = opts;
-          opts = {};
-        } else if (opts.transport) {
-          if (opts.transport instanceof SonicBoom || opts.transport.writable || opts.transport._writableState) {
-            throw Error("option.transport do not allow stream, please pass to option directly. e.g. pino(transport)");
-          }
-          if (opts.transport.targets && opts.transport.targets.length && opts.formatters && typeof opts.formatters.level === "function") {
-            throw Error("option.transport.targets do not allow custom level formatters");
-          }
-          let customLevels;
-          if (opts.customLevels) {
-            customLevels = opts.useOnlyCustomLevels ? opts.customLevels : Object.assign({}, opts.levels, opts.customLevels);
-          }
-          stream = transport({ caller, ...opts.transport, levels: customLevels });
-        }
-        opts = Object.assign({}, defaultOptions, opts);
-        opts.serializers = Object.assign({}, defaultOptions.serializers, opts.serializers);
-        opts.formatters = Object.assign({}, defaultOptions.formatters, opts.formatters);
-        if (opts.prettyPrint) {
-          throw new Error("prettyPrint option is no longer supported, see the pino-pretty package (https://github.com/pinojs/pino-pretty)");
-        }
-        const { enabled, onChild } = opts;
-        if (enabled === false) opts.level = "silent";
-        if (!onChild) opts.onChild = noop3;
-        if (!stream) {
-          if (!hasBeenTampered(process.stdout)) {
-            stream = buildSafeSonicBoom({ fd: process.stdout.fd || 1 });
-          } else {
-            stream = process.stdout;
-          }
-        }
-        return { opts, stream };
-      };
-    }
-    function stringify2(obj, stringifySafeFn) {
-      try {
-        return JSON.stringify(obj);
-      } catch (_) {
-        try {
-          const stringify3 = stringifySafeFn || this[stringifySafeSym];
-          return stringify3(obj);
-        } catch (_2) {
-          return '"[unable to serialize, circular reference is too complex to analyze]"';
-        }
-      }
-    }
-    function buildFormatters(level, bindings, log) {
-      return {
-        level,
-        bindings,
-        log
-      };
-    }
-    function normalizeDestFileDescriptor(destination) {
-      const fd = Number(destination);
-      if (typeof destination === "string" && Number.isFinite(fd)) {
-        return fd;
-      }
-      if (destination === void 0) {
-        return 1;
-      }
-      return destination;
-    }
-    module.exports = {
-      noop: noop3,
-      buildSafeSonicBoom,
-      asChindings,
-      asJson,
-      genLog,
-      createArgsNormalizer,
-      stringify: stringify2,
-      buildFormatters,
-      normalizeDestFileDescriptor
-    };
-  }
-});
-
-// ../node_modules/.pnpm/pino@9.14.0/node_modules/pino/lib/constants.js
-var require_constants3 = __commonJS({
-  "../node_modules/.pnpm/pino@9.14.0/node_modules/pino/lib/constants.js"(exports, module) {
-    var DEFAULT_LEVELS = {
-      trace: 10,
-      debug: 20,
-      info: 30,
-      warn: 40,
-      error: 50,
-      fatal: 60
-    };
-    var SORTING_ORDER = {
-      ASC: "ASC",
-      DESC: "DESC"
-    };
-    module.exports = {
-      DEFAULT_LEVELS,
-      SORTING_ORDER
-    };
-  }
-});
-
-// ../node_modules/.pnpm/pino@9.14.0/node_modules/pino/lib/levels.js
-var require_levels = __commonJS({
-  "../node_modules/.pnpm/pino@9.14.0/node_modules/pino/lib/levels.js"(exports, module) {
-    "use strict";
-    var {
-      lsCacheSym,
-      levelValSym,
-      useOnlyCustomLevelsSym,
-      streamSym,
-      formattersSym,
-      hooksSym,
-      levelCompSym
-    } = require_symbols();
-    var { noop: noop3, genLog } = require_tools();
-    var { DEFAULT_LEVELS, SORTING_ORDER } = require_constants3();
-    var levelMethods = {
-      fatal: (hook) => {
-        const logFatal = genLog(DEFAULT_LEVELS.fatal, hook);
-        return function(...args) {
-          const stream = this[streamSym];
-          logFatal.call(this, ...args);
-          if (typeof stream.flushSync === "function") {
-            try {
-              stream.flushSync();
-            } catch (e) {
-            }
-          }
-        };
-      },
-      error: (hook) => genLog(DEFAULT_LEVELS.error, hook),
-      warn: (hook) => genLog(DEFAULT_LEVELS.warn, hook),
-      info: (hook) => genLog(DEFAULT_LEVELS.info, hook),
-      debug: (hook) => genLog(DEFAULT_LEVELS.debug, hook),
-      trace: (hook) => genLog(DEFAULT_LEVELS.trace, hook)
-    };
-    var nums = Object.keys(DEFAULT_LEVELS).reduce((o, k) => {
-      o[DEFAULT_LEVELS[k]] = k;
-      return o;
-    }, {});
-    var initialLsCache = Object.keys(nums).reduce((o, k) => {
-      o[k] = '{"level":' + Number(k);
-      return o;
-    }, {});
-    function genLsCache(instance) {
-      const formatter = instance[formattersSym].level;
-      const { labels } = instance.levels;
-      const cache = {};
-      for (const label in labels) {
-        const level = formatter(labels[label], Number(label));
-        cache[label] = JSON.stringify(level).slice(0, -1);
-      }
-      instance[lsCacheSym] = cache;
-      return instance;
-    }
-    function isStandardLevel(level, useOnlyCustomLevels) {
-      if (useOnlyCustomLevels) {
-        return false;
-      }
-      switch (level) {
-        case "fatal":
-        case "error":
-        case "warn":
-        case "info":
-        case "debug":
-        case "trace":
-          return true;
-        default:
-          return false;
-      }
-    }
-    function setLevel(level) {
-      const { labels, values: values2 } = this.levels;
-      if (typeof level === "number") {
-        if (labels[level] === void 0) throw Error("unknown level value" + level);
-        level = labels[level];
-      }
-      if (values2[level] === void 0) throw Error("unknown level " + level);
-      const preLevelVal = this[levelValSym];
-      const levelVal = this[levelValSym] = values2[level];
-      const useOnlyCustomLevelsVal = this[useOnlyCustomLevelsSym];
-      const levelComparison = this[levelCompSym];
-      const hook = this[hooksSym].logMethod;
-      for (const key in values2) {
-        if (levelComparison(values2[key], levelVal) === false) {
-          this[key] = noop3;
-          continue;
-        }
-        this[key] = isStandardLevel(key, useOnlyCustomLevelsVal) ? levelMethods[key](hook) : genLog(values2[key], hook);
-      }
-      this.emit(
-        "level-change",
-        level,
-        levelVal,
-        labels[preLevelVal],
-        preLevelVal,
-        this
-      );
-    }
-    function getLevel(level) {
-      const { levels, levelVal } = this;
-      return levels && levels.labels ? levels.labels[levelVal] : "";
-    }
-    function isLevelEnabled(logLevel) {
-      const { values: values2 } = this.levels;
-      const logLevelVal = values2[logLevel];
-      return logLevelVal !== void 0 && this[levelCompSym](logLevelVal, this[levelValSym]);
-    }
-    function compareLevel(direction, current, expected) {
-      if (direction === SORTING_ORDER.DESC) {
-        return current <= expected;
-      }
-      return current >= expected;
-    }
-    function genLevelComparison(levelComparison) {
-      if (typeof levelComparison === "string") {
-        return compareLevel.bind(null, levelComparison);
-      }
-      return levelComparison;
-    }
-    function mappings(customLevels = null, useOnlyCustomLevels = false) {
-      const customNums = customLevels ? Object.keys(customLevels).reduce((o, k) => {
-        o[customLevels[k]] = k;
-        return o;
-      }, {}) : null;
-      const labels = Object.assign(
-        Object.create(Object.prototype, { Infinity: { value: "silent" } }),
-        useOnlyCustomLevels ? null : nums,
-        customNums
-      );
-      const values2 = Object.assign(
-        Object.create(Object.prototype, { silent: { value: Infinity } }),
-        useOnlyCustomLevels ? null : DEFAULT_LEVELS,
-        customLevels
-      );
-      return { labels, values: values2 };
-    }
-    function assertDefaultLevelFound(defaultLevel, customLevels, useOnlyCustomLevels) {
-      if (typeof defaultLevel === "number") {
-        const values2 = [].concat(
-          Object.keys(customLevels || {}).map((key) => customLevels[key]),
-          useOnlyCustomLevels ? [] : Object.keys(nums).map((level) => +level),
-          Infinity
-        );
-        if (!values2.includes(defaultLevel)) {
-          throw Error(`default level:${defaultLevel} must be included in custom levels`);
-        }
-        return;
-      }
-      const labels = Object.assign(
-        Object.create(Object.prototype, { silent: { value: Infinity } }),
-        useOnlyCustomLevels ? null : DEFAULT_LEVELS,
-        customLevels
-      );
-      if (!(defaultLevel in labels)) {
-        throw Error(`default level:${defaultLevel} must be included in custom levels`);
-      }
-    }
-    function assertNoLevelCollisions(levels, customLevels) {
-      const { labels, values: values2 } = levels;
-      for (const k in customLevels) {
-        if (k in values2) {
-          throw Error("levels cannot be overridden");
-        }
-        if (customLevels[k] in labels) {
-          throw Error("pre-existing level values cannot be used for new levels");
-        }
-      }
-    }
-    function assertLevelComparison(levelComparison) {
-      if (typeof levelComparison === "function") {
-        return;
-      }
-      if (typeof levelComparison === "string" && Object.values(SORTING_ORDER).includes(levelComparison)) {
-        return;
-      }
-      throw new Error('Levels comparison should be one of "ASC", "DESC" or "function" type');
-    }
-    module.exports = {
-      initialLsCache,
-      genLsCache,
-      levelMethods,
-      getLevel,
-      setLevel,
-      isLevelEnabled,
-      mappings,
-      assertNoLevelCollisions,
-      assertDefaultLevelFound,
-      genLevelComparison,
-      assertLevelComparison
-    };
-  }
-});
-
-// ../node_modules/.pnpm/pino@9.14.0/node_modules/pino/lib/meta.js
-var require_meta = __commonJS({
-  "../node_modules/.pnpm/pino@9.14.0/node_modules/pino/lib/meta.js"(exports, module) {
-    "use strict";
-    module.exports = { version: "9.14.0" };
-  }
-});
-
-// ../node_modules/.pnpm/pino@9.14.0/node_modules/pino/lib/proto.js
-var require_proto = __commonJS({
-  "../node_modules/.pnpm/pino@9.14.0/node_modules/pino/lib/proto.js"(exports, module) {
-    "use strict";
-    var { EventEmitter: EventEmitter2 } = __require("node:events");
-    var {
-      lsCacheSym,
-      levelValSym,
-      setLevelSym,
-      getLevelSym,
-      chindingsSym,
-      parsedChindingsSym,
-      mixinSym,
-      asJsonSym,
-      writeSym,
-      mixinMergeStrategySym,
-      timeSym,
-      timeSliceIndexSym,
-      streamSym,
-      serializersSym,
-      formattersSym,
-      errorKeySym,
-      messageKeySym,
-      useOnlyCustomLevelsSym,
-      needsMetadataGsym,
-      redactFmtSym,
-      stringifySym,
-      formatOptsSym,
-      stringifiersSym,
-      msgPrefixSym,
-      hooksSym
-    } = require_symbols();
-    var {
-      getLevel,
-      setLevel,
-      isLevelEnabled,
-      mappings,
-      initialLsCache,
-      genLsCache,
-      assertNoLevelCollisions
-    } = require_levels();
-    var {
-      asChindings,
-      asJson,
-      buildFormatters,
-      stringify: stringify2,
-      noop: noop3
-    } = require_tools();
-    var {
-      version: version2
-    } = require_meta();
-    var redaction = require_redaction();
-    var constructor = class Pino {
-    };
-    var prototype = {
-      constructor,
-      child,
-      bindings,
-      setBindings,
-      flush,
-      isLevelEnabled,
-      version: version2,
-      get level() {
-        return this[getLevelSym]();
-      },
-      set level(lvl) {
-        this[setLevelSym](lvl);
-      },
-      get levelVal() {
-        return this[levelValSym];
-      },
-      set levelVal(n) {
-        throw Error("levelVal is read-only");
-      },
-      get msgPrefix() {
-        return this[msgPrefixSym];
-      },
-      get [Symbol.toStringTag]() {
-        return "Pino";
-      },
-      [lsCacheSym]: initialLsCache,
-      [writeSym]: write,
-      [asJsonSym]: asJson,
-      [getLevelSym]: getLevel,
-      [setLevelSym]: setLevel
-    };
-    Object.setPrototypeOf(prototype, EventEmitter2.prototype);
-    module.exports = function() {
-      return Object.create(prototype);
-    };
-    var resetChildingsFormatter = (bindings2) => bindings2;
-    function child(bindings2, options) {
-      if (!bindings2) {
-        throw Error("missing bindings for child Pino");
-      }
-      const serializers2 = this[serializersSym];
-      const formatters = this[formattersSym];
-      const instance = Object.create(this);
-      if (options == null) {
-        if (instance[formattersSym].bindings !== resetChildingsFormatter) {
-          instance[formattersSym] = buildFormatters(
-            formatters.level,
-            resetChildingsFormatter,
-            formatters.log
-          );
-        }
-        instance[chindingsSym] = asChindings(instance, bindings2);
-        instance[setLevelSym](this.level);
-        if (this.onChild !== noop3) {
-          this.onChild(instance);
-        }
-        return instance;
-      }
-      if (options.hasOwnProperty("serializers") === true) {
-        instance[serializersSym] = /* @__PURE__ */ Object.create(null);
-        for (const k in serializers2) {
-          instance[serializersSym][k] = serializers2[k];
-        }
-        const parentSymbols = Object.getOwnPropertySymbols(serializers2);
-        for (var i = 0; i < parentSymbols.length; i++) {
-          const ks = parentSymbols[i];
-          instance[serializersSym][ks] = serializers2[ks];
-        }
-        for (const bk in options.serializers) {
-          instance[serializersSym][bk] = options.serializers[bk];
-        }
-        const bindingsSymbols = Object.getOwnPropertySymbols(options.serializers);
-        for (var bi = 0; bi < bindingsSymbols.length; bi++) {
-          const bks = bindingsSymbols[bi];
-          instance[serializersSym][bks] = options.serializers[bks];
-        }
-      } else instance[serializersSym] = serializers2;
-      if (options.hasOwnProperty("formatters")) {
-        const { level, bindings: chindings, log } = options.formatters;
-        instance[formattersSym] = buildFormatters(
-          level || formatters.level,
-          chindings || resetChildingsFormatter,
-          log || formatters.log
-        );
-      } else {
-        instance[formattersSym] = buildFormatters(
-          formatters.level,
-          resetChildingsFormatter,
-          formatters.log
-        );
-      }
-      if (options.hasOwnProperty("customLevels") === true) {
-        assertNoLevelCollisions(this.levels, options.customLevels);
-        instance.levels = mappings(options.customLevels, instance[useOnlyCustomLevelsSym]);
-        genLsCache(instance);
-      }
-      if (typeof options.redact === "object" && options.redact !== null || Array.isArray(options.redact)) {
-        instance.redact = options.redact;
-        const stringifiers = redaction(instance.redact, stringify2);
-        const formatOpts = { stringify: stringifiers[redactFmtSym] };
-        instance[stringifySym] = stringify2;
-        instance[stringifiersSym] = stringifiers;
-        instance[formatOptsSym] = formatOpts;
-      }
-      if (typeof options.msgPrefix === "string") {
-        instance[msgPrefixSym] = (this[msgPrefixSym] || "") + options.msgPrefix;
-      }
-      instance[chindingsSym] = asChindings(instance, bindings2);
-      const childLevel = options.level || this.level;
-      instance[setLevelSym](childLevel);
-      this.onChild(instance);
-      return instance;
-    }
-    function bindings() {
-      const chindings = this[chindingsSym];
-      const chindingsJson = `{${chindings.substr(1)}}`;
-      const bindingsFromJson = JSON.parse(chindingsJson);
-      delete bindingsFromJson.pid;
-      delete bindingsFromJson.hostname;
-      return bindingsFromJson;
-    }
-    function setBindings(newBindings) {
-      const chindings = asChindings(this, newBindings);
-      this[chindingsSym] = chindings;
-      delete this[parsedChindingsSym];
-    }
-    function defaultMixinMergeStrategy(mergeObject, mixinObject) {
-      return Object.assign(mixinObject, mergeObject);
-    }
-    function write(_obj, msg, num) {
-      const t = this[timeSym]();
-      const mixin = this[mixinSym];
-      const errorKey = this[errorKeySym];
-      const messageKey = this[messageKeySym];
-      const mixinMergeStrategy = this[mixinMergeStrategySym] || defaultMixinMergeStrategy;
-      let obj;
-      const streamWriteHook = this[hooksSym].streamWrite;
-      if (_obj === void 0 || _obj === null) {
-        obj = {};
-      } else if (_obj instanceof Error) {
-        obj = { [errorKey]: _obj };
-        if (msg === void 0) {
-          msg = _obj.message;
-        }
-      } else {
-        obj = _obj;
-        if (msg === void 0 && _obj[messageKey] === void 0 && _obj[errorKey]) {
-          msg = _obj[errorKey].message;
-        }
-      }
-      if (mixin) {
-        obj = mixinMergeStrategy(obj, mixin(obj, num, this));
-      }
-      const s = this[asJsonSym](obj, msg, num, t);
-      const stream = this[streamSym];
-      if (stream[needsMetadataGsym] === true) {
-        stream.lastLevel = num;
-        stream.lastObj = obj;
-        stream.lastMsg = msg;
-        stream.lastTime = t.slice(this[timeSliceIndexSym]);
-        stream.lastLogger = this;
-      }
-      stream.write(streamWriteHook ? streamWriteHook(s) : s);
-    }
-    function flush(cb) {
-      if (cb != null && typeof cb !== "function") {
-        throw Error("callback must be a function");
-      }
-      const stream = this[streamSym];
-      if (typeof stream.flush === "function") {
-        stream.flush(cb || noop3);
-      } else if (cb) cb();
-    }
-  }
-});
-
-// ../node_modules/.pnpm/safe-stable-stringify@2.5.0/node_modules/safe-stable-stringify/index.js
-var require_safe_stable_stringify = __commonJS({
-  "../node_modules/.pnpm/safe-stable-stringify@2.5.0/node_modules/safe-stable-stringify/index.js"(exports, module) {
-    "use strict";
-    var { hasOwnProperty } = Object.prototype;
-    var stringify2 = configure();
-    stringify2.configure = configure;
-    stringify2.stringify = stringify2;
-    stringify2.default = stringify2;
-    exports.stringify = stringify2;
-    exports.configure = configure;
-    module.exports = stringify2;
-    var strEscapeSequencesRegExp = /[\u0000-\u001f\u0022\u005c\ud800-\udfff]/;
-    function strEscape(str) {
-      if (str.length < 5e3 && !strEscapeSequencesRegExp.test(str)) {
-        return `"${str}"`;
-      }
-      return JSON.stringify(str);
-    }
-    function sort(array, comparator) {
-      if (array.length > 200 || comparator) {
-        return array.sort(comparator);
-      }
-      for (let i = 1; i < array.length; i++) {
-        const currentValue = array[i];
-        let position = i;
-        while (position !== 0 && array[position - 1] > currentValue) {
-          array[position] = array[position - 1];
-          position--;
-        }
-        array[position] = currentValue;
-      }
-      return array;
-    }
-    var typedArrayPrototypeGetSymbolToStringTag = Object.getOwnPropertyDescriptor(
-      Object.getPrototypeOf(
-        Object.getPrototypeOf(
-          new Int8Array()
-        )
-      ),
-      Symbol.toStringTag
-    ).get;
-    function isTypedArrayWithEntries(value) {
-      return typedArrayPrototypeGetSymbolToStringTag.call(value) !== void 0 && value.length !== 0;
-    }
-    function stringifyTypedArray(array, separator, maximumBreadth) {
-      if (array.length < maximumBreadth) {
-        maximumBreadth = array.length;
-      }
-      const whitespace = separator === "," ? "" : " ";
-      let res = `"0":${whitespace}${array[0]}`;
-      for (let i = 1; i < maximumBreadth; i++) {
-        res += `${separator}"${i}":${whitespace}${array[i]}`;
-      }
-      return res;
-    }
-    function getCircularValueOption(options) {
-      if (hasOwnProperty.call(options, "circularValue")) {
-        const circularValue = options.circularValue;
-        if (typeof circularValue === "string") {
-          return `"${circularValue}"`;
-        }
-        if (circularValue == null) {
-          return circularValue;
-        }
-        if (circularValue === Error || circularValue === TypeError) {
-          return {
-            toString() {
-              throw new TypeError("Converting circular structure to JSON");
-            }
-          };
-        }
-        throw new TypeError('The "circularValue" argument must be of type string or the value null or undefined');
-      }
-      return '"[Circular]"';
-    }
-    function getDeterministicOption(options) {
-      let value;
-      if (hasOwnProperty.call(options, "deterministic")) {
-        value = options.deterministic;
-        if (typeof value !== "boolean" && typeof value !== "function") {
-          throw new TypeError('The "deterministic" argument must be of type boolean or comparator function');
-        }
-      }
-      return value === void 0 ? true : value;
-    }
-    function getBooleanOption(options, key) {
-      let value;
-      if (hasOwnProperty.call(options, key)) {
-        value = options[key];
-        if (typeof value !== "boolean") {
-          throw new TypeError(`The "${key}" argument must be of type boolean`);
-        }
-      }
-      return value === void 0 ? true : value;
-    }
-    function getPositiveIntegerOption(options, key) {
-      let value;
-      if (hasOwnProperty.call(options, key)) {
-        value = options[key];
-        if (typeof value !== "number") {
-          throw new TypeError(`The "${key}" argument must be of type number`);
-        }
-        if (!Number.isInteger(value)) {
-          throw new TypeError(`The "${key}" argument must be an integer`);
-        }
-        if (value < 1) {
-          throw new RangeError(`The "${key}" argument must be >= 1`);
-        }
-      }
-      return value === void 0 ? Infinity : value;
-    }
-    function getItemCount(number) {
-      if (number === 1) {
-        return "1 item";
-      }
-      return `${number} items`;
-    }
-    function getUniqueReplacerSet(replacerArray) {
-      const replacerSet = /* @__PURE__ */ new Set();
-      for (const value of replacerArray) {
-        if (typeof value === "string" || typeof value === "number") {
-          replacerSet.add(String(value));
-        }
-      }
-      return replacerSet;
-    }
-    function getStrictOption(options) {
-      if (hasOwnProperty.call(options, "strict")) {
-        const value = options.strict;
-        if (typeof value !== "boolean") {
-          throw new TypeError('The "strict" argument must be of type boolean');
-        }
-        if (value) {
-          return (value2) => {
-            let message2 = `Object can not safely be stringified. Received type ${typeof value2}`;
-            if (typeof value2 !== "function") message2 += ` (${value2.toString()})`;
-            throw new Error(message2);
-          };
-        }
-      }
-    }
-    function configure(options) {
-      options = { ...options };
-      const fail = getStrictOption(options);
-      if (fail) {
-        if (options.bigint === void 0) {
-          options.bigint = false;
-        }
-        if (!("circularValue" in options)) {
-          options.circularValue = Error;
-        }
-      }
-      const circularValue = getCircularValueOption(options);
-      const bigint2 = getBooleanOption(options, "bigint");
-      const deterministic = getDeterministicOption(options);
-      const comparator = typeof deterministic === "function" ? deterministic : void 0;
-      const maximumDepth = getPositiveIntegerOption(options, "maximumDepth");
-      const maximumBreadth = getPositiveIntegerOption(options, "maximumBreadth");
-      function stringifyFnReplacer(key, parent, stack, replacer, spacer, indentation) {
-        let value = parent[key];
-        if (typeof value === "object" && value !== null && typeof value.toJSON === "function") {
-          value = value.toJSON(key);
-        }
-        value = replacer.call(parent, key, value);
-        switch (typeof value) {
-          case "string":
-            return strEscape(value);
-          case "object": {
-            if (value === null) {
-              return "null";
-            }
-            if (stack.indexOf(value) !== -1) {
-              return circularValue;
-            }
-            let res = "";
-            let join = ",";
-            const originalIndentation = indentation;
-            if (Array.isArray(value)) {
-              if (value.length === 0) {
-                return "[]";
-              }
-              if (maximumDepth < stack.length + 1) {
-                return '"[Array]"';
-              }
-              stack.push(value);
-              if (spacer !== "") {
-                indentation += spacer;
-                res += `
-${indentation}`;
-                join = `,
-${indentation}`;
-              }
-              const maximumValuesToStringify = Math.min(value.length, maximumBreadth);
-              let i = 0;
-              for (; i < maximumValuesToStringify - 1; i++) {
-                const tmp2 = stringifyFnReplacer(String(i), value, stack, replacer, spacer, indentation);
-                res += tmp2 !== void 0 ? tmp2 : "null";
-                res += join;
-              }
-              const tmp = stringifyFnReplacer(String(i), value, stack, replacer, spacer, indentation);
-              res += tmp !== void 0 ? tmp : "null";
-              if (value.length - 1 > maximumBreadth) {
-                const removedKeys = value.length - maximumBreadth - 1;
-                res += `${join}"... ${getItemCount(removedKeys)} not stringified"`;
-              }
-              if (spacer !== "") {
-                res += `
-${originalIndentation}`;
-              }
-              stack.pop();
-              return `[${res}]`;
-            }
-            let keys = Object.keys(value);
-            const keyLength = keys.length;
-            if (keyLength === 0) {
-              return "{}";
-            }
-            if (maximumDepth < stack.length + 1) {
-              return '"[Object]"';
-            }
-            let whitespace = "";
-            let separator = "";
-            if (spacer !== "") {
-              indentation += spacer;
-              join = `,
-${indentation}`;
-              whitespace = " ";
-            }
-            const maximumPropertiesToStringify = Math.min(keyLength, maximumBreadth);
-            if (deterministic && !isTypedArrayWithEntries(value)) {
-              keys = sort(keys, comparator);
-            }
-            stack.push(value);
-            for (let i = 0; i < maximumPropertiesToStringify; i++) {
-              const key2 = keys[i];
-              const tmp = stringifyFnReplacer(key2, value, stack, replacer, spacer, indentation);
-              if (tmp !== void 0) {
-                res += `${separator}${strEscape(key2)}:${whitespace}${tmp}`;
-                separator = join;
-              }
-            }
-            if (keyLength > maximumBreadth) {
-              const removedKeys = keyLength - maximumBreadth;
-              res += `${separator}"...":${whitespace}"${getItemCount(removedKeys)} not stringified"`;
-              separator = join;
-            }
-            if (spacer !== "" && separator.length > 1) {
-              res = `
-${indentation}${res}
-${originalIndentation}`;
-            }
-            stack.pop();
-            return `{${res}}`;
-          }
-          case "number":
-            return isFinite(value) ? String(value) : fail ? fail(value) : "null";
-          case "boolean":
-            return value === true ? "true" : "false";
-          case "undefined":
-            return void 0;
-          case "bigint":
-            if (bigint2) {
-              return String(value);
-            }
-          // fallthrough
-          default:
-            return fail ? fail(value) : void 0;
-        }
-      }
-      function stringifyArrayReplacer(key, value, stack, replacer, spacer, indentation) {
-        if (typeof value === "object" && value !== null && typeof value.toJSON === "function") {
-          value = value.toJSON(key);
-        }
-        switch (typeof value) {
-          case "string":
-            return strEscape(value);
-          case "object": {
-            if (value === null) {
-              return "null";
-            }
-            if (stack.indexOf(value) !== -1) {
-              return circularValue;
-            }
-            const originalIndentation = indentation;
-            let res = "";
-            let join = ",";
-            if (Array.isArray(value)) {
-              if (value.length === 0) {
-                return "[]";
-              }
-              if (maximumDepth < stack.length + 1) {
-                return '"[Array]"';
-              }
-              stack.push(value);
-              if (spacer !== "") {
-                indentation += spacer;
-                res += `
-${indentation}`;
-                join = `,
-${indentation}`;
-              }
-              const maximumValuesToStringify = Math.min(value.length, maximumBreadth);
-              let i = 0;
-              for (; i < maximumValuesToStringify - 1; i++) {
-                const tmp2 = stringifyArrayReplacer(String(i), value[i], stack, replacer, spacer, indentation);
-                res += tmp2 !== void 0 ? tmp2 : "null";
-                res += join;
-              }
-              const tmp = stringifyArrayReplacer(String(i), value[i], stack, replacer, spacer, indentation);
-              res += tmp !== void 0 ? tmp : "null";
-              if (value.length - 1 > maximumBreadth) {
-                const removedKeys = value.length - maximumBreadth - 1;
-                res += `${join}"... ${getItemCount(removedKeys)} not stringified"`;
-              }
-              if (spacer !== "") {
-                res += `
-${originalIndentation}`;
-              }
-              stack.pop();
-              return `[${res}]`;
-            }
-            stack.push(value);
-            let whitespace = "";
-            if (spacer !== "") {
-              indentation += spacer;
-              join = `,
-${indentation}`;
-              whitespace = " ";
-            }
-            let separator = "";
-            for (const key2 of replacer) {
-              const tmp = stringifyArrayReplacer(key2, value[key2], stack, replacer, spacer, indentation);
-              if (tmp !== void 0) {
-                res += `${separator}${strEscape(key2)}:${whitespace}${tmp}`;
-                separator = join;
-              }
-            }
-            if (spacer !== "" && separator.length > 1) {
-              res = `
-${indentation}${res}
-${originalIndentation}`;
-            }
-            stack.pop();
-            return `{${res}}`;
-          }
-          case "number":
-            return isFinite(value) ? String(value) : fail ? fail(value) : "null";
-          case "boolean":
-            return value === true ? "true" : "false";
-          case "undefined":
-            return void 0;
-          case "bigint":
-            if (bigint2) {
-              return String(value);
-            }
-          // fallthrough
-          default:
-            return fail ? fail(value) : void 0;
-        }
-      }
-      function stringifyIndent(key, value, stack, spacer, indentation) {
-        switch (typeof value) {
-          case "string":
-            return strEscape(value);
-          case "object": {
-            if (value === null) {
-              return "null";
-            }
-            if (typeof value.toJSON === "function") {
-              value = value.toJSON(key);
-              if (typeof value !== "object") {
-                return stringifyIndent(key, value, stack, spacer, indentation);
-              }
-              if (value === null) {
-                return "null";
-              }
-            }
-            if (stack.indexOf(value) !== -1) {
-              return circularValue;
-            }
-            const originalIndentation = indentation;
-            if (Array.isArray(value)) {
-              if (value.length === 0) {
-                return "[]";
-              }
-              if (maximumDepth < stack.length + 1) {
-                return '"[Array]"';
-              }
-              stack.push(value);
-              indentation += spacer;
-              let res2 = `
-${indentation}`;
-              const join2 = `,
-${indentation}`;
-              const maximumValuesToStringify = Math.min(value.length, maximumBreadth);
-              let i = 0;
-              for (; i < maximumValuesToStringify - 1; i++) {
-                const tmp2 = stringifyIndent(String(i), value[i], stack, spacer, indentation);
-                res2 += tmp2 !== void 0 ? tmp2 : "null";
-                res2 += join2;
-              }
-              const tmp = stringifyIndent(String(i), value[i], stack, spacer, indentation);
-              res2 += tmp !== void 0 ? tmp : "null";
-              if (value.length - 1 > maximumBreadth) {
-                const removedKeys = value.length - maximumBreadth - 1;
-                res2 += `${join2}"... ${getItemCount(removedKeys)} not stringified"`;
-              }
-              res2 += `
-${originalIndentation}`;
-              stack.pop();
-              return `[${res2}]`;
-            }
-            let keys = Object.keys(value);
-            const keyLength = keys.length;
-            if (keyLength === 0) {
-              return "{}";
-            }
-            if (maximumDepth < stack.length + 1) {
-              return '"[Object]"';
-            }
-            indentation += spacer;
-            const join = `,
-${indentation}`;
-            let res = "";
-            let separator = "";
-            let maximumPropertiesToStringify = Math.min(keyLength, maximumBreadth);
-            if (isTypedArrayWithEntries(value)) {
-              res += stringifyTypedArray(value, join, maximumBreadth);
-              keys = keys.slice(value.length);
-              maximumPropertiesToStringify -= value.length;
-              separator = join;
-            }
-            if (deterministic) {
-              keys = sort(keys, comparator);
-            }
-            stack.push(value);
-            for (let i = 0; i < maximumPropertiesToStringify; i++) {
-              const key2 = keys[i];
-              const tmp = stringifyIndent(key2, value[key2], stack, spacer, indentation);
-              if (tmp !== void 0) {
-                res += `${separator}${strEscape(key2)}: ${tmp}`;
-                separator = join;
-              }
-            }
-            if (keyLength > maximumBreadth) {
-              const removedKeys = keyLength - maximumBreadth;
-              res += `${separator}"...": "${getItemCount(removedKeys)} not stringified"`;
-              separator = join;
-            }
-            if (separator !== "") {
-              res = `
-${indentation}${res}
-${originalIndentation}`;
-            }
-            stack.pop();
-            return `{${res}}`;
-          }
-          case "number":
-            return isFinite(value) ? String(value) : fail ? fail(value) : "null";
-          case "boolean":
-            return value === true ? "true" : "false";
-          case "undefined":
-            return void 0;
-          case "bigint":
-            if (bigint2) {
-              return String(value);
-            }
-          // fallthrough
-          default:
-            return fail ? fail(value) : void 0;
-        }
-      }
-      function stringifySimple(key, value, stack) {
-        switch (typeof value) {
-          case "string":
-            return strEscape(value);
-          case "object": {
-            if (value === null) {
-              return "null";
-            }
-            if (typeof value.toJSON === "function") {
-              value = value.toJSON(key);
-              if (typeof value !== "object") {
-                return stringifySimple(key, value, stack);
-              }
-              if (value === null) {
-                return "null";
-              }
-            }
-            if (stack.indexOf(value) !== -1) {
-              return circularValue;
-            }
-            let res = "";
-            const hasLength = value.length !== void 0;
-            if (hasLength && Array.isArray(value)) {
-              if (value.length === 0) {
-                return "[]";
-              }
-              if (maximumDepth < stack.length + 1) {
-                return '"[Array]"';
-              }
-              stack.push(value);
-              const maximumValuesToStringify = Math.min(value.length, maximumBreadth);
-              let i = 0;
-              for (; i < maximumValuesToStringify - 1; i++) {
-                const tmp2 = stringifySimple(String(i), value[i], stack);
-                res += tmp2 !== void 0 ? tmp2 : "null";
-                res += ",";
-              }
-              const tmp = stringifySimple(String(i), value[i], stack);
-              res += tmp !== void 0 ? tmp : "null";
-              if (value.length - 1 > maximumBreadth) {
-                const removedKeys = value.length - maximumBreadth - 1;
-                res += `,"... ${getItemCount(removedKeys)} not stringified"`;
-              }
-              stack.pop();
-              return `[${res}]`;
-            }
-            let keys = Object.keys(value);
-            const keyLength = keys.length;
-            if (keyLength === 0) {
-              return "{}";
-            }
-            if (maximumDepth < stack.length + 1) {
-              return '"[Object]"';
-            }
-            let separator = "";
-            let maximumPropertiesToStringify = Math.min(keyLength, maximumBreadth);
-            if (hasLength && isTypedArrayWithEntries(value)) {
-              res += stringifyTypedArray(value, ",", maximumBreadth);
-              keys = keys.slice(value.length);
-              maximumPropertiesToStringify -= value.length;
-              separator = ",";
-            }
-            if (deterministic) {
-              keys = sort(keys, comparator);
-            }
-            stack.push(value);
-            for (let i = 0; i < maximumPropertiesToStringify; i++) {
-              const key2 = keys[i];
-              const tmp = stringifySimple(key2, value[key2], stack);
-              if (tmp !== void 0) {
-                res += `${separator}${strEscape(key2)}:${tmp}`;
-                separator = ",";
-              }
-            }
-            if (keyLength > maximumBreadth) {
-              const removedKeys = keyLength - maximumBreadth;
-              res += `${separator}"...":"${getItemCount(removedKeys)} not stringified"`;
-            }
-            stack.pop();
-            return `{${res}}`;
-          }
-          case "number":
-            return isFinite(value) ? String(value) : fail ? fail(value) : "null";
-          case "boolean":
-            return value === true ? "true" : "false";
-          case "undefined":
-            return void 0;
-          case "bigint":
-            if (bigint2) {
-              return String(value);
-            }
-          // fallthrough
-          default:
-            return fail ? fail(value) : void 0;
-        }
-      }
-      function stringify3(value, replacer, space) {
-        if (arguments.length > 1) {
-          let spacer = "";
-          if (typeof space === "number") {
-            spacer = " ".repeat(Math.min(space, 10));
-          } else if (typeof space === "string") {
-            spacer = space.slice(0, 10);
-          }
-          if (replacer != null) {
-            if (typeof replacer === "function") {
-              return stringifyFnReplacer("", { "": value }, [], replacer, spacer, "");
-            }
-            if (Array.isArray(replacer)) {
-              return stringifyArrayReplacer("", value, [], getUniqueReplacerSet(replacer), spacer, "");
-            }
-          }
-          if (spacer.length !== 0) {
-            return stringifyIndent("", value, [], spacer, "");
-          }
-        }
-        return stringifySimple("", value, []);
-      }
-      return stringify3;
-    }
-  }
-});
-
-// ../node_modules/.pnpm/pino@9.14.0/node_modules/pino/lib/multistream.js
-var require_multistream = __commonJS({
-  "../node_modules/.pnpm/pino@9.14.0/node_modules/pino/lib/multistream.js"(exports, module) {
-    "use strict";
-    var metadata = /* @__PURE__ */ Symbol.for("pino.metadata");
-    var { DEFAULT_LEVELS } = require_constants3();
-    var DEFAULT_INFO_LEVEL = DEFAULT_LEVELS.info;
-    function multistream(streamsArray, opts) {
-      streamsArray = streamsArray || [];
-      opts = opts || { dedupe: false };
-      const streamLevels = Object.create(DEFAULT_LEVELS);
-      streamLevels.silent = Infinity;
-      if (opts.levels && typeof opts.levels === "object") {
-        Object.keys(opts.levels).forEach((i) => {
-          streamLevels[i] = opts.levels[i];
-        });
-      }
-      const res = {
-        write,
-        add,
-        remove,
-        emit,
-        flushSync,
-        end,
-        minLevel: 0,
-        lastId: 0,
-        streams: [],
-        clone,
-        [metadata]: true,
-        streamLevels
-      };
-      if (Array.isArray(streamsArray)) {
-        streamsArray.forEach(add, res);
-      } else {
-        add.call(res, streamsArray);
-      }
-      streamsArray = null;
-      return res;
-      function write(data) {
-        let dest;
-        const level = this.lastLevel;
-        const { streams } = this;
-        let recordedLevel = 0;
-        let stream;
-        for (let i = initLoopVar(streams.length, opts.dedupe); checkLoopVar(i, streams.length, opts.dedupe); i = adjustLoopVar(i, opts.dedupe)) {
-          dest = streams[i];
-          if (dest.level <= level) {
-            if (recordedLevel !== 0 && recordedLevel !== dest.level) {
-              break;
-            }
-            stream = dest.stream;
-            if (stream[metadata]) {
-              const { lastTime, lastMsg, lastObj, lastLogger } = this;
-              stream.lastLevel = level;
-              stream.lastTime = lastTime;
-              stream.lastMsg = lastMsg;
-              stream.lastObj = lastObj;
-              stream.lastLogger = lastLogger;
-            }
-            stream.write(data);
-            if (opts.dedupe) {
-              recordedLevel = dest.level;
-            }
-          } else if (!opts.dedupe) {
-            break;
-          }
-        }
-      }
-      function emit(...args) {
-        for (const { stream } of this.streams) {
-          if (typeof stream.emit === "function") {
-            stream.emit(...args);
-          }
-        }
-      }
-      function flushSync() {
-        for (const { stream } of this.streams) {
-          if (typeof stream.flushSync === "function") {
-            stream.flushSync();
-          }
-        }
-      }
-      function add(dest) {
-        if (!dest) {
-          return res;
-        }
-        const isStream = typeof dest.write === "function" || dest.stream;
-        const stream_ = dest.write ? dest : dest.stream;
-        if (!isStream) {
-          throw Error("stream object needs to implement either StreamEntry or DestinationStream interface");
-        }
-        const { streams, streamLevels: streamLevels2 } = this;
-        let level;
-        if (typeof dest.levelVal === "number") {
-          level = dest.levelVal;
-        } else if (typeof dest.level === "string") {
-          level = streamLevels2[dest.level];
-        } else if (typeof dest.level === "number") {
-          level = dest.level;
-        } else {
-          level = DEFAULT_INFO_LEVEL;
-        }
-        const dest_ = {
-          stream: stream_,
-          level,
-          levelVal: void 0,
-          id: ++res.lastId
-        };
-        streams.unshift(dest_);
-        streams.sort(compareByLevel);
-        this.minLevel = streams[0].level;
-        return res;
-      }
-      function remove(id) {
-        const { streams } = this;
-        const index = streams.findIndex((s) => s.id === id);
-        if (index >= 0) {
-          streams.splice(index, 1);
-          streams.sort(compareByLevel);
-          this.minLevel = streams.length > 0 ? streams[0].level : -1;
-        }
-        return res;
-      }
-      function end() {
-        for (const { stream } of this.streams) {
-          if (typeof stream.flushSync === "function") {
-            stream.flushSync();
-          }
-          stream.end();
-        }
-      }
-      function clone(level) {
-        const streams = new Array(this.streams.length);
-        for (let i = 0; i < streams.length; i++) {
-          streams[i] = {
-            level,
-            stream: this.streams[i].stream
-          };
-        }
-        return {
-          write,
-          add,
-          remove,
-          minLevel: level,
-          streams,
-          clone,
-          emit,
-          flushSync,
-          [metadata]: true
-        };
-      }
-    }
-    function compareByLevel(a, b2) {
-      return a.level - b2.level;
-    }
-    function initLoopVar(length, dedupe) {
-      return dedupe ? length - 1 : 0;
-    }
-    function adjustLoopVar(i, dedupe) {
-      return dedupe ? i - 1 : i + 1;
-    }
-    function checkLoopVar(i, length, dedupe) {
-      return dedupe ? i >= 0 : i < length;
-    }
-    module.exports = multistream;
-  }
-});
-
-// ../node_modules/.pnpm/pino@9.14.0/node_modules/pino/pino.js
-var require_pino = __commonJS({
-  "../node_modules/.pnpm/pino@9.14.0/node_modules/pino/pino.js"(exports, module) {
-    function pinoBundlerAbsolutePath(p) {
-      try {
-        const path2 = __require("path");
-        const outputDir = "/home/runner/workspace/FinalManifestion1/api-server/dist";
-        return path2.resolve(outputDir, p.replace(/^\.\//, ""));
-      } catch (e) {
-        const f = new Function("p", "return new URL(p, import.meta.url).pathname");
-        return f(p);
-      }
-    }
-    globalThis.__bundlerPathsOverrides = { ...globalThis.__bundlerPathsOverrides || {}, "thread-stream-worker": pinoBundlerAbsolutePath("./thread-stream-worker.mjs"), "pino-worker": pinoBundlerAbsolutePath("./pino-worker.mjs"), "pino/file": pinoBundlerAbsolutePath("./pino-file.mjs"), "pino-pretty": pinoBundlerAbsolutePath("./pino-pretty.mjs") };
-    var os2 = __require("node:os");
-    var stdSerializers = require_pino_std_serializers();
-    var caller = require_caller();
-    var redaction = require_redaction();
-    var time2 = require_time();
-    var proto = require_proto();
-    var symbols = require_symbols();
-    var { configure } = require_safe_stable_stringify();
-    var { assertDefaultLevelFound, mappings, genLsCache, genLevelComparison, assertLevelComparison } = require_levels();
-    var { DEFAULT_LEVELS, SORTING_ORDER } = require_constants3();
-    var {
-      createArgsNormalizer,
-      asChindings,
-      buildSafeSonicBoom,
-      buildFormatters,
-      stringify: stringify2,
-      normalizeDestFileDescriptor,
-      noop: noop3
-    } = require_tools();
-    var { version: version2 } = require_meta();
-    var {
-      chindingsSym,
-      redactFmtSym,
-      serializersSym,
-      timeSym,
-      timeSliceIndexSym,
-      streamSym,
-      stringifySym,
-      stringifySafeSym,
-      stringifiersSym,
-      setLevelSym,
-      endSym,
-      formatOptsSym,
-      messageKeySym,
-      errorKeySym,
-      nestedKeySym,
-      mixinSym,
-      levelCompSym,
-      useOnlyCustomLevelsSym,
-      formattersSym,
-      hooksSym,
-      nestedKeyStrSym,
-      mixinMergeStrategySym,
-      msgPrefixSym
-    } = symbols;
-    var { epochTime, nullTime } = time2;
-    var { pid } = process;
-    var hostname = os2.hostname();
-    var defaultErrorSerializer = stdSerializers.err;
-    var defaultOptions = {
-      level: "info",
-      levelComparison: SORTING_ORDER.ASC,
-      levels: DEFAULT_LEVELS,
-      messageKey: "msg",
-      errorKey: "err",
-      nestedKey: null,
-      enabled: true,
-      base: { pid, hostname },
-      serializers: Object.assign(/* @__PURE__ */ Object.create(null), {
-        err: defaultErrorSerializer
-      }),
-      formatters: Object.assign(/* @__PURE__ */ Object.create(null), {
-        bindings(bindings) {
-          return bindings;
-        },
-        level(label, number) {
-          return { level: number };
-        }
-      }),
-      hooks: {
-        logMethod: void 0,
-        streamWrite: void 0
-      },
-      timestamp: epochTime,
-      name: void 0,
-      redact: null,
-      customLevels: null,
-      useOnlyCustomLevels: false,
-      depthLimit: 5,
-      edgeLimit: 100
-    };
-    var normalize = createArgsNormalizer(defaultOptions);
-    var serializers2 = Object.assign(/* @__PURE__ */ Object.create(null), stdSerializers);
-    function pino2(...args) {
-      const instance = {};
-      const { opts, stream } = normalize(instance, caller(), ...args);
-      if (opts.level && typeof opts.level === "string" && DEFAULT_LEVELS[opts.level.toLowerCase()] !== void 0) opts.level = opts.level.toLowerCase();
-      const {
-        redact,
-        crlf,
-        serializers: serializers3,
-        timestamp: timestamp2,
-        messageKey,
-        errorKey,
-        nestedKey,
-        base,
-        name,
-        level,
-        customLevels,
-        levelComparison,
-        mixin,
-        mixinMergeStrategy,
-        useOnlyCustomLevels,
-        formatters,
-        hooks,
-        depthLimit,
-        edgeLimit,
-        onChild,
-        msgPrefix
-      } = opts;
-      const stringifySafe = configure({
-        maximumDepth: depthLimit,
-        maximumBreadth: edgeLimit
-      });
-      const allFormatters = buildFormatters(
-        formatters.level,
-        formatters.bindings,
-        formatters.log
-      );
-      const stringifyFn = stringify2.bind({
-        [stringifySafeSym]: stringifySafe
-      });
-      const stringifiers = redact ? redaction(redact, stringifyFn) : {};
-      const formatOpts = redact ? { stringify: stringifiers[redactFmtSym] } : { stringify: stringifyFn };
-      const end = "}" + (crlf ? "\r\n" : "\n");
-      const coreChindings = asChindings.bind(null, {
-        [chindingsSym]: "",
-        [serializersSym]: serializers3,
-        [stringifiersSym]: stringifiers,
-        [stringifySym]: stringify2,
-        [stringifySafeSym]: stringifySafe,
-        [formattersSym]: allFormatters
-      });
-      let chindings = "";
-      if (base !== null) {
-        if (name === void 0) {
-          chindings = coreChindings(base);
-        } else {
-          chindings = coreChindings(Object.assign({}, base, { name }));
-        }
-      }
-      const time3 = timestamp2 instanceof Function ? timestamp2 : timestamp2 ? epochTime : nullTime;
-      const timeSliceIndex = time3().indexOf(":") + 1;
-      if (useOnlyCustomLevels && !customLevels) throw Error("customLevels is required if useOnlyCustomLevels is set true");
-      if (mixin && typeof mixin !== "function") throw Error(`Unknown mixin type "${typeof mixin}" - expected "function"`);
-      if (msgPrefix && typeof msgPrefix !== "string") throw Error(`Unknown msgPrefix type "${typeof msgPrefix}" - expected "string"`);
-      assertDefaultLevelFound(level, customLevels, useOnlyCustomLevels);
-      const levels = mappings(customLevels, useOnlyCustomLevels);
-      if (typeof stream.emit === "function") {
-        stream.emit("message", { code: "PINO_CONFIG", config: { levels, messageKey, errorKey } });
-      }
-      assertLevelComparison(levelComparison);
-      const levelCompFunc = genLevelComparison(levelComparison);
-      Object.assign(instance, {
-        levels,
-        [levelCompSym]: levelCompFunc,
-        [useOnlyCustomLevelsSym]: useOnlyCustomLevels,
-        [streamSym]: stream,
-        [timeSym]: time3,
-        [timeSliceIndexSym]: timeSliceIndex,
-        [stringifySym]: stringify2,
-        [stringifySafeSym]: stringifySafe,
-        [stringifiersSym]: stringifiers,
-        [endSym]: end,
-        [formatOptsSym]: formatOpts,
-        [messageKeySym]: messageKey,
-        [errorKeySym]: errorKey,
-        [nestedKeySym]: nestedKey,
-        // protect against injection
-        [nestedKeyStrSym]: nestedKey ? `,${JSON.stringify(nestedKey)}:{` : "",
-        [serializersSym]: serializers3,
-        [mixinSym]: mixin,
-        [mixinMergeStrategySym]: mixinMergeStrategy,
-        [chindingsSym]: chindings,
-        [formattersSym]: allFormatters,
-        [hooksSym]: hooks,
-        silent: noop3,
-        onChild,
-        [msgPrefixSym]: msgPrefix
-      });
-      Object.setPrototypeOf(instance, proto());
-      genLsCache(instance);
-      instance[setLevelSym](level);
-      return instance;
-    }
-    module.exports = pino2;
-    module.exports.destination = (dest = process.stdout.fd) => {
-      if (typeof dest === "object") {
-        dest.dest = normalizeDestFileDescriptor(dest.dest || process.stdout.fd);
-        return buildSafeSonicBoom(dest);
-      } else {
-        return buildSafeSonicBoom({ dest: normalizeDestFileDescriptor(dest), minLength: 0 });
-      }
-    };
-    module.exports.transport = require_transport();
-    module.exports.multistream = require_multistream();
-    module.exports.levels = mappings();
-    module.exports.stdSerializers = serializers2;
-    module.exports.stdTimeFunctions = Object.assign({}, time2);
-    module.exports.symbols = symbols;
-    module.exports.version = version2;
-    module.exports.default = pino2;
-    module.exports.pino = pino2;
-  }
-});
-
-// ../node_modules/.pnpm/get-caller-file@2.0.5/node_modules/get-caller-file/index.js
-var require_get_caller_file = __commonJS({
-  "../node_modules/.pnpm/get-caller-file@2.0.5/node_modules/get-caller-file/index.js"(exports, module) {
-    "use strict";
-    module.exports = function getCallerFile(position) {
-      if (position === void 0) {
-        position = 2;
-      }
-      if (position >= Error.stackTraceLimit) {
-        throw new TypeError("getCallerFile(position) requires position be less then Error.stackTraceLimit but position was: `" + position + "` and Error.stackTraceLimit was: `" + Error.stackTraceLimit + "`");
-      }
-      var oldPrepareStackTrace = Error.prepareStackTrace;
-      Error.prepareStackTrace = function(_, stack2) {
-        return stack2;
-      };
-      var stack = new Error().stack;
-      Error.prepareStackTrace = oldPrepareStackTrace;
-      if (stack !== null && typeof stack === "object") {
-        return stack[position] ? stack[position].getFileName() : void 0;
-      }
-    };
-  }
-});
-
-// ../node_modules/.pnpm/pino-http@10.5.0/node_modules/pino-http/logger.js
-var require_logger = __commonJS({
-  "../node_modules/.pnpm/pino-http@10.5.0/node_modules/pino-http/logger.js"(exports, module) {
-    "use strict";
-    var { pino: pino2, symbols: { stringifySym, chindingsSym } } = require_pino();
-    var serializers2 = require_pino_std_serializers();
-    var getCallerFile = require_get_caller_file();
-    var startTime = /* @__PURE__ */ Symbol("startTime");
-    var reqObject = /* @__PURE__ */ Symbol("reqObject");
-    function pinoLogger(opts, stream) {
-      if (opts && opts._writableState) {
-        stream = opts;
-        opts = null;
-      }
-      opts = Object.assign({}, opts);
-      opts.customAttributeKeys = opts.customAttributeKeys || {};
-      const reqKey = opts.customAttributeKeys.req || "req";
-      const resKey = opts.customAttributeKeys.res || "res";
-      const errKey = opts.customAttributeKeys.err || "err";
-      const requestIdKey = opts.customAttributeKeys.reqId || "reqId";
-      const responseTimeKey = opts.customAttributeKeys.responseTime || "responseTime";
-      delete opts.customAttributeKeys;
-      const customProps = opts.customProps || void 0;
-      opts.wrapSerializers = "wrapSerializers" in opts ? opts.wrapSerializers : true;
-      if (opts.wrapSerializers) {
-        opts.serializers = Object.assign({}, opts.serializers);
-        const requestSerializer = opts.serializers[reqKey] || opts.serializers.req || serializers2.req;
-        const responseSerializer = opts.serializers[resKey] || opts.serializers.res || serializers2.res;
-        const errorSerializer = opts.serializers[errKey] || opts.serializers.err || serializers2.err;
-        opts.serializers[reqKey] = serializers2.wrapRequestSerializer(requestSerializer);
-        opts.serializers[resKey] = serializers2.wrapResponseSerializer(responseSerializer);
-        opts.serializers[errKey] = serializers2.wrapErrorSerializer(errorSerializer);
-      }
-      delete opts.wrapSerializers;
-      if (opts.useLevel && opts.customLogLevel) {
-        throw new Error("You can't pass 'useLevel' and 'customLogLevel' together");
-      }
-      function getValidLogLevel(level, defaultValue = "info") {
-        if (level && typeof level === "string") {
-          const logLevel = level.trim();
-          if (validLogLevels.includes(logLevel) === true) {
-            return logLevel;
-          }
-        }
-        return defaultValue;
-      }
-      function getLogLevelFromCustomLogLevel(customLogLevel2, useLevel2, res, err, req) {
-        return customLogLevel2 ? getValidLogLevel(customLogLevel2(req, res, err), useLevel2) : useLevel2;
-      }
-      const customLogLevel = opts.customLogLevel;
-      delete opts.customLogLevel;
-      const theStream = opts.stream || stream;
-      delete opts.stream;
-      const autoLogging = opts.autoLogging !== false;
-      const autoLoggingIgnore = opts.autoLogging && opts.autoLogging.ignore ? opts.autoLogging.ignore : null;
-      delete opts.autoLogging;
-      const onRequestReceivedObject = getFunctionOrDefault(opts.customReceivedObject, void 0);
-      const receivedMessage = getFunctionOrDefault(opts.customReceivedMessage, void 0);
-      const onRequestSuccessObject = getFunctionOrDefault(opts.customSuccessObject, defaultSuccessfulRequestObjectProvider);
-      const successMessage = getFunctionOrDefault(opts.customSuccessMessage, defaultSuccessfulRequestMessageProvider);
-      const onRequestErrorObject = getFunctionOrDefault(opts.customErrorObject, defaultFailedRequestObjectProvider);
-      const errorMessage = getFunctionOrDefault(opts.customErrorMessage, defaultFailedRequestMessageProvider);
-      delete opts.customSuccessfulMessage;
-      delete opts.customErroredMessage;
-      const quietReqLogger = !!opts.quietReqLogger;
-      const quietResLogger = !!opts.quietResLogger;
-      const logger2 = wrapChild(opts, theStream);
-      const validLogLevels = Object.keys(logger2.levels.values).concat("silent");
-      const useLevel = getValidLogLevel(opts.useLevel);
-      delete opts.useLevel;
-      const genReqId = reqIdGenFactory(opts.genReqId);
-      const result = (req, res, next) => {
-        return loggingMiddleware(logger2, req, res, next);
-      };
-      result.logger = logger2;
-      return result;
-      function onResFinished(res, logger3, err) {
-        let log = logger3;
-        const responseTime = Date.now() - res[startTime];
-        const req = res[reqObject];
-        const level = getLogLevelFromCustomLogLevel(customLogLevel, useLevel, res, err, req);
-        if (level === "silent") {
-          return;
-        }
-        const customPropBindings = typeof customProps === "function" ? customProps(req, res) : customProps;
-        if (customPropBindings) {
-          const customPropBindingStr = logger3[stringifySym](customPropBindings).replace(/[{}]/g, "");
-          const customPropBindingsStr = logger3[chindingsSym];
-          if (!customPropBindingsStr.includes(customPropBindingStr)) {
-            log = logger3.child(customPropBindings);
-          }
-        }
-        if (err || res.err || res.statusCode >= 500) {
-          const error = err || res.err || new Error("failed with status code " + res.statusCode);
-          log[level](
-            onRequestErrorObject(req, res, error, {
-              [resKey]: res,
-              [errKey]: error,
-              [responseTimeKey]: responseTime
-            }),
-            errorMessage(req, res, error, responseTime)
-          );
-          return;
-        }
-        log[level](
-          onRequestSuccessObject(req, res, {
-            [resKey]: res,
-            [responseTimeKey]: responseTime
-          }),
-          successMessage(req, res, responseTime)
-        );
-      }
-      function loggingMiddleware(logger3, req, res, next) {
-        let shouldLogSuccess = true;
-        req.id = req.id || genReqId(req, res);
-        const log = quietReqLogger ? logger3.child({ [requestIdKey]: req.id }) : logger3;
-        let fullReqLogger = log.child({ [reqKey]: req });
-        const customPropBindings = typeof customProps === "function" ? customProps(req, res) : customProps;
-        if (customPropBindings) {
-          fullReqLogger = fullReqLogger.child(customPropBindings);
-        }
-        const responseLogger = quietResLogger ? log : fullReqLogger;
-        const requestLogger = quietReqLogger ? log : fullReqLogger;
-        if (!res.log) {
-          res.log = responseLogger;
-        }
-        if (Array.isArray(res.allLogs) === false) {
-          res.allLogs = [];
-        }
-        res.allLogs.push(responseLogger);
-        if (!req.log) {
-          req.log = requestLogger;
-        }
-        if (!req.allLogs) {
-          req.allLogs = [];
-        }
-        req.allLogs.push(requestLogger);
-        res[startTime] = res[startTime] || Date.now();
-        res[reqObject] = req;
-        const onResponseComplete = (err) => {
-          res.removeListener("close", onResponseComplete);
-          res.removeListener("finish", onResponseComplete);
-          res.removeListener("error", onResponseComplete);
-          return onResFinished(res, responseLogger, err);
-        };
-        if (autoLogging) {
-          if (autoLoggingIgnore !== null && shouldLogSuccess === true) {
-            const isIgnored = autoLoggingIgnore(req);
-            shouldLogSuccess = !isIgnored;
-          }
-          if (shouldLogSuccess) {
-            const shouldLogReceived = receivedMessage !== void 0 || onRequestReceivedObject !== void 0;
-            if (shouldLogReceived) {
-              const level = getLogLevelFromCustomLogLevel(customLogLevel, useLevel, res, void 0, req);
-              const receivedObjectResult = onRequestReceivedObject !== void 0 ? onRequestReceivedObject(req, res, void 0) : {};
-              const receivedStringResult = receivedMessage !== void 0 ? receivedMessage(req, res) : void 0;
-              requestLogger[level](receivedObjectResult, receivedStringResult);
-            }
-            res.on("close", onResponseComplete);
-            res.on("finish", onResponseComplete);
-          }
-          res.on("error", onResponseComplete);
-        }
-        if (next) {
-          next();
-        }
-      }
-    }
-    function wrapChild(opts, stream) {
-      const prevLogger = opts.logger;
-      const prevGenReqId = opts.genReqId;
-      let logger2 = null;
-      if (prevLogger) {
-        opts.logger = void 0;
-        opts.genReqId = void 0;
-        logger2 = prevLogger.child({}, opts);
-        opts.logger = prevLogger;
-        opts.genReqId = prevGenReqId;
-      } else {
-        if (opts.transport && !opts.transport.caller) {
-          opts.transport.caller = getCallerFile();
-        }
-        logger2 = pino2(opts, stream);
-      }
-      return logger2;
-    }
-    function reqIdGenFactory(func) {
-      if (typeof func === "function") return func;
-      const maxInt = 2147483647;
-      let nextReqId = 0;
-      return function genReqId(req, res) {
-        return req.id || (nextReqId = nextReqId + 1 & maxInt);
-      };
-    }
-    function getFunctionOrDefault(value, defaultValue) {
-      if (value && typeof value === "function") {
-        return value;
-      }
-      return defaultValue;
-    }
-    function defaultSuccessfulRequestObjectProvider(req, res, successObject) {
-      return successObject;
-    }
-    function defaultFailedRequestObjectProvider(req, res, error, errorObject) {
-      return errorObject;
-    }
-    function defaultFailedRequestMessageProvider() {
-      return "request errored";
-    }
-    function defaultSuccessfulRequestMessageProvider(req, res) {
-      return !req.readableAborted && res.writableEnded ? "request completed" : "request aborted";
-    }
-    module.exports = pinoLogger;
-    module.exports.stdSerializers = {
-      err: serializers2.err,
-      req: serializers2.req,
-      res: serializers2.res
-    };
-    module.exports.startTime = startTime;
-    module.exports.default = pinoLogger;
-    module.exports.pinoHttp = pinoLogger;
-  }
-});
-
 // src/app.ts
-var import_express19 = __toESM(require_express2(), 1);
+var import_express20 = __toESM(require_express2(), 1);
 var import_cors = __toESM(require_lib3(), 1);
 var import_compression = __toESM(require_compression(), 1);
 
@@ -32766,13 +28203,13 @@ var rateLimit = (passedOptions) => {
 var rate_limit_default = rateLimit;
 
 // src/app.ts
-var import_pino_http = __toESM(require_logger(), 1);
+import pinoHttp from "pino-http";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs2 from "fs";
 
 // src/routes/index.ts
-var import_express18 = __toESM(require_express2(), 1);
+var import_express19 = __toESM(require_express2(), 1);
 
 // src/routes/health.ts
 var import_express = __toESM(require_express2(), 1);
@@ -38281,7 +33718,7 @@ var noop2 = () => {
 function Subscribe(postgres2, options) {
   const subscribers = /* @__PURE__ */ new Map(), slot = "postgresjs_" + Math.random().toString(36).slice(2), state = {};
   let connection2, stream, ended = false;
-  const sql2 = subscribe.sql = postgres2({
+  const sql3 = subscribe.sql = postgres2({
     ...options,
     transform: { column: {}, value: {}, row: {} },
     max: 1,
@@ -38297,18 +33734,18 @@ function Subscribe(postgres2, options) {
         return;
       stream = null;
       state.pid = state.secret = void 0;
-      connected(await init(sql2, slot, options.publications));
+      connected(await init(sql3, slot, options.publications));
       subscribers.forEach((event) => event.forEach(({ onsubscribe }) => onsubscribe()));
     },
     no_subscribe: true
   });
-  const end = sql2.end, close = sql2.close;
-  sql2.end = async () => {
+  const end = sql3.end, close = sql3.close;
+  sql3.end = async () => {
     ended = true;
     stream && await new Promise((r) => (stream.once("close", r), stream.end()));
     return end();
   };
-  sql2.close = async () => {
+  sql3.close = async () => {
     stream && await new Promise((r) => (stream.once("close", r), stream.end()));
     return close();
   };
@@ -38316,7 +33753,7 @@ function Subscribe(postgres2, options) {
   async function subscribe(event, fn, onsubscribe = noop2, onerror = noop2) {
     event = parseEvent(event);
     if (!connection2)
-      connection2 = init(sql2, slot, options.publications);
+      connection2 = init(sql3, slot, options.publications);
     const subscriber = { fn, onsubscribe };
     const fns = subscribers.has(event) ? subscribers.get(event).add(subscriber) : subscribers.set(event, /* @__PURE__ */ new Set([subscriber])).get(event);
     const unsubscribe = () => {
@@ -38327,7 +33764,7 @@ function Subscribe(postgres2, options) {
       connected(x);
       onsubscribe();
       stream && stream.on("error", onerror);
-      return { unsubscribe, state, sql: sql2 };
+      return { unsubscribe, state, sql: sql3 };
     });
   }
   function connected(x) {
@@ -38335,14 +33772,14 @@ function Subscribe(postgres2, options) {
     state.pid = x.state.pid;
     state.secret = x.state.secret;
   }
-  async function init(sql3, slot2, publications) {
+  async function init(sql4, slot2, publications) {
     if (!publications)
       throw new Error("Missing publication names");
-    const xs = await sql3.unsafe(
+    const xs = await sql4.unsafe(
       `CREATE_REPLICATION_SLOT ${slot2} TEMPORARY LOGICAL pgoutput NOEXPORT_SNAPSHOT`
     );
     const [x] = xs;
-    const stream2 = await sql3.unsafe(
+    const stream2 = await sql4.unsafe(
       `START_REPLICATION SLOT ${slot2} LOGICAL ${x.consistent_point} (proto_version '1', publication_names '${publications}')`
     ).writable();
     const state2 = {
@@ -38350,14 +33787,14 @@ function Subscribe(postgres2, options) {
     };
     stream2.on("data", data);
     stream2.on("error", error);
-    stream2.on("close", sql3.close);
+    stream2.on("close", sql4.close);
     return { stream: stream2, state: xs.state };
     function error(e) {
       console.error("Unexpected error during logical streaming - reconnecting", e);
     }
     function data(x2) {
       if (x2[0] === 119) {
-        parse(x2.subarray(25), state2, sql3.options.parsers, handle, options.transform);
+        parse(x2.subarray(25), state2, sql4.options.parsers, handle, options.transform);
       } else if (x2[0] === 107 && x2[17]) {
         state2.lsn = x2.subarray(1, 9);
         pong();
@@ -38489,22 +33926,22 @@ function parseEvent(x) {
 
 // ../node_modules/.pnpm/postgres@3.4.9/node_modules/postgres/src/large.js
 import Stream2 from "stream";
-function largeObject(sql2, oid, mode = 131072 | 262144) {
+function largeObject(sql3, oid, mode = 131072 | 262144) {
   return new Promise(async (resolve, reject) => {
-    await sql2.begin(async (sql3) => {
+    await sql3.begin(async (sql4) => {
       let finish;
-      !oid && ([{ oid }] = await sql3`select lo_creat(-1) as oid`);
-      const [{ fd }] = await sql3`select lo_open(${oid}, ${mode}) as fd`;
+      !oid && ([{ oid }] = await sql4`select lo_creat(-1) as oid`);
+      const [{ fd }] = await sql4`select lo_open(${oid}, ${mode}) as fd`;
       const lo = {
         writable,
         readable,
-        close: () => sql3`select lo_close(${fd})`.then(finish),
-        tell: () => sql3`select lo_tell64(${fd})`,
-        read: (x) => sql3`select loread(${fd}, ${x}) as data`,
-        write: (x) => sql3`select lowrite(${fd}, ${x})`,
-        truncate: (x) => sql3`select lo_truncate64(${fd}, ${x})`,
-        seek: (x, whence = 0) => sql3`select lo_lseek64(${fd}, ${x}, ${whence})`,
-        size: () => sql3`
+        close: () => sql4`select lo_close(${fd})`.then(finish),
+        tell: () => sql4`select lo_tell64(${fd})`,
+        read: (x) => sql4`select loread(${fd}, ${x}) as data`,
+        write: (x) => sql4`select lowrite(${fd}, ${x})`,
+        truncate: (x) => sql4`select lo_truncate64(${fd}, ${x})`,
+        seek: (x, whence = 0) => sql4`select lo_lseek64(${fd}, ${x}, ${whence})`,
+        size: () => sql4`
           select
             lo_lseek64(${fd}, location, 0) as position,
             seek.size
@@ -38579,12 +34016,12 @@ function Postgres(a, b2) {
   let ending = false;
   const queries = queue_default(), connecting = queue_default(), reserved = queue_default(), closed = queue_default(), ended = queue_default(), open = queue_default(), busy = queue_default(), full = queue_default(), queues = { connecting, reserved, closed, ended, open, busy, full };
   const connections = [...Array(options.max)].map(() => connection_default(options, queues, { onopen, onend, onclose }));
-  const sql2 = Sql(handler);
-  Object.assign(sql2, {
+  const sql3 = Sql(handler);
+  Object.assign(sql3, {
     get parameters() {
       return options.parameters;
     },
-    largeObject: largeObject.bind(null, sql2),
+    largeObject: largeObject.bind(null, sql3),
     subscribe,
     CLOSE,
     END: CLOSE,
@@ -38596,14 +34033,14 @@ function Postgres(a, b2) {
     close,
     end
   });
-  return sql2;
+  return sql3;
   function Sql(handler2) {
     handler2.debug = options.debug;
     Object.entries(options.types).reduce((acc, [name, type]) => {
       acc[name] = (x) => new Parameter(x, type.to);
       return acc;
     }, typed);
-    Object.assign(sql3, {
+    Object.assign(sql4, {
       types: typed,
       typed,
       unsafe,
@@ -38612,11 +34049,11 @@ function Postgres(a, b2) {
       json: json2,
       file
     });
-    return sql3;
+    return sql4;
     function typed(value, type) {
       return new Parameter(value, type);
     }
-    function sql3(strings, ...args) {
+    function sql4(strings, ...args) {
       const query = strings && Array.isArray(strings.raw) ? new Query(strings, args, handler2, cancel) : typeof strings === "string" && !args.length ? new Identifier(options.transform.column.to ? options.transform.column.to(strings) : strings) : new Builder(strings, args);
       return query;
     }
@@ -38647,7 +34084,7 @@ function Postgres(a, b2) {
   }
   async function listen(name, fn, onlisten) {
     const listener = { fn, onlisten };
-    const sql3 = listen.sql || (listen.sql = Postgres({
+    const sql4 = listen.sql || (listen.sql = Postgres({
       ...options,
       max: 1,
       idle_timeout: null,
@@ -38671,7 +34108,7 @@ function Postgres(a, b2) {
       listener.onlisten && listener.onlisten();
       return { state: result2.state, unlisten };
     }
-    channels[name] = { result: sql3`listen ${sql3.unsafe('"' + name.replace(/"/g, '""') + '"')}`, listeners: [listener] };
+    channels[name] = { result: sql4`listen ${sql4.unsafe('"' + name.replace(/"/g, '""') + '"')}`, listeners: [listener] };
     const result = await channels[name].result;
     listener.onlisten && listener.onlisten();
     return { state: result.state, unlisten };
@@ -38682,11 +34119,11 @@ function Postgres(a, b2) {
       if (channels[name].listeners.length)
         return;
       delete channels[name];
-      return sql3`unlisten ${sql3.unsafe('"' + name.replace(/"/g, '""') + '"')}`;
+      return sql4`unlisten ${sql4.unsafe('"' + name.replace(/"/g, '""') + '"')}`;
     }
   }
   async function notify(channel, payload) {
-    return await sql2`select pg_notify(${channel}, ${"" + payload})`;
+    return await sql3`select pg_notify(${channel}, ${"" + payload})`;
   }
   async function reserve() {
     const queue = queue_default();
@@ -38698,12 +34135,12 @@ function Postgres(a, b2) {
     move(c, reserved);
     c.reserved = () => queue.length ? c.execute(queue.shift()) : move(c, reserved);
     c.reserved.release = true;
-    const sql3 = Sql(handler2);
-    sql3.release = () => {
+    const sql4 = Sql(handler2);
+    sql4.release = () => {
       c.reserved = null;
       onopen(c);
     };
-    return sql3;
+    return sql4;
     function handler2(q) {
       c.queue === full ? queue.push(q) : c.execute(q) || move(c, full);
     }
@@ -38713,7 +34150,7 @@ function Postgres(a, b2) {
     const queries2 = queue_default();
     let savepoints = 0, connection2, prepare = null;
     try {
-      await sql2.unsafe("begin " + options2.replace(/[^a-z ]/ig, ""), [], { onexecute }).execute();
+      await sql3.unsafe("begin " + options2.replace(/[^a-z ]/ig, ""), [], { onexecute }).execute();
       return await Promise.race([
         scope(connection2, fn),
         new Promise((_, reject) => connection2.onclose = reject)
@@ -38722,29 +34159,29 @@ function Postgres(a, b2) {
       throw error;
     }
     async function scope(c, fn2, name) {
-      const sql3 = Sql(handler2);
-      sql3.savepoint = savepoint;
-      sql3.prepare = (x) => prepare = x.replace(/[^a-z0-9$-_. ]/gi);
+      const sql4 = Sql(handler2);
+      sql4.savepoint = savepoint;
+      sql4.prepare = (x) => prepare = x.replace(/[^a-z0-9$-_. ]/gi);
       let uncaughtError, result;
-      name && await sql3`savepoint ${sql3(name)}`;
+      name && await sql4`savepoint ${sql4(name)}`;
       try {
         result = await new Promise((resolve, reject) => {
-          const x = fn2(sql3);
+          const x = fn2(sql4);
           Promise.resolve(Array.isArray(x) ? Promise.all(x) : x).then(resolve, reject);
         });
         if (uncaughtError)
           throw uncaughtError;
       } catch (e) {
-        await (name ? sql3`rollback to ${sql3(name)}` : sql3`rollback`);
+        await (name ? sql4`rollback to ${sql4(name)}` : sql4`rollback`);
         throw e instanceof PostgresError && e.code === "25P02" && uncaughtError || e;
       }
       if (!name) {
-        prepare ? await sql3`prepare transaction '${sql3.unsafe(prepare)}'` : await sql3`commit`;
+        prepare ? await sql4`prepare transaction '${sql4.unsafe(prepare)}'` : await sql4`commit`;
       }
       return result;
       function savepoint(name2, fn3) {
         if (name2 && Array.isArray(name2.raw))
-          return savepoint((sql4) => sql4.apply(sql4, arguments));
+          return savepoint((sql5) => sql5.apply(sql5, arguments));
         arguments.length === 1 && (fn3 = name2, name2 = null);
         return scope(c, fn3, "s" + savepoints++ + (name2 ? "_" + name2 : ""));
       }
@@ -39627,10 +35064,10 @@ var PgEnumColumn = class extends PgColumn {
 // ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/subquery.js
 var Subquery = class {
   static [entityKind] = "Subquery";
-  constructor(sql2, fields, alias, isWith = false, usedTables = []) {
+  constructor(sql3, fields, alias, isWith = false, usedTables = []) {
     this._ = {
       brand: "Subquery",
-      sql: sql2,
+      sql: sql3,
       selectedFields: fields,
       alias,
       isWith,
@@ -40028,19 +35465,19 @@ function sql(strings, ...params) {
   }
   return new SQL(queryChunks);
 }
-((sql2) => {
+((sql22) => {
   function empty() {
     return new SQL([]);
   }
-  sql2.empty = empty;
+  sql22.empty = empty;
   function fromList(list) {
     return new SQL(list);
   }
-  sql2.fromList = fromList;
+  sql22.fromList = fromList;
   function raw(str) {
     return new SQL([new StringChunk(str)]);
   }
-  sql2.raw = raw;
+  sql22.raw = raw;
   function join(chunks, separator) {
     const result = [];
     for (const [i, chunk] of chunks.entries()) {
@@ -40051,24 +35488,24 @@ function sql(strings, ...params) {
     }
     return new SQL(result);
   }
-  sql2.join = join;
+  sql22.join = join;
   function identifier(value) {
     return new Name(value);
   }
-  sql2.identifier = identifier;
+  sql22.identifier = identifier;
   function placeholder2(name2) {
     return new Placeholder(name2);
   }
-  sql2.placeholder = placeholder2;
+  sql22.placeholder = placeholder2;
   function param2(value, encoder2) {
     return new Param(value, encoder2);
   }
-  sql2.param = param2;
+  sql22.param = param2;
 })(sql || (sql = {}));
 ((SQL2) => {
   class Aliased {
-    constructor(sql2, fieldAlias) {
-      this.sql = sql2;
+    constructor(sql22, fieldAlias) {
+      this.sql = sql22;
       this.fieldAlias = fieldAlias;
     }
     static [entityKind] = "SQL.Aliased";
@@ -42362,6 +37799,11 @@ function mapRelationalRow(tablesConfig, tableConfig, row, buildQueryResultSelect
   return result;
 }
 
+// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/sql/functions/aggregate.js
+function count(expression) {
+  return sql`count(${expression || sql.raw("*")})`.mapWith(Number);
+}
+
 // ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/view-base.js
 var PgViewBase = class extends View {
   static [entityKind] = "PgViewBase";
@@ -42759,8 +38201,8 @@ var PgDialect = class {
       return "none";
     }
   }
-  sqlToQuery(sql2, invokeSource) {
-    return sql2.toQuery({
+  sqlToQuery(sql22, invokeSource) {
+    return sql22.toQuery({
       casing: this.casing,
       escapeName: this.escapeName,
       escapeParam: this.escapeParam,
@@ -45119,10 +40561,10 @@ var PgRelationalQuery = class extends QueryPromise {
 
 // ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/query-builders/raw.js
 var PgRaw = class extends QueryPromise {
-  constructor(execute, sql2, query, mapBatchResult) {
+  constructor(execute, sql3, query, mapBatchResult) {
     super();
     this.execute = execute;
-    this.sql = sql2;
+    this.sql = sql3;
     this.query = query;
     this.mapBatchResult = mapBatchResult;
   }
@@ -45442,8 +40884,8 @@ var NoopCache = class extends Cache {
   async onMutate(_params) {
   }
 };
-async function hashQuery(sql2, params) {
-  const dataToHash = `${sql2}-${JSON.stringify(params)}`;
+async function hashQuery(sql3, params) {
+  const dataToHash = `${sql3}-${JSON.stringify(params)}`;
   const encoder2 = new TextEncoder();
   const data = encoder2.encode(dataToHash);
   const hashBuffer = await crypto.subtle.digest("SHA-256", data);
@@ -45576,8 +41018,8 @@ var PgSession = class {
     ).all();
   }
   /** @internal */
-  async count(sql2, token) {
-    const res = await this.execute(sql2, token);
+  async count(sql22, token) {
+    const res = await this.execute(sql22, token);
     return Number(
       res[0]["count"]
     );
@@ -45881,6 +41323,7 @@ var activityLogTable = pgTable("activity_log", {
   description: text("description").notNull(),
   memberId: integer("member_id"),
   memberName: text("member_name"),
+  performedByName: text("performed_by_name"),
   createdAt: timestamp("created_at").notNull().defaultNow()
 });
 var pcfsTable = pgTable("pcfs", {
@@ -46378,15 +41821,372 @@ router2.post("/change-pin", authenticateToken, async (req, res) => {
 });
 var auth_default = router2;
 
-// src/routes/members.ts
+// src/routes/public.ts
 var import_express3 = __toESM(require_express2(), 1);
 import crypto4 from "crypto";
 var router3 = (0, import_express3.Router)();
-router3.use(authenticateToken);
+function hashPassword2(password) {
+  return crypto4.createHash("sha256").update(password + "ce_kumasi_salt").digest("hex");
+}
+function generatePin() {
+  return String(Math.floor(1e3 + Math.random() * 9e3));
+}
+async function generateMembershipId(firstName, lastName) {
+  const initials = ((firstName[0] ?? "X") + (lastName[0] ?? "X")).toUpperCase();
+  const prefix = `CEKSI-${initials}`;
+  const existing = await db.select({ membershipId: membersTable.membershipId }).from(membersTable).where(ilike(membersTable.membershipId, `${prefix}%`));
+  let max = 0;
+  for (const row of existing) {
+    const num = parseInt(row.membershipId.slice(prefix.length), 10);
+    if (!isNaN(num) && num > max) max = num;
+  }
+  return `${prefix}${String(max + 1).padStart(3, "0")}`;
+}
+async function linkChildToParentFamily(parentId, childType, childEntityId) {
+  const prevFcCond = childType === "child" ? and(eq(familyChildrenTable.childId, childEntityId), eq(familyChildrenTable.type, "child")) : and(eq(familyChildrenTable.teenId, childEntityId), eq(familyChildrenTable.type, "teen"));
+  const prevFc = await db.select().from(familyChildrenTable).where(prevFcCond).limit(1);
+  let family = null;
+  const asHead = await db.select().from(familiesTable).where(eq(familiesTable.headId, parentId)).limit(1);
+  if (asHead.length) family = asHead[0];
+  if (!family) {
+    const asSpouse = await db.select().from(familiesTable).where(eq(familiesTable.spouseId, parentId)).limit(1);
+    if (asSpouse.length) family = asSpouse[0];
+  }
+  if (!family) {
+    const member = await db.select().from(membersTable).where(eq(membersTable.id, parentId)).limit(1);
+    if (!member.length) return;
+    const famData = member[0].gender === "male" ? { headId: parentId } : { spouseId: parentId };
+    const spouseId = member[0].spouseId;
+    if (spouseId) {
+      const spouseAlreadyIn = await db.select({ id: familiesTable.id }).from(familiesTable).where(or(eq(familiesTable.headId, spouseId), eq(familiesTable.spouseId, spouseId))).limit(1);
+      if (!spouseAlreadyIn.length) {
+        if (member[0].gender === "male") famData.spouseId = spouseId;
+        else famData.headId = spouseId;
+      }
+    }
+    const created = await db.insert(familiesTable).values(famData).returning();
+    family = created[0];
+  } else {
+    const parentRow = await db.select().from(membersTable).where(eq(membersTable.id, parentId)).limit(1);
+    if (parentRow.length && parentRow[0].spouseId) {
+      const spouseId = parentRow[0].spouseId;
+      const slotUpdate = {};
+      if (parentRow[0].gender === "male" && !family.spouseId) {
+        const si = await db.select({ id: familiesTable.id }).from(familiesTable).where(and(or(eq(familiesTable.headId, spouseId), eq(familiesTable.spouseId, spouseId)), ne(familiesTable.id, family.id))).limit(1);
+        if (!si.length) slotUpdate.spouseId = spouseId;
+      } else if (parentRow[0].gender === "female" && !family.headId) {
+        const si = await db.select({ id: familiesTable.id }).from(familiesTable).where(and(or(eq(familiesTable.headId, spouseId), eq(familiesTable.spouseId, spouseId)), ne(familiesTable.id, family.id))).limit(1);
+        if (!si.length) slotUpdate.headId = spouseId;
+      }
+      if (Object.keys(slotUpdate).length) {
+        await db.update(familiesTable).set(slotUpdate).where(eq(familiesTable.id, family.id));
+        family = { ...family, ...slotUpdate };
+      }
+    }
+  }
+  if (prevFc.length && prevFc[0].familyId !== family.id) {
+    await db.delete(familyChildrenTable).where(prevFcCond);
+  }
+  const conds = [
+    eq(familyChildrenTable.familyId, family.id),
+    eq(familyChildrenTable.type, childType)
+  ];
+  if (childType === "child") conds.push(eq(familyChildrenTable.childId, childEntityId));
+  else conds.push(eq(familyChildrenTable.teenId, childEntityId));
+  const existing = await db.select().from(familyChildrenTable).where(and(...conds)).limit(1);
+  if (!existing.length) {
+    const fcData = { familyId: family.id, type: childType };
+    if (childType === "child") fcData.childId = childEntityId;
+    else fcData.teenId = childEntityId;
+    await db.insert(familyChildrenTable).values(fcData);
+  }
+}
+router3.get("/public/cells", async (_req, res) => {
+  try {
+    const cells = await db.select().from(cellsTable).where(eq(cellsTable.isArchived, false)).orderBy(cellsTable.name);
+    const enriched = await Promise.all(cells.map(async (c) => {
+      let seniorCellName = null;
+      let pcfName = null;
+      if (c.seniorCellId) {
+        const sc = await db.select().from(seniorCellsTable).where(eq(seniorCellsTable.id, c.seniorCellId)).limit(1);
+        if (sc.length) {
+          seniorCellName = sc[0].name;
+          if (sc[0].pcfId) {
+            const pcf = await db.select().from(pcfsTable).where(eq(pcfsTable.id, sc[0].pcfId)).limit(1);
+            if (pcf.length) pcfName = pcf[0].name;
+          }
+        }
+      }
+      return { id: c.id, name: c.name, seniorCellName, pcfName };
+    }));
+    res.json(enriched);
+  } catch {
+    res.status(500).json({ error: "Failed to load cells" });
+  }
+});
+router3.get("/public/members-search", async (req, res) => {
+  const q = String(req.query.q || "").trim();
+  if (q.length < 2) return res.json([]);
+  try {
+    const results = await db.select({
+      id: membersTable.id,
+      firstName: membersTable.firstName,
+      lastName: membersTable.lastName,
+      membershipId: membersTable.membershipId
+    }).from(membersTable).where(and(
+      eq(membersTable.isArchived, false),
+      or(
+        ilike(membersTable.firstName, `%${q}%`),
+        ilike(membersTable.lastName, `%${q}%`),
+        ilike(membersTable.membershipId, `%${q}%`)
+      )
+    )).limit(12);
+    res.json(results);
+  } catch {
+    res.json([]);
+  }
+});
+router3.post("/public/register/member", async (req, res) => {
+  try {
+    const {
+      firstName,
+      lastName,
+      gender,
+      phone1,
+      phone2,
+      email,
+      occupation,
+      residentialAddress,
+      emergencyContact,
+      dateOfBirth,
+      maritalStatus,
+      dateJoined,
+      foundationSchoolDate,
+      weddingDate,
+      isBaptized,
+      cellId,
+      title,
+      profilePhoto,
+      memberType,
+      spouseId: rawSpouseId
+    } = req.body;
+    if (!firstName || !lastName || !gender || !phone1) {
+      return res.status(400).json({ error: "First name, last name, gender and phone are required." });
+    }
+    const resolvedType = memberType === "visitor" ? "visitor" : "member";
+    const selectedSpouseId = rawSpouseId ? parseInt(String(rawSpouseId), 10) : null;
+    const existing = await db.select().from(membersTable).where(
+      and(
+        or(eq(membersTable.phone1, phone1), eq(membersTable.phone2, phone1)),
+        eq(membersTable.isArchived, false)
+      )
+    ).limit(1);
+    if (existing.length) {
+      const m = existing[0];
+      return res.status(409).json({
+        error: `Phone number already registered to ${m.firstName} ${m.lastName} (${m.membershipId}).`
+      });
+    }
+    if (selectedSpouseId) {
+      const spouseRecord = await db.select().from(membersTable).where(and(eq(membersTable.id, selectedSpouseId), eq(membersTable.isArchived, false))).limit(1);
+      if (!spouseRecord.length) {
+        return res.status(400).json({ error: "Selected spouse not found." });
+      }
+      if (spouseRecord[0].gender === gender) {
+        return res.status(400).json({ error: "Same-sex couples are not permitted." });
+      }
+      const usedAsSpouse = await db.select({ id: membersTable.id }).from(membersTable).where(and(eq(membersTable.spouseId, selectedSpouseId), eq(membersTable.isArchived, false))).limit(1);
+      if (usedAsSpouse.length) {
+        return res.status(409).json({ error: "This person is already linked as a spouse to another member." });
+      }
+      if (spouseRecord[0].spouseId) {
+        return res.status(409).json({ error: "This person already has a spouse linked to their profile." });
+      }
+    }
+    const pin = generatePin();
+    const membershipId = await generateMembershipId(firstName, lastName);
+    const created = await db.insert(membersTable).values({
+      membershipId,
+      firstName,
+      lastName,
+      gender,
+      phone1,
+      phone2: phone2 || null,
+      email: email || null,
+      occupation: occupation || "",
+      residentialAddress: residentialAddress || "",
+      emergencyContact: emergencyContact || "",
+      dateOfBirth: dateOfBirth || null,
+      maritalStatus: maritalStatus || null,
+      dateJoined: dateJoined || null,
+      foundationSchoolDate: foundationSchoolDate || null,
+      weddingDate: weddingDate || null,
+      isBaptized: !!isBaptized,
+      cellId: cellId ? parseInt(String(cellId), 10) : null,
+      title: title || null,
+      profilePhoto: profilePhoto || null,
+      memberType: resolvedType,
+      spouseId: selectedSpouseId,
+      pin
+    }).returning();
+    const newMemberId = created[0].id;
+    if (selectedSpouseId && resolvedType === "member" && maritalStatus === "married") {
+      const spouseUpdates = { spouseId: newMemberId, maritalStatus: "married" };
+      if (weddingDate) spouseUpdates.weddingDate = weddingDate;
+      await db.update(membersTable).set(spouseUpdates).where(eq(membersTable.id, selectedSpouseId));
+      const spouseExistingFamily = await db.select().from(familiesTable).where(or(eq(familiesTable.headId, selectedSpouseId), eq(familiesTable.spouseId, selectedSpouseId))).limit(1);
+      if (spouseExistingFamily.length) {
+        const sf = spouseExistingFamily[0];
+        if (gender === "male" && !sf.headId) {
+          await db.update(familiesTable).set({ headId: newMemberId }).where(eq(familiesTable.id, sf.id));
+        } else if (gender === "female" && !sf.spouseId) {
+          await db.update(familiesTable).set({ spouseId: newMemberId }).where(eq(familiesTable.id, sf.id));
+        }
+      } else {
+        const newMemberAlreadyIn = await db.select({ id: familiesTable.id }).from(familiesTable).where(or(eq(familiesTable.headId, newMemberId), eq(familiesTable.spouseId, newMemberId))).limit(1);
+        if (!newMemberAlreadyIn.length) {
+          if (gender === "male") {
+            await db.insert(familiesTable).values({ headId: newMemberId, spouseId: selectedSpouseId });
+          } else {
+            await db.insert(familiesTable).values({ headId: selectedSpouseId, spouseId: newMemberId });
+          }
+        }
+      }
+    }
+    await db.insert(activityLogTable).values({
+      type: "new_member",
+      description: `${resolvedType === "visitor" ? "Visitor" : "Member"} ${firstName} ${lastName} self-registered via public form`,
+      memberId: newMemberId,
+      memberName: `${firstName} ${lastName}`
+    });
+    await db.insert(usersTable).values({
+      username: membershipId,
+      passwordHash: hashPassword2(pin),
+      roleLevel: 5,
+      memberId: newMemberId
+    });
+    res.status(201).json({ membershipId, pin, name: `${firstName} ${lastName}` });
+  } catch (err) {
+    res.status(500).json({ error: err?.message ?? "Registration failed" });
+  }
+});
+router3.post("/public/register/child", async (req, res) => {
+  try {
+    const { firstName, lastName, gender, dateOfBirth, class: childClass, parentId, parentExternal } = req.body;
+    if (!firstName || !lastName || !childClass) {
+      return res.status(400).json({ error: "First name, last name and class are required." });
+    }
+    const pid = parentId ? parseInt(String(parentId), 10) : null;
+    const pext = parentExternal ? String(parentExternal).trim() : null;
+    if (pid || pext) {
+      const orClauses = [];
+      if (pid) orClauses.push(eq(childrenTable.parentId, pid));
+      if (pext) orClauses.push(sql`LOWER(${childrenTable.parentExternal}) = LOWER(${pext})`);
+      const dup = await db.select({ id: childrenTable.id }).from(childrenTable).where(
+        and(
+          eq(childrenTable.isArchived, false),
+          sql`LOWER(${childrenTable.firstName}) = LOWER(${firstName})`,
+          sql`LOWER(${childrenTable.lastName}) = LOWER(${lastName})`,
+          or(...orClauses)
+        )
+      ).limit(1);
+      if (dup.length) {
+        return res.status(409).json({
+          error: `${firstName} ${lastName} is already registered with this parent.`
+        });
+      }
+    }
+    const created = await db.insert(childrenTable).values({
+      firstName,
+      lastName,
+      gender: gender || null,
+      dateOfBirth: dateOfBirth || null,
+      class: childClass,
+      parentId: pid,
+      parentExternal: pext
+    }).returning();
+    if (pid) {
+      await linkChildToParentFamily(pid, "child", created[0].id);
+    }
+    res.status(201).json({ id: created[0].id, firstName, lastName });
+  } catch (err) {
+    res.status(500).json({ error: err?.message ?? "Registration failed" });
+  }
+});
+router3.post("/public/register/teen", async (req, res) => {
+  try {
+    const {
+      firstName,
+      lastName,
+      gender,
+      phone1,
+      phone2,
+      residentialAddress,
+      placeOfResidence,
+      dateOfBirth,
+      dateJoined,
+      foundationSchoolDate,
+      foundationSchoolCompleted,
+      parentId,
+      parentExternal
+    } = req.body;
+    if (!firstName || !lastName) {
+      return res.status(400).json({ error: "First name and last name are required." });
+    }
+    const pid = parentId ? parseInt(String(parentId), 10) : null;
+    const pext = parentExternal ? String(parentExternal).trim() : null;
+    if (pid || pext) {
+      const orClauses = [];
+      if (pid) orClauses.push(eq(teensTable.parentId, pid));
+      if (pext) orClauses.push(sql`LOWER(${teensTable.parentExternal}) = LOWER(${pext})`);
+      const dup = await db.select({ id: teensTable.id }).from(teensTable).where(
+        and(
+          eq(teensTable.isArchived, false),
+          sql`LOWER(${teensTable.firstName}) = LOWER(${firstName})`,
+          sql`LOWER(${teensTable.lastName}) = LOWER(${lastName})`,
+          or(...orClauses)
+        )
+      ).limit(1);
+      if (dup.length) {
+        return res.status(409).json({
+          error: `${firstName} ${lastName} is already registered with this parent.`
+        });
+      }
+    }
+    const address = placeOfResidence || residentialAddress || null;
+    const created = await db.insert(teensTable).values({
+      firstName,
+      lastName,
+      gender: gender || null,
+      phone1: phone1 || null,
+      phone2: phone2 || null,
+      residentialAddress: address,
+      dateOfBirth: dateOfBirth || null,
+      dateJoined: dateJoined || null,
+      foundationSchoolDate: foundationSchoolDate || null,
+      foundationSchoolCompleted: !!foundationSchoolCompleted,
+      parentId: pid,
+      parentExternal: pext
+    }).returning();
+    if (pid) {
+      await linkChildToParentFamily(pid, "teen", created[0].id);
+    }
+    res.status(201).json({ id: created[0].id, firstName, lastName });
+  } catch (err) {
+    res.status(500).json({ error: err?.message ?? "Registration failed" });
+  }
+});
+var public_default = router3;
+
+// src/routes/members.ts
+var import_express4 = __toESM(require_express2(), 1);
+import crypto5 from "crypto";
+var router4 = (0, import_express4.Router)();
+router4.use(authenticateToken);
 function fmt(m) {
   return m.title ? `${m.title} ${m.firstName} ${m.lastName}` : `${m.firstName} ${m.lastName}`;
 }
-async function generateMembershipId(firstName, lastName, type = "member") {
+async function generateMembershipId2(firstName, lastName, type = "member") {
   const initials = ((firstName[0] ?? "X") + (lastName[0] ?? "X")).toUpperCase();
   const prefix = type === "visitor" ? `VST-${initials}` : `CEKSI-${initials}`;
   const existing = await db.select({ membershipId: membersTable.membershipId }).from(membersTable).where(ilike(membersTable.membershipId, `${prefix}%`));
@@ -46397,11 +42197,11 @@ async function generateMembershipId(firstName, lastName, type = "member") {
   }
   return `${prefix}${String(max + 1).padStart(3, "0")}`;
 }
-function generatePin() {
+function generatePin2() {
   return String(Math.floor(1e3 + Math.random() * 9e3));
 }
-function hashPassword2(password) {
-  return crypto4.createHash("sha256").update(password + "ce_kumasi_salt").digest("hex");
+function hashPassword3(password) {
+  return crypto5.createHash("sha256").update(password + "ce_kumasi_salt").digest("hex");
 }
 async function getActiveMinistryYear() {
   const today = (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
@@ -46502,7 +42302,7 @@ async function getMemberWithRoles(id) {
     activeMinistryYear
   };
 }
-router3.get("/", async (req, res) => {
+router4.get("/", async (req, res) => {
   const { search, type, cellId, seniorCellId, pcfId, page = "1", limit = "25" } = req.query;
   const pageNum = parseInt(page);
   const limitNum = Math.min(parseInt(limit), 100);
@@ -46562,7 +42362,7 @@ router3.get("/", async (req, res) => {
   }));
   res.json({ data: enriched, total: Number(total[0].count), page: pageNum, limit: limitNum });
 });
-router3.post("/", async (req, res) => {
+router4.post("/", async (req, res) => {
   const { firstName, lastName, gender, phone1, memberType = "member", ...rest } = req.body;
   if (!firstName || !lastName || !gender || !phone1) {
     return res.status(400).json({ error: "Missing required fields" });
@@ -46588,9 +42388,9 @@ router3.post("/", async (req, res) => {
     if (usedAsSpouse.length) return res.status(409).json({ error: "This person is already linked as a spouse to another member." });
     if (spouseRecord[0].spouseId) return res.status(409).json({ error: "This person already has a spouse linked to their profile." });
   }
-  const pin = generatePin();
+  const pin = generatePin2();
   const created = await db.insert(membersTable).values({
-    membershipId: await generateMembershipId(firstName, lastName, memberType === "visitor" ? "visitor" : "member"),
+    membershipId: await generateMembershipId2(firstName, lastName, memberType === "visitor" ? "visitor" : "member"),
     firstName,
     lastName,
     gender,
@@ -46599,18 +42399,21 @@ router3.post("/", async (req, res) => {
     pin,
     ...rest
   }).returning();
+  const actor = req.user;
   await db.insert(activityLogTable).values({
     type: "new_member",
     description: `${memberType === "visitor" ? "Visitor" : "Member"} ${created[0].title ? created[0].title + " " : ""}${firstName} ${lastName} was added`,
     memberId: created[0].id,
-    memberName: `${firstName} ${lastName}`
+    memberName: `${firstName} ${lastName}`,
+    performedByUserId: actor?.id ?? null,
+    performedByName: actor?.username ?? null
   });
   if (memberType === "member") {
     const existingUser = await db.select().from(usersTable).where(eq(usersTable.memberId, created[0].id)).limit(1);
     if (!existingUser.length) {
       await db.insert(usersTable).values({
         username: created[0].membershipId,
-        passwordHash: hashPassword2(pin),
+        passwordHash: hashPassword3(pin),
         roleLevel: 5,
         memberId: created[0].id
       });
@@ -46644,13 +42447,13 @@ router3.post("/", async (req, res) => {
   }
   res.status(201).json({ ...created[0], leadershipRoles: [] });
 });
-router3.get("/:id", async (req, res) => {
+router4.get("/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   const member = await getMemberWithRoles(id);
   if (!member) return res.status(404).json({ error: "Member not found" });
   res.json(member);
 });
-router3.patch("/:id", async (req, res) => {
+router4.patch("/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   const { firstName, lastName, phone1, ...rest } = req.body;
   const currentMember = await db.select().from(membersTable).where(and(eq(membersTable.id, id), eq(membersTable.isArchived, false))).limit(1);
@@ -46765,7 +42568,7 @@ router3.patch("/:id", async (req, res) => {
   const member = await getMemberWithRoles(id);
   res.json(member ?? updated[0]);
 });
-router3.delete("/:id", async (req, res) => {
+router4.delete("/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   const { reason } = req.body;
   const user = req.user;
@@ -46783,7 +42586,7 @@ router3.delete("/:id", async (req, res) => {
   await db.update(membersTable).set({ isArchived: true, archiveReason: reason, archivedAt: /* @__PURE__ */ new Date(), archivedBy: user.id }).where(eq(membersTable.id, id));
   res.json({ success: true });
 });
-router3.post("/:id/convert", async (req, res) => {
+router4.post("/:id/convert", async (req, res) => {
   const id = parseInt(req.params.id);
   const { cellId } = req.body;
   if (!cellId) return res.status(400).json({ error: "Cell ID required" });
@@ -46791,10 +42594,10 @@ router3.post("/:id/convert", async (req, res) => {
   if (!updated.length) return res.status(404).json({ error: "Member not found" });
   res.json({ ...updated[0], leadershipRoles: [] });
 });
-router3.post("/:id/send-credentials", async (req, res) => {
+router4.post("/:id/send-credentials", async (req, res) => {
   res.json({ success: true, message: "Credentials send request noted." });
 });
-router3.get("/:id/credentials", requireRole(1), async (req, res) => {
+router4.get("/:id/credentials", requireRole(1), async (req, res) => {
   const id = parseInt(req.params.id);
   const member = await db.select({ id: membersTable.id, pin: membersTable.pin, membershipId: membersTable.membershipId }).from(membersTable).where(eq(membersTable.id, id)).limit(1);
   if (!member.length) return res.status(404).json({ error: "Member not found" });
@@ -46810,15 +42613,15 @@ router3.get("/:id/credentials", requireRole(1), async (req, res) => {
     roleLevel: user.length ? user[0].roleLevel : 5
   });
 });
-router3.post("/:id/reset-password", requireRole(1), async (req, res) => {
+router4.post("/:id/reset-password", requireRole(1), async (req, res) => {
   const id = parseInt(req.params.id);
   const { newPin, newPassword } = req.body;
   const member = await db.select().from(membersTable).where(eq(membersTable.id, id)).limit(1);
   if (!member.length) return res.status(404).json({ error: "Member not found" });
-  const pin = newPin || generatePin();
+  const pin = newPin || generatePin2();
   await db.update(membersTable).set({ pin }).where(eq(membersTable.id, id));
   const password = newPassword || pin;
-  const passwordHash = hashPassword2(password);
+  const passwordHash = hashPassword3(password);
   const user = await db.select().from(usersTable).where(eq(usersTable.memberId, id)).limit(1);
   if (user.length) {
     await db.update(usersTable).set({ passwordHash, isActive: true }).where(eq(usersTable.memberId, id));
@@ -46832,7 +42635,7 @@ router3.post("/:id/reset-password", requireRole(1), async (req, res) => {
   }
   res.json({ success: true, newPin: pin, message: `Password reset. New PIN: ${pin}` });
 });
-router3.get("/:id/givings", async (req, res) => {
+router4.get("/:id/givings", async (req, res) => {
   const memberId = parseInt(req.params.id);
   const { ministryYearId, page = "1", limit = "20" } = req.query;
   const pageNum = parseInt(page);
@@ -46854,7 +42657,7 @@ router3.get("/:id/givings", async (req, res) => {
   }));
   res.json({ data: enriched, total: Number(total[0].count), page: pageNum, limit: limitNum });
 });
-router3.get("/:id/attendance", async (req, res) => {
+router4.get("/:id/attendance", async (req, res) => {
   const memberId = parseInt(req.params.id);
   const { ministryYearId, page = "1", limit = "20" } = req.query;
   const pageNum = parseInt(page);
@@ -46878,18 +42681,18 @@ router3.get("/:id/attendance", async (req, res) => {
   }));
   res.json({ data: enriched, total: Number(total[0].count), page: pageNum, limit: limitNum });
 });
-var members_default = router3;
+var members_default = router4;
 
 // src/routes/fellowships.ts
-var import_express4 = __toESM(require_express2(), 1);
-import crypto5 from "crypto";
-var router4 = (0, import_express4.Router)();
-router4.use(authenticateToken);
+var import_express5 = __toESM(require_express2(), 1);
+import crypto6 from "crypto";
+var router5 = (0, import_express5.Router)();
+router5.use(authenticateToken);
 function fmt2(m) {
   return m.title ? `${m.title} ${m.firstName} ${m.lastName}` : `${m.firstName} ${m.lastName}`;
 }
-function hashPassword3(password) {
-  return crypto5.createHash("sha256").update(password + "ce_kumasi_salt").digest("hex");
+function hashPassword4(password) {
+  return crypto6.createHash("sha256").update(password + "ce_kumasi_salt").digest("hex");
 }
 async function ensureLeaderAccount(memberId) {
   const member = await db.select().from(membersTable).where(eq(membersTable.id, memberId)).limit(1);
@@ -46904,7 +42707,7 @@ async function ensureLeaderAccount(memberId) {
     const pin = m.pin ?? "1234";
     await db.insert(usersTable).values({
       username: m.membershipId,
-      passwordHash: hashPassword3(pin),
+      passwordHash: hashPassword4(pin),
       roleLevel: 4,
       memberId,
       isActive: true
@@ -46933,7 +42736,7 @@ async function getCellWithDetails(cellId) {
   }
   return { ...c, memberCount: Number(memberCount[0].count), hasLeader: !!c.leaderId, leaderName };
 }
-router4.get("/cells", async (req, res) => {
+router5.get("/cells", async (req, res) => {
   const { search, seniorCellId, standalone } = req.query;
   let conditions = [eq(cellsTable.isArchived, false)];
   if (search) conditions.push(ilike(cellsTable.name, `%${search}%`));
@@ -46956,7 +42759,7 @@ router4.get("/cells", async (req, res) => {
   }));
   res.json(enriched);
 });
-router4.post("/cells", async (req, res) => {
+router5.post("/cells", async (req, res) => {
   const { name, leaderId } = req.body;
   if (!name) return res.status(400).json({ error: "Name required" });
   const existing = await db.select().from(cellsTable).where(and(ilike(cellsTable.name, name.trim()), eq(cellsTable.isArchived, false))).limit(1);
@@ -46964,7 +42767,7 @@ router4.post("/cells", async (req, res) => {
   const created = await db.insert(cellsTable).values({ name: name.trim(), leaderId: leaderId || null }).returning();
   res.status(201).json({ ...created[0], memberCount: 0, hasLeader: !!leaderId, leaderName: null });
 });
-router4.get("/cells/:id", async (req, res) => {
+router5.get("/cells/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   const cell = await getCellWithDetails(id);
   if (!cell) return res.status(404).json({ error: "Cell not found" });
@@ -46975,7 +42778,7 @@ router4.get("/cells/:id", async (req, res) => {
   }));
   res.json({ ...cell, members: enriched });
 });
-router4.patch("/cells/:id", async (req, res) => {
+router5.patch("/cells/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   const { name, leaderId } = req.body;
   if (name) {
@@ -47015,7 +42818,7 @@ router4.patch("/cells/:id", async (req, res) => {
   }
   res.json({ ...c, memberCount: Number(cnt[0].count), hasLeader: !!c.leaderId, leaderName });
 });
-router4.delete("/cells/:id", async (req, res) => {
+router5.delete("/cells/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   const { reason } = req.body;
   if (!reason) return res.status(400).json({ error: "Reason required" });
@@ -47049,7 +42852,7 @@ router4.delete("/cells/:id", async (req, res) => {
   }
   res.json({ success: true, autoDeletedSc, autoDeletedPcf });
 });
-router4.get("/senior-cells", async (req, res) => {
+router5.get("/senior-cells", async (req, res) => {
   const { search, pcfId, standalone } = req.query;
   let conditions = [eq(seniorCellsTable.isArchived, false)];
   if (search) conditions.push(ilike(seniorCellsTable.name, `%${search}%`));
@@ -47078,7 +42881,7 @@ router4.get("/senior-cells", async (req, res) => {
   }));
   res.json(enriched);
 });
-router4.post("/senior-cells", async (req, res) => {
+router5.post("/senior-cells", async (req, res) => {
   const { name, cellIds, leaderId } = req.body;
   if (!name) return res.status(400).json({ error: "Name required" });
   if (!cellIds || !Array.isArray(cellIds) || cellIds.length < 2) return res.status(400).json({ error: "At least 2 cells required" });
@@ -47091,7 +42894,7 @@ router4.post("/senior-cells", async (req, res) => {
   });
   res.status(201).json({ ...result, cellCount: cellIds.length, memberCount: 0, hasLeader: !!leaderId, leaderName: null });
 });
-router4.get("/senior-cells/:id", async (req, res) => {
+router5.get("/senior-cells/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   const sc = await db.select().from(seniorCellsTable).where(eq(seniorCellsTable.id, id)).limit(1);
   if (!sc.length) return res.status(404).json({ error: "Senior cell not found" });
@@ -47115,7 +42918,7 @@ router4.get("/senior-cells/:id", async (req, res) => {
   }
   res.json({ ...sc[0], cellCount, memberCount, hasLeader: !!sc[0].leaderId, leaderName, cells: enrichedCells });
 });
-router4.patch("/senior-cells/:id", async (req, res) => {
+router5.patch("/senior-cells/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   const { name, leaderId, cellIds } = req.body;
   if (name) {
@@ -47152,7 +42955,7 @@ router4.patch("/senior-cells/:id", async (req, res) => {
   }
   res.json({ ...updated[0], hasLeader: !!updated[0].leaderId });
 });
-router4.delete("/senior-cells/:id", async (req, res) => {
+router5.delete("/senior-cells/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   const { reason } = req.body;
   if (!reason) return res.status(400).json({ error: "Reason required" });
@@ -47180,7 +42983,7 @@ router4.delete("/senior-cells/:id", async (req, res) => {
   }
   res.json({ success: true, autoDeletedPcf });
 });
-router4.get("/pcfs", async (req, res) => {
+router5.get("/pcfs", async (req, res) => {
   const { search } = req.query;
   let conditions = [eq(pcfsTable.isArchived, false)];
   if (search) conditions.push(ilike(pcfsTable.name, `%${search}%`));
@@ -47205,7 +43008,7 @@ router4.get("/pcfs", async (req, res) => {
   }));
   res.json(enriched);
 });
-router4.post("/pcfs", async (req, res) => {
+router5.post("/pcfs", async (req, res) => {
   const { name, seniorCellIds, leaderId } = req.body;
   if (!name) return res.status(400).json({ error: "Name required" });
   if (!seniorCellIds || !Array.isArray(seniorCellIds) || seniorCellIds.length < 2) return res.status(400).json({ error: "At least 2 senior cells required" });
@@ -47218,7 +43021,7 @@ router4.post("/pcfs", async (req, res) => {
   });
   res.status(201).json({ ...result, seniorCellCount: seniorCellIds.length, memberCount: 0, hasLeader: !!leaderId, leaderName: null });
 });
-router4.get("/pcfs/:id", async (req, res) => {
+router5.get("/pcfs/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   const pcf = await db.select().from(pcfsTable).where(eq(pcfsTable.id, id)).limit(1);
   if (!pcf.length) return res.status(404).json({ error: "PCF not found" });
@@ -47253,7 +43056,7 @@ router4.get("/pcfs/:id", async (req, res) => {
   }
   res.json({ ...pcf[0], seniorCellCount, memberCount, hasLeader: !!pcf[0].leaderId, leaderName, seniorCells: enrichedSCs });
 });
-router4.patch("/pcfs/:id", async (req, res) => {
+router5.patch("/pcfs/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   const { name, leaderId, seniorCellIds } = req.body;
   if (name) {
@@ -47289,7 +43092,7 @@ router4.patch("/pcfs/:id", async (req, res) => {
   }
   res.json({ ...updated[0], hasLeader: !!updated[0].leaderId });
 });
-router4.delete("/pcfs/:id", async (req, res) => {
+router5.delete("/pcfs/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   const { reason } = req.body;
   if (!reason) return res.status(400).json({ error: "Reason required" });
@@ -47307,7 +43110,7 @@ router4.delete("/pcfs/:id", async (req, res) => {
   await db.update(pcfsTable).set({ isArchived: true }).where(eq(pcfsTable.id, id));
   res.json({ success: true });
 });
-router4.get("/fellowships/hierarchy", async (req, res) => {
+router5.get("/fellowships/hierarchy", async (req, res) => {
   const pcfs = await db.select().from(pcfsTable).where(eq(pcfsTable.isArchived, false));
   const standaloneSCs = await db.select().from(seniorCellsTable).where(and(eq(seniorCellsTable.isArchived, false), isNull(seniorCellsTable.pcfId)));
   const standaloneCells = await db.select().from(cellsTable).where(and(eq(cellsTable.isArchived, false), isNull(cellsTable.seniorCellId)));
@@ -47359,16 +43162,16 @@ router4.get("/fellowships/hierarchy", async (req, res) => {
   const enrichedCells = await Promise.all(standaloneCells.map(enrichCell));
   res.json({ pcfs: enrichedPcfs, standaloneSeniorCells: enrichedSCs, standaloneCells: enrichedCells });
 });
-var fellowships_default = router4;
+var fellowships_default = router5;
 
 // src/routes/departments.ts
-var import_express5 = __toESM(require_express2(), 1);
-var router5 = (0, import_express5.Router)();
-router5.use(authenticateToken);
+var import_express6 = __toESM(require_express2(), 1);
+var router6 = (0, import_express6.Router)();
+router6.use(authenticateToken);
 function fmt3(m) {
   return m.title ? `${m.title} ${m.firstName} ${m.lastName}` : `${m.firstName} ${m.lastName}`;
 }
-router5.get("/", async (req, res) => {
+router6.get("/", async (req, res) => {
   const currentMemberId = req.user?.memberId ?? null;
   const depts = await db.select().from(departmentsTable).where(eq(departmentsTable.isArchived, false)).orderBy(departmentsTable.name);
   const enriched = await Promise.all(depts.map(async (d) => {
@@ -47387,13 +43190,13 @@ router5.get("/", async (req, res) => {
   }));
   res.json(enriched);
 });
-router5.post("/", async (req, res) => {
+router6.post("/", async (req, res) => {
   const { name, description, headId } = req.body;
   if (!name) return res.status(400).json({ error: "Name required" });
   const created = await db.insert(departmentsTable).values({ name, description, headId: headId || null }).returning();
   res.status(201).json({ ...created[0], memberCount: 0, headName: null });
 });
-router5.get("/:id", async (req, res) => {
+router6.get("/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   const dept = await db.select().from(departmentsTable).where(eq(departmentsTable.id, id)).limit(1);
   if (!dept.length) return res.status(404).json({ error: "Department not found" });
@@ -47416,7 +43219,7 @@ router5.get("/:id", async (req, res) => {
   }
   res.json({ ...dept[0], memberCount: deptMembers.length, headName, members: sorted });
 });
-router5.patch("/:id", async (req, res) => {
+router6.patch("/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   const { name, description, headId } = req.body;
   const update = {};
@@ -47428,14 +43231,14 @@ router5.patch("/:id", async (req, res) => {
   const cnt = await db.select({ count: sql`count(*)` }).from(departmentMembersTable).where(eq(departmentMembersTable.departmentId, id));
   res.json({ ...updated[0], memberCount: Number(cnt[0].count) });
 });
-router5.delete("/:id", async (req, res) => {
+router6.delete("/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   const { reason } = req.body;
   if (!reason) return res.status(400).json({ error: "Reason required" });
   await db.update(departmentsTable).set({ isArchived: true, archiveReason: reason }).where(eq(departmentsTable.id, id));
   res.json({ success: true });
 });
-router5.post("/:id/members", async (req, res) => {
+router6.post("/:id/members", async (req, res) => {
   const departmentId = parseInt(req.params.id);
   const { memberId, subUnit, isHead } = req.body;
   if (!memberId) return res.status(400).json({ error: "Member ID required" });
@@ -47446,7 +43249,7 @@ router5.post("/:id/members", async (req, res) => {
   await db.insert(departmentMembersTable).values({ departmentId, memberId, subUnit, isHead: isHead || false }).onConflictDoNothing();
   res.status(201).json({ success: true });
 });
-router5.patch("/:id/members/:memberId", async (req, res) => {
+router6.patch("/:id/members/:memberId", async (req, res) => {
   const departmentId = parseInt(req.params.id);
   const memberId = parseInt(req.params.memberId);
   const { subUnit, isHead } = req.body;
@@ -47456,19 +43259,19 @@ router5.patch("/:id/members/:memberId", async (req, res) => {
   await db.update(departmentMembersTable).set(update).where(and(eq(departmentMembersTable.departmentId, departmentId), eq(departmentMembersTable.memberId, memberId)));
   res.json({ success: true });
 });
-router5.delete("/:id/members/:memberId", async (req, res) => {
+router6.delete("/:id/members/:memberId", async (req, res) => {
   const departmentId = parseInt(req.params.id);
   const memberId = parseInt(req.params.memberId);
   await db.delete(departmentMembersTable).where(and(eq(departmentMembersTable.departmentId, departmentId), eq(departmentMembersTable.memberId, memberId)));
   res.json({ success: true });
 });
-var departments_default = router5;
+var departments_default = router6;
 
 // src/routes/children.ts
-var import_express6 = __toESM(require_express2(), 1);
-var router6 = (0, import_express6.Router)();
-router6.use(authenticateToken);
-async function generateMembershipId2(firstName, lastName) {
+var import_express7 = __toESM(require_express2(), 1);
+var router7 = (0, import_express7.Router)();
+router7.use(authenticateToken);
+async function generateMembershipId3(firstName, lastName) {
   const initials = ((firstName[0] ?? "X") + (lastName[0] ?? "X")).toUpperCase();
   const prefix = `CEKSI-${initials}`;
   const existing = await db.select({ membershipId: membersTable.membershipId }).from(membersTable).where(ilike(membersTable.membershipId, `${prefix}%`));
@@ -47483,27 +43286,27 @@ async function cleanupFamilyIfUndersized(familyId) {
   const fam = await db.select().from(familiesTable).where(eq(familiesTable.id, familyId)).limit(1);
   if (!fam.length) return;
   const f = fam[0];
-  let count = (f.headId ? 1 : 0) + (f.spouseId ? 1 : 0);
+  let count2 = (f.headId ? 1 : 0) + (f.spouseId ? 1 : 0);
   const fcRows = await db.select().from(familyChildrenTable).where(eq(familyChildrenTable.familyId, familyId));
   for (const fc of fcRows) {
     if (fc.type === "child" && fc.childId) {
       const c = await db.select({ id: childrenTable.id }).from(childrenTable).where(and(eq(childrenTable.id, fc.childId), eq(childrenTable.isArchived, false))).limit(1);
-      if (c.length) count++;
+      if (c.length) count2++;
     } else if (fc.type === "teen" && fc.teenId) {
       const t = await db.select({ id: teensTable.id }).from(teensTable).where(and(eq(teensTable.id, fc.teenId), eq(teensTable.isArchived, false))).limit(1);
-      if (t.length) count++;
+      if (t.length) count2++;
     } else if (fc.type === "member" && fc.memberId) {
-      count++;
+      count2++;
     }
   }
-  if (count < 2) {
+  if (count2 < 2) {
     if (f.headId) await db.update(membersTable).set({ spouseId: null }).where(eq(membersTable.id, f.headId));
     if (f.spouseId) await db.update(membersTable).set({ spouseId: null }).where(eq(membersTable.id, f.spouseId));
     await db.delete(familyChildrenTable).where(eq(familyChildrenTable.familyId, familyId));
     await db.delete(familiesTable).where(eq(familiesTable.id, familyId));
   }
 }
-async function linkChildToParentFamily(parentId, childType, childEntityId) {
+async function linkChildToParentFamily2(parentId, childType, childEntityId) {
   const prevFcCond = childType === "child" ? and(eq(familyChildrenTable.childId, childEntityId), eq(familyChildrenTable.type, "child")) : and(eq(familyChildrenTable.teenId, childEntityId), eq(familyChildrenTable.type, "teen"));
   const prevFc = await db.select().from(familyChildrenTable).where(prevFcCond).limit(1);
   let family = null;
@@ -47562,7 +43365,7 @@ async function linkChildToParentFamily(parentId, childType, childEntityId) {
     await db.insert(familyChildrenTable).values(fcData);
   }
 }
-router6.get("/children", async (req, res) => {
+router7.get("/children", async (req, res) => {
   const { search, page = "1", limit = "25" } = req.query;
   const childClass = req.query.class;
   const pageNum = parseInt(page);
@@ -47596,7 +43399,7 @@ router6.get("/children", async (req, res) => {
     limit: limitNum
   });
 });
-router6.post("/children", async (req, res) => {
+router7.post("/children", async (req, res) => {
   const {
     firstName,
     lastName,
@@ -47621,11 +43424,11 @@ router6.post("/children", async (req, res) => {
   if (parentId) {
     const p = await db.select().from(membersTable).where(eq(membersTable.id, parentId)).limit(1);
     if (p.length) parentName = `${p[0].firstName} ${p[0].lastName}`;
-    await linkChildToParentFamily(parseInt(parentId), "child", created[0].id);
+    await linkChildToParentFamily2(parseInt(parentId), "child", created[0].id);
   }
   res.status(201).json({ ...created[0], parentName });
 });
-router6.patch("/children/:id", async (req, res) => {
+router7.patch("/children/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   const {
     firstName,
@@ -47662,7 +43465,7 @@ router6.patch("/children/:id", async (req, res) => {
       }
     }
     if (newParentId) {
-      await linkChildToParentFamily(newParentId, "child", id);
+      await linkChildToParentFamily2(newParentId, "child", id);
     }
   }
   let parentName = null;
@@ -47672,7 +43475,7 @@ router6.patch("/children/:id", async (req, res) => {
   }
   res.json({ ...updated[0], parentName });
 });
-router6.delete("/children/:id", async (req, res) => {
+router7.delete("/children/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   const { reason } = req.body;
   if (!reason) return res.status(400).json({ error: "Reason required" });
@@ -47686,7 +43489,7 @@ router6.delete("/children/:id", async (req, res) => {
   }
   res.json({ success: true });
 });
-router6.get("/teens", async (req, res) => {
+router7.get("/teens", async (req, res) => {
   const { search, page = "1", limit = "25" } = req.query;
   const pageNum = parseInt(page);
   const limitNum = Math.min(parseInt(limit), 100);
@@ -47718,7 +43521,7 @@ router6.get("/teens", async (req, res) => {
     limit: limitNum
   });
 });
-router6.post("/teens", async (req, res) => {
+router7.post("/teens", async (req, res) => {
   const { firstName, lastName, transferFromChildId, parentId, ...rest } = req.body;
   if (!firstName || !lastName)
     return res.status(400).json({ error: "First name and last name required" });
@@ -47739,7 +43542,7 @@ router6.post("/teens", async (req, res) => {
   if (parentId) {
     const p = await db.select().from(membersTable).where(eq(membersTable.id, parseInt(parentId))).limit(1);
     if (p.length) parentName = `${p[0].firstName} ${p[0].lastName}`;
-    await linkChildToParentFamily(
+    await linkChildToParentFamily2(
       parseInt(parentId),
       "teen",
       created[0].id
@@ -47747,7 +43550,7 @@ router6.post("/teens", async (req, res) => {
   }
   res.status(201).json({ ...created[0], parentName });
 });
-router6.patch("/teens/:id", async (req, res) => {
+router7.patch("/teens/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   const current = await db.select().from(teensTable).where(eq(teensTable.id, id)).limit(1);
   if (!current.length) return res.status(404).json({ error: "Teen not found" });
@@ -47768,7 +43571,7 @@ router6.patch("/teens/:id", async (req, res) => {
       }
     }
     if (newParentId) {
-      await linkChildToParentFamily(newParentId, "teen", id);
+      await linkChildToParentFamily2(newParentId, "teen", id);
     }
   }
   let parentName = null;
@@ -47778,14 +43581,14 @@ router6.patch("/teens/:id", async (req, res) => {
   }
   res.json({ ...updated[0], parentName });
 });
-router6.post("/teens/:id/promote", async (req, res) => {
+router7.post("/teens/:id/promote", async (req, res) => {
   const id = parseInt(req.params.id);
   const { gender } = req.body;
   if (!gender) return res.status(400).json({ error: "Gender is required to promote teen to member" });
   const teens = await db.select().from(teensTable).where(eq(teensTable.id, id)).limit(1);
   if (!teens.length) return res.status(404).json({ error: "Teen not found" });
   const teen = teens[0];
-  const membershipId = await generateMembershipId2(teen.firstName, teen.lastName);
+  const membershipId = await generateMembershipId3(teen.firstName, teen.lastName);
   const pin = String(Math.floor(1e3 + Math.random() * 9e3));
   const created = await db.insert(membersTable).values({
     membershipId,
@@ -47812,7 +43615,7 @@ router6.post("/teens/:id/promote", async (req, res) => {
   }
   res.status(201).json(created[0]);
 });
-router6.delete("/teens/:id", async (req, res) => {
+router7.delete("/teens/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   const { reason } = req.body;
   if (!reason) return res.status(400).json({ error: "Reason required" });
@@ -47826,12 +43629,12 @@ router6.delete("/teens/:id", async (req, res) => {
   }
   res.json({ success: true });
 });
-var children_default = router6;
+var children_default = router7;
 
 // src/routes/families.ts
-var import_express7 = __toESM(require_express2(), 1);
-var router7 = (0, import_express7.Router)();
-router7.use(authenticateToken);
+var import_express8 = __toESM(require_express2(), 1);
+var router8 = (0, import_express8.Router)();
+router8.use(authenticateToken);
 function fmt4(m) {
   return m.title ? `${m.title} ${m.firstName} ${m.lastName}` : `${m.firstName} ${m.lastName}`;
 }
@@ -47898,20 +43701,20 @@ async function cleanupFamilyIfUndersized2(familyId) {
   const fam = await db.select().from(familiesTable).where(eq(familiesTable.id, familyId)).limit(1);
   if (!fam.length) return;
   const f = fam[0];
-  let count = (f.headId ? 1 : 0) + (f.spouseId ? 1 : 0);
+  let count2 = (f.headId ? 1 : 0) + (f.spouseId ? 1 : 0);
   const fcRows = await db.select().from(familyChildrenTable).where(eq(familyChildrenTable.familyId, familyId));
   for (const fc of fcRows) {
     if (fc.type === "child" && fc.childId) {
       const c = await db.select({ id: childrenTable.id }).from(childrenTable).where(and(eq(childrenTable.id, fc.childId), eq(childrenTable.isArchived, false))).limit(1);
-      if (c.length) count++;
+      if (c.length) count2++;
     } else if (fc.type === "teen" && fc.teenId) {
       const t = await db.select({ id: teensTable.id }).from(teensTable).where(and(eq(teensTable.id, fc.teenId), eq(teensTable.isArchived, false))).limit(1);
-      if (t.length) count++;
+      if (t.length) count2++;
     } else if (fc.type === "member" && fc.memberId) {
-      count++;
+      count2++;
     }
   }
-  if (count < 2) {
+  if (count2 < 2) {
     if (f.headId) await db.update(membersTable).set({ spouseId: null }).where(eq(membersTable.id, f.headId));
     if (f.spouseId) await db.update(membersTable).set({ spouseId: null }).where(eq(membersTable.id, f.spouseId));
     await db.delete(familyChildrenTable).where(eq(familyChildrenTable.familyId, familyId));
@@ -47936,7 +43739,7 @@ async function isMemberInAnyFamily(memberId, excludeFamilyId) {
   const asChild = await db.select().from(familyChildrenTable).where(childCond).limit(1);
   return asChild.length > 0;
 }
-router7.get("/", async (req, res) => {
+router8.get("/", async (req, res) => {
   const { search, memberId } = req.query;
   let families = await db.select().from(familiesTable).orderBy(familiesTable.createdAt);
   if (memberId) {
@@ -47961,7 +43764,7 @@ router7.get("/", async (req, res) => {
   const enriched = await Promise.all(families.map(getFamilyDetail));
   res.json(enriched);
 });
-router7.post("/", async (req, res) => {
+router8.post("/", async (req, res) => {
   const {
     fatherId,
     motherId,
@@ -48018,7 +43821,7 @@ router7.post("/", async (req, res) => {
   await db.update(membersTable).set({ spouseId: parseInt(fatherId), maritalStatus: "married" }).where(eq(membersTable.id, parseInt(motherId)));
   res.status(201).json(await getFamilyDetail(created[0]));
 });
-router7.patch("/:id", async (req, res) => {
+router8.patch("/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   const { fatherId, motherId, childIds, teenIds, memberChildIds } = req.body;
   const fam = await db.select().from(familiesTable).where(eq(familiesTable.id, id)).limit(1);
@@ -48103,13 +43906,13 @@ router7.patch("/:id", async (req, res) => {
   }
   res.json(await getFamilyDetail(updated[0]));
 });
-router7.get("/:id", async (req, res) => {
+router8.get("/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   const fam = await db.select().from(familiesTable).where(eq(familiesTable.id, id)).limit(1);
   if (!fam.length) return res.status(404).json({ error: "Family not found" });
   res.json(await getFamilyDetail(fam[0]));
 });
-router7.delete("/:id", async (req, res) => {
+router8.delete("/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   const fam = await db.select().from(familiesTable).where(eq(familiesTable.id, id)).limit(1);
   if (fam.length) {
@@ -48124,13 +43927,13 @@ router7.delete("/:id", async (req, res) => {
   await db.delete(familiesTable).where(eq(familiesTable.id, id));
   res.json({ success: true });
 });
-var families_default = router7;
+var families_default = router8;
 
 // src/routes/attendance.ts
-var import_express8 = __toESM(require_express2(), 1);
-var router8 = (0, import_express8.Router)();
-router8.use(authenticateToken);
-async function generateMembershipId3(firstName, lastName, type = "member") {
+var import_express9 = __toESM(require_express2(), 1);
+var router9 = (0, import_express9.Router)();
+router9.use(authenticateToken);
+async function generateMembershipId4(firstName, lastName, type = "member") {
   const initials = ((firstName[0] ?? "X") + (lastName[0] ?? "X")).toUpperCase();
   const prefix = type === "visitor" ? `VST-${initials}` : `CEKSI-${initials}`;
   const existing = await db.select({ membershipId: membersTable.membershipId }).from(membersTable).where(ilike(membersTable.membershipId, `${prefix}%`));
@@ -48144,7 +43947,7 @@ async function generateMembershipId3(firstName, lastName, type = "member") {
 function fmt5(m) {
   return m.title ? `${m.title} ${m.firstName} ${m.lastName}` : `${m.firstName} ${m.lastName}`;
 }
-router8.get("/services", async (req, res) => {
+router9.get("/services", async (req, res) => {
   const { page = "1", limit = "25" } = req.query;
   const pageNum = parseInt(page);
   const limitNum = Math.min(parseInt(limit), 100);
@@ -48157,7 +43960,7 @@ router8.get("/services", async (req, res) => {
   }));
   res.json({ data: enriched, total: Number(total[0].count), page: pageNum, limit: limitNum });
 });
-router8.post("/services", async (req, res) => {
+router9.post("/services", async (req, res) => {
   const { name, date: date2, time: time2, force } = req.body;
   if (!name || !date2) return res.status(400).json({ error: "Name and date are required" });
   const open = await db.select().from(servicesTable).where(eq(servicesTable.status, "open")).limit(1);
@@ -48173,7 +43976,7 @@ router8.post("/services", async (req, res) => {
   const created = await db.insert(servicesTable).values({ name, date: date2, time: time2 || null, type: "onsite", status: "open" }).returning();
   res.status(201).json({ ...created[0], memberCount: 0, childrenCount: 0, teensCount: 0, firstTimerCount: 0, totalCount: 0 });
 });
-router8.patch("/services/:id", async (req, res) => {
+router9.patch("/services/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   const user = req.user;
   if (user.roleLevel > 3) return res.status(403).json({ error: "Not authorized" });
@@ -48188,7 +43991,7 @@ router8.patch("/services/:id", async (req, res) => {
   const cnt = await db.select({ count: sql`count(*)` }).from(attendanceRecordsTable).where(eq(attendanceRecordsTable.serviceId, id));
   res.json({ ...updated[0], totalCheckins: Number(cnt[0].count) });
 });
-router8.get("/services/active", async (req, res) => {
+router9.get("/services/active", async (req, res) => {
   const open = await db.select().from(servicesTable).where(eq(servicesTable.status, "open")).limit(1);
   if (!open.length) return res.json({ service: null });
   const svc = open[0];
@@ -48214,19 +44017,19 @@ router8.get("/services/active", async (req, res) => {
     }
   });
 });
-router8.get("/services/:id", async (req, res) => {
+router9.get("/services/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   const service = await db.select().from(servicesTable).where(eq(servicesTable.id, id)).limit(1);
   if (!service.length) return res.status(404).json({ error: "Service not found" });
   const cnt = await db.select({ count: sql`count(*)` }).from(attendanceRecordsTable).where(eq(attendanceRecordsTable.serviceId, id));
   res.json({ ...service[0], totalCheckins: Number(cnt[0].count) });
 });
-router8.post("/services/:id/close", async (req, res) => {
+router9.post("/services/:id/close", async (req, res) => {
   const id = parseInt(req.params.id);
   await db.update(servicesTable).set({ status: "closed", closedAt: /* @__PURE__ */ new Date() }).where(eq(servicesTable.id, id));
   res.json({ success: true });
 });
-router8.post("/services/:id/checkin", async (req, res) => {
+router9.post("/services/:id/checkin", async (req, res) => {
   const serviceId = parseInt(req.params.id);
   const { memberId, membershipId, method = "manual" } = req.body;
   let member = null;
@@ -48248,21 +44051,24 @@ router8.post("/services/:id/checkin", async (req, res) => {
     return res.json({ success: true, member: { ...member, cellName, leadershipRoles: [] }, alreadyCheckedIn: true });
   }
   await db.insert(attendanceRecordsTable).values({ serviceId, memberId: member.id, cellId: member.cellId ?? null, method });
+  const checkinActor = req.user;
   await db.insert(activityLogTable).values({
     type: "checkin",
     description: `${fmt5(member)} checked in`,
     memberId: member.id,
-    memberName: fmt5(member)
+    memberName: fmt5(member),
+    performedByUserId: checkinActor?.id ?? null,
+    performedByName: checkinActor?.username ?? null
   });
   res.json({ success: true, member: { ...member, cellName, leadershipRoles: [] }, alreadyCheckedIn: false });
 });
-router8.delete("/services/:id/checkin/:memberId", async (req, res) => {
+router9.delete("/services/:id/checkin/:memberId", async (req, res) => {
   const serviceId = parseInt(req.params.id);
   const memberId = parseInt(req.params.memberId);
   await db.delete(attendanceRecordsTable).where(and(eq(attendanceRecordsTable.serviceId, serviceId), eq(attendanceRecordsTable.memberId, memberId)));
   res.json({ success: true });
 });
-router8.post("/services/:id/register-child", async (req, res) => {
+router9.post("/services/:id/register-child", async (req, res) => {
   const serviceId = parseInt(req.params.id);
   const { childId } = req.body;
   if (!childId) return res.status(400).json({ error: "childId required" });
@@ -48273,7 +44079,7 @@ router8.post("/services/:id/register-child", async (req, res) => {
   await db.insert(serviceChildrenAttendanceTable).values({ serviceId, childId });
   res.json({ success: true, child: child[0], alreadyRegistered: false });
 });
-router8.post("/services/:id/register-teen", async (req, res) => {
+router9.post("/services/:id/register-teen", async (req, res) => {
   const serviceId = parseInt(req.params.id);
   const { teenId } = req.body;
   if (!teenId) return res.status(400).json({ error: "teenId required" });
@@ -48284,19 +44090,19 @@ router8.post("/services/:id/register-teen", async (req, res) => {
   await db.insert(serviceTeensAttendanceTable).values({ serviceId, teenId });
   res.json({ success: true, teen: teen[0], alreadyRegistered: false });
 });
-router8.delete("/services/:serviceId/register-child/:childId", async (req, res) => {
+router9.delete("/services/:serviceId/register-child/:childId", async (req, res) => {
   const serviceId = parseInt(req.params.serviceId);
   const childId = parseInt(req.params.childId);
   await db.delete(serviceChildrenAttendanceTable).where(and(eq(serviceChildrenAttendanceTable.serviceId, serviceId), eq(serviceChildrenAttendanceTable.childId, childId)));
   res.json({ success: true });
 });
-router8.delete("/services/:serviceId/register-teen/:teenId", async (req, res) => {
+router9.delete("/services/:serviceId/register-teen/:teenId", async (req, res) => {
   const serviceId = parseInt(req.params.serviceId);
   const teenId = parseInt(req.params.teenId);
   await db.delete(serviceTeensAttendanceTable).where(and(eq(serviceTeensAttendanceTable.serviceId, serviceId), eq(serviceTeensAttendanceTable.teenId, teenId)));
   res.json({ success: true });
 });
-router8.get("/services/:id/attendance", async (req, res) => {
+router9.get("/services/:id/attendance", async (req, res) => {
   const serviceId = parseInt(req.params.id);
   const checkins = await db.select().from(attendanceRecordsTable).where(eq(attendanceRecordsTable.serviceId, serviceId));
   const checkedInIds = new Set(checkins.map((c) => c.memberId));
@@ -48547,7 +44353,7 @@ router8.get("/services/:id/attendance", async (req, res) => {
     teensList
   });
 });
-router8.get("/first-timers", async (req, res) => {
+router9.get("/first-timers", async (req, res) => {
   const { search, serviceId, page = "1", limit = "25" } = req.query;
   const pageNum = parseInt(page);
   const limitNum = Math.min(parseInt(limit), 100);
@@ -48580,7 +44386,7 @@ router8.get("/first-timers", async (req, res) => {
   }));
   res.json({ data: enriched, total: Number(total[0].count), page: pageNum, limit: limitNum });
 });
-router8.get("/first-timers/voided", async (req, res) => {
+router9.get("/first-timers/voided", async (req, res) => {
   const { search } = req.query;
   let conditions = [eq(firstTimersTable.isRegistrationError, true)];
   if (search) conditions.push(or(ilike(firstTimersTable.firstName, `%${search}%`), ilike(firstTimersTable.lastName, `%${search}%`)));
@@ -48598,7 +44404,7 @@ router8.get("/first-timers/voided", async (req, res) => {
   }));
   res.json({ data: enriched });
 });
-router8.post("/first-timers/:id/restore", async (req, res) => {
+router9.post("/first-timers/:id/restore", async (req, res) => {
   const id = parseInt(req.params.id);
   const ft = await db.select().from(firstTimersTable).where(eq(firstTimersTable.id, id)).limit(1);
   if (!ft.length) return res.status(404).json({ error: "Record not found" });
@@ -48611,7 +44417,7 @@ router8.post("/first-timers/:id/restore", async (req, res) => {
   }).where(eq(firstTimersTable.id, id));
   res.json({ success: true });
 });
-router8.get("/first-timers/check-name", async (req, res) => {
+router9.get("/first-timers/check-name", async (req, res) => {
   const { firstName, lastName } = req.query;
   if (!firstName || !lastName) return res.json({ matches: [] });
   const matches = await db.select({
@@ -48629,7 +44435,7 @@ router8.get("/first-timers/check-name", async (req, res) => {
   ));
   res.json({ matches });
 });
-router8.post("/first-timers", async (req, res) => {
+router9.post("/first-timers", async (req, res) => {
   const { firstName, lastName, gender, contact, invitedById, invitedByChildId, invitedByTeenId, serviceId } = req.body;
   if (!firstName || !lastName || !gender || !serviceId) return res.status(400).json({ error: "First name, last name, gender, and service required" });
   if (contact) {
@@ -48654,7 +44460,8 @@ router8.post("/first-timers", async (req, res) => {
     serviceId
   }).returning();
   const svc = await db.select().from(servicesTable).where(eq(servicesTable.id, serviceId)).limit(1);
-  await db.insert(activityLogTable).values({ type: "first_timer", description: `First timer ${firstName} ${lastName} registered` });
+  const ftActor = req.user;
+  await db.insert(activityLogTable).values({ type: "first_timer", description: `First timer ${firstName} ${lastName} registered`, performedByUserId: ftActor?.id ?? null, performedByName: ftActor?.username ?? null });
   let invitedByFellowship = null;
   let invitedByName = null;
   if (invitedById) {
@@ -48681,7 +44488,7 @@ router8.post("/first-timers", async (req, res) => {
     invitedByFellowship
   });
 });
-router8.delete("/first-timers/:id", async (req, res) => {
+router9.delete("/first-timers/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   const { reason } = req.body;
   const permanent = req.query.permanent === "true";
@@ -48700,7 +44507,7 @@ router8.delete("/first-timers/:id", async (req, res) => {
   }
   res.json({ success: true });
 });
-router8.put("/first-timers/:id", async (req, res) => {
+router9.put("/first-timers/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   const { firstName, lastName, gender, contact, residence, bornAgain, maritalStatus, prayerRequest } = req.body;
   const ft = await db.select().from(firstTimersTable).where(eq(firstTimersTable.id, id)).limit(1);
@@ -48717,7 +44524,7 @@ router8.put("/first-timers/:id", async (req, res) => {
   }).where(eq(firstTimersTable.id, id)).returning();
   res.json(updated[0]);
 });
-router8.post("/first-timers/:id/send-to-teens", async (req, res) => {
+router9.post("/first-timers/:id/send-to-teens", async (req, res) => {
   const id = parseInt(req.params.id);
   const ft = await db.select().from(firstTimersTable).where(eq(firstTimersTable.id, id)).limit(1);
   if (!ft.length) return res.status(404).json({ error: "First timer not found" });
@@ -48732,7 +44539,7 @@ router8.post("/first-timers/:id/send-to-teens", async (req, res) => {
   await db.update(firstTimersTable).set({ isArchived: true, archiveReason: "Sent to Teens Church" }).where(eq(firstTimersTable.id, id));
   res.json(teen[0]);
 });
-router8.post("/first-timers/:id/send-to-children", async (req, res) => {
+router9.post("/first-timers/:id/send-to-children", async (req, res) => {
   const id = parseInt(req.params.id);
   const { class: childClass } = req.body;
   if (!childClass) return res.status(400).json({ error: "Class required" });
@@ -48747,7 +44554,7 @@ router8.post("/first-timers/:id/send-to-children", async (req, res) => {
   await db.update(firstTimersTable).set({ isArchived: true, archiveReason: "Sent to Children's Church" }).where(eq(firstTimersTable.id, id));
   res.json(child[0]);
 });
-router8.post("/first-timers/:id/convert", async (req, res) => {
+router9.post("/first-timers/:id/convert", async (req, res) => {
   const id = parseInt(req.params.id);
   const { cellId, force } = req.body;
   if (!cellId) return res.status(400).json({ error: "Cell ID required" });
@@ -48777,7 +44584,7 @@ router8.post("/first-timers/:id/convert", async (req, res) => {
     }
   }
   const pin = String(Math.floor(1e3 + Math.random() * 9e3));
-  const membershipId = await generateMembershipId3(ft[0].firstName, ft[0].lastName, "member");
+  const membershipId = await generateMembershipId4(ft[0].firstName, ft[0].lastName, "member");
   const member = await db.insert(membersTable).values({
     membershipId,
     firstName: ft[0].firstName,
@@ -48795,12 +44602,12 @@ router8.post("/first-timers/:id/convert", async (req, res) => {
   await db.update(givingsTable).set({ memberId: member[0].id, firstTimerId: null }).where(eq(givingsTable.firstTimerId, id));
   res.json({ ...member[0], leadershipRoles: [] });
 });
-router8.post("/first-timers/:id/convert-to-visitor", async (req, res) => {
+router9.post("/first-timers/:id/convert-to-visitor", async (req, res) => {
   const id = parseInt(req.params.id);
   const ft = await db.select().from(firstTimersTable).where(eq(firstTimersTable.id, id)).limit(1);
   if (!ft.length) return res.status(404).json({ error: "First timer not found" });
   const pin = String(Math.floor(1e3 + Math.random() * 9e3));
-  const membershipId = await generateMembershipId3(ft[0].firstName, ft[0].lastName, "visitor");
+  const membershipId = await generateMembershipId4(ft[0].firstName, ft[0].lastName, "visitor");
   const member = await db.insert(membersTable).values({
     membershipId,
     firstName: ft[0].firstName,
@@ -48818,7 +44625,7 @@ router8.post("/first-timers/:id/convert-to-visitor", async (req, res) => {
   await db.update(givingsTable).set({ memberId: member[0].id, firstTimerId: null }).where(eq(givingsTable.firstTimerId, id));
   res.json({ ...member[0], leadershipRoles: [] });
 });
-router8.post("/first-timers/:id/returning", async (req, res) => {
+router9.post("/first-timers/:id/returning", async (req, res) => {
   const id = parseInt(req.params.id);
   const { serviceId } = req.body;
   if (!serviceId) return res.status(400).json({ error: "Service ID required" });
@@ -48849,7 +44656,7 @@ router8.post("/first-timers/:id/returning", async (req, res) => {
   });
   res.json({ success: true, alreadyRegistered: false });
 });
-router8.get("/reports/monthly", async (req, res) => {
+router9.get("/reports/monthly", async (req, res) => {
   const { year: year2, month } = req.query;
   if (!year2 || !month) return res.status(400).json({ error: "Year and month required" });
   const y = parseInt(year2);
@@ -48879,7 +44686,7 @@ router8.get("/reports/monthly", async (req, res) => {
   }
   res.json({ year: y, month: m, services, pcfReports });
 });
-router8.get("/reports/overall", async (req, res) => {
+router9.get("/reports/overall", async (req, res) => {
   const { startDate, endDate } = req.query;
   if (!startDate || !endDate) return res.status(400).json({ error: "Start and end dates required" });
   const services = await db.select().from(servicesTable).where(and(gte(servicesTable.date, startDate), lte(servicesTable.date, endDate)));
@@ -48897,7 +44704,7 @@ router8.get("/reports/overall", async (req, res) => {
   }
   res.json({ startDate, endDate, services, fellowshipRows });
 });
-router8.get("/reports/members-attendance", async (req, res) => {
+router9.get("/reports/members-attendance", async (req, res) => {
   const { month, serviceId, cellId, seniorCellId, pcfId, search, page = "1", limit = "20" } = req.query;
   const pageNum = parseInt(page);
   const limitNum = Math.min(parseInt(limit), 50);
@@ -48975,7 +44782,7 @@ router8.get("/reports/members-attendance", async (req, res) => {
     limit: limitNum
   });
 });
-router8.get("/reports/fellowship-attendance", async (req, res) => {
+router9.get("/reports/fellowship-attendance", async (req, res) => {
   const { month } = req.query;
   if (!month) return res.status(400).json({ error: "Month required (YYYY-MM)" });
   const [y, m] = month.split("-");
@@ -49067,11 +44874,11 @@ router8.get("/reports/fellowship-attendance", async (req, res) => {
         const cellAtt = {};
         for (const svc of services) {
           const cnt = await db.select({ count: sql`count(*)` }).from(attendanceRecordsTable).where(and(eq(attendanceRecordsTable.serviceId, svc.id), eq(attendanceRecordsTable.cellId, cell.id)));
-          let count = Number(cnt[0].count);
-          count += returningFtByCellId[cell.id]?.[svc.id] ?? 0;
-          cellAtt[svc.id] = count;
-          scAtt[svc.id] = (scAtt[svc.id] || 0) + count;
-          pcfAtt[svc.id] = (pcfAtt[svc.id] || 0) + count;
+          let count2 = Number(cnt[0].count);
+          count2 += returningFtByCellId[cell.id]?.[svc.id] ?? 0;
+          cellAtt[svc.id] = count2;
+          scAtt[svc.id] = (scAtt[svc.id] || 0) + count2;
+          pcfAtt[svc.id] = (pcfAtt[svc.id] || 0) + count2;
         }
         cellNodes.push({ id: cell.id, name: cell.name, serviceAttendance: cellAtt, memberCount });
       }
@@ -49161,7 +44968,7 @@ router8.get("/reports/fellowship-attendance", async (req, res) => {
     standaloneCells: standaloneCellNodes
   });
 });
-router8.get("/reports/first-timers-status", async (req, res) => {
+router9.get("/reports/first-timers-status", async (req, res) => {
   const { search, page = "1", limit = "20", startDate, endDate } = req.query;
   const pageNum = parseInt(page);
   const limitNum = Math.min(parseInt(limit), 50);
@@ -49324,7 +45131,7 @@ router8.get("/reports/first-timers-status", async (req, res) => {
     limit: limitNum
   });
 });
-router8.get("/reports/attendance-trend", async (req, res) => {
+router9.get("/reports/attendance-trend", async (req, res) => {
   const { view = "month", month, year: year2, pcfId, seniorCellId, cellId, group } = req.query;
   if (group === "teens" || group === "children") {
     const tbl = group === "teens" ? serviceTeensAttendanceTable : serviceChildrenAttendanceTable;
@@ -49353,12 +45160,12 @@ router8.get("/reports/attendance-trend", async (req, res) => {
       const startDate = `${y2}-${String(mo).padStart(2, "0")}-01`;
       const endDate = `${y2}-${String(mo).padStart(2, "0")}-31`;
       const svcs = await db.select({ id: servicesTable.id }).from(servicesTable).where(and(gte(servicesTable.date, startDate), lte(servicesTable.date, endDate)));
-      let count = 0;
+      let count2 = 0;
       if (svcs.length) {
         const cnt = await db.select({ count: sql`count(*)` }).from(tbl).where(inArray(tbl.serviceId, svcs.map((s) => s.id)));
-        count = Number(cnt[0].count);
+        count2 = Number(cnt[0].count);
       }
-      const avg = svcs.length > 0 ? Math.round(count / svcs.length) : 0;
+      const avg = svcs.length > 0 ? Math.round(count2 / svcs.length) : 0;
       return { label: MONTHS2[mo - 1], month: `${y2}-${String(mo).padStart(2, "0")}`, total: avg };
     }));
     return res.json({ view: "year", year: y2, dataPoints: dataPoints2 });
@@ -49447,7 +45254,7 @@ router8.get("/reports/attendance-trend", async (req, res) => {
   );
   res.json({ view: "year", year: y, dataPoints });
 });
-router8.get("/reports/ct-attendance", async (req, res) => {
+router9.get("/reports/ct-attendance", async (req, res) => {
   const { month, group } = req.query;
   if (!month || !group || group !== "children" && group !== "teens") {
     return res.status(400).json({ error: "month and group (children|teens) required" });
@@ -49503,7 +45310,7 @@ router8.get("/reports/ct-attendance", async (req, res) => {
   const members = Array.from(entityMap.values()).sort((a, b2) => a.name.localeCompare(b2.name));
   return res.json({ services, members });
 });
-router8.post("/services/self-checkin", async (req, res) => {
+router9.post("/services/self-checkin", async (req, res) => {
   const user = req.user;
   const memberId = user?.memberId;
   if (!memberId) return res.status(403).json({ error: "Member account required to self check-in" });
@@ -49528,12 +45335,12 @@ router8.post("/services/self-checkin", async (req, res) => {
   });
   res.json({ success: true, alreadyCheckedIn: false });
 });
-var attendance_default = router8;
+var attendance_default = router9;
 
 // src/routes/finance.ts
-var import_express9 = __toESM(require_express2(), 1);
-var router9 = (0, import_express9.Router)();
-router9.use(authenticateToken);
+var import_express10 = __toESM(require_express2(), 1);
+var router10 = (0, import_express10.Router)();
+router10.use(authenticateToken);
 function fmt6(m) {
   return m.title ? `${m.title} ${m.firstName} ${m.lastName}` : `${m.firstName} ${m.lastName}`;
 }
@@ -49557,21 +45364,21 @@ async function resolvePersonName(g) {
   }
   return "Unknown";
 }
-router9.get("/ministry-years", async (req, res) => {
+router10.get("/ministry-years", async (req, res) => {
   const { activeOnly } = req.query;
   let query = db.select().from(ministryYearsTable).orderBy(ministryYearsTable.startDate);
   const years = await query;
   const filtered = activeOnly === "true" ? years.filter((y) => !y.isClosed) : years;
   res.json(filtered);
 });
-router9.post("/ministry-years", requireRole(2), async (req, res) => {
+router10.post("/ministry-years", requireRole(2), async (req, res) => {
   const { name, startDate, endDate } = req.body;
   if (!name || !startDate || !endDate) return res.status(400).json({ error: "Name, start date, and end date required" });
   await db.update(ministryYearsTable).set({ isActive: false });
   const created = await db.insert(ministryYearsTable).values({ name, startDate, endDate, isActive: true }).returning();
   res.status(201).json(created[0]);
 });
-router9.delete("/ministry-years/:id", requireRole(2), async (req, res) => {
+router10.delete("/ministry-years/:id", requireRole(2), async (req, res) => {
   const id = parseInt(req.params.id);
   const year2 = await db.select().from(ministryYearsTable).where(eq(ministryYearsTable.id, id)).limit(1);
   if (!year2.length) return res.status(404).json({ error: "Ministry year not found" });
@@ -49582,7 +45389,7 @@ router9.delete("/ministry-years/:id", requireRole(2), async (req, res) => {
   await db.delete(ministryYearsTable).where(eq(ministryYearsTable.id, id));
   res.json({ success: true });
 });
-router9.patch("/ministry-years/:id", requireRole(2), async (req, res) => {
+router10.patch("/ministry-years/:id", requireRole(2), async (req, res) => {
   const id = parseInt(req.params.id);
   const { name, startDate, endDate, isActive, isClosed } = req.body;
   const updates = {};
@@ -49606,17 +45413,17 @@ router9.patch("/ministry-years/:id", requireRole(2), async (req, res) => {
   if (!updated.length) return res.status(404).json({ error: "Ministry year not found" });
   res.json(updated[0]);
 });
-router9.get("/giving-types", async (req, res) => {
+router10.get("/giving-types", async (req, res) => {
   const types5 = await db.select().from(givingTypesTable).orderBy(givingTypesTable.name);
   res.json(types5);
 });
-router9.post("/giving-types", requireRole(2), async (req, res) => {
+router10.post("/giving-types", requireRole(2), async (req, res) => {
   const { name, description } = req.body;
   if (!name) return res.status(400).json({ error: "Name required" });
   const created = await db.insert(givingTypesTable).values({ name, description }).returning();
   res.status(201).json(created[0]);
 });
-router9.patch("/giving-types/:id", requireRole(2), async (req, res) => {
+router10.patch("/giving-types/:id", requireRole(2), async (req, res) => {
   const id = parseInt(req.params.id);
   const { name, description } = req.body;
   const updates = {};
@@ -49627,7 +45434,7 @@ router9.patch("/giving-types/:id", requireRole(2), async (req, res) => {
   if (!updated.length) return res.status(404).json({ error: "Giving type not found" });
   res.json(updated[0]);
 });
-router9.get("/giving-search", async (req, res) => {
+router10.get("/giving-search", async (req, res) => {
   const { q = "", type = "" } = req.query;
   if (!q || String(q).length < 2) return res.json([]);
   const term = `%${q}%`;
@@ -49651,7 +45458,7 @@ router9.get("/giving-search", async (req, res) => {
   }
   res.json(results);
 });
-router9.get("/givings", async (req, res) => {
+router10.get("/givings", async (req, res) => {
   const { memberId, ministryYearId, givingTypeId, page = "1", limit = "25" } = req.query;
   const pageNum = parseInt(page);
   const limitNum = Math.min(parseInt(limit), 100);
@@ -49676,7 +45483,7 @@ router9.get("/givings", async (req, res) => {
   }));
   res.json({ data: enriched, total: Number(total[0].count), page: pageNum, limit: limitNum });
 });
-router9.post("/givings", async (req, res) => {
+router10.post("/givings", async (req, res) => {
   const { memberId, teenId, childId, firstTimerId, personName, givingTypeId, amount, date: date2, ministryYearId, notes } = req.body;
   if (!givingTypeId || !amount || !date2 || !ministryYearId) return res.status(400).json({ error: "Required fields missing" });
   if (!memberId && !teenId && !childId && !firstTimerId) return res.status(400).json({ error: "Person (member, teen, child, or first timer) required" });
@@ -49706,7 +45513,7 @@ router9.post("/givings", async (req, res) => {
     ministryYearName: year2.length ? year2[0].name : "Unknown"
   });
 });
-router9.patch("/givings/:id", requireRole(2), async (req, res) => {
+router10.patch("/givings/:id", requireRole(2), async (req, res) => {
   const id = parseInt(req.params.id);
   const { memberId, teenId, childId, personName, givingTypeId, amount, date: date2, ministryYearId, notes } = req.body;
   const updates = {};
@@ -49734,12 +45541,12 @@ router9.patch("/givings/:id", requireRole(2), async (req, res) => {
     ministryYearName: year2.length ? year2[0].name : "Unknown"
   });
 });
-router9.delete("/givings/:id", requireRole(2), async (req, res) => {
+router10.delete("/givings/:id", requireRole(2), async (req, res) => {
   const id = parseInt(req.params.id);
   await db.update(givingsTable).set({ isArchived: true }).where(eq(givingsTable.id, id));
   res.json({ success: true });
 });
-router9.get("/reports/finance", async (req, res) => {
+router10.get("/reports/finance", async (req, res) => {
   const { ministryYearId } = req.query;
   const allYears = await db.select().from(ministryYearsTable).orderBy(ministryYearsTable.startDate);
   const givingTypes = await db.select().from(givingTypesTable);
@@ -49815,13 +45622,13 @@ router9.get("/reports/finance", async (req, res) => {
   }
   res.json({ years: result });
 });
-var finance_default = router9;
+var finance_default = router10;
 
 // src/routes/archives.ts
-var import_express10 = __toESM(require_express2(), 1);
-var router10 = (0, import_express10.Router)();
-router10.use(authenticateToken);
-router10.get("/members", async (req, res) => {
+var import_express11 = __toESM(require_express2(), 1);
+var router11 = (0, import_express11.Router)();
+router11.use(authenticateToken);
+router11.get("/members", async (req, res) => {
   const { search, page = "1", limit = "25" } = req.query;
   const pageNum = parseInt(page);
   const limitNum = Math.min(parseInt(limit), 100);
@@ -49849,14 +45656,14 @@ router10.get("/members", async (req, res) => {
   }));
   res.json({ data: enriched, total: Number(total[0].count), page: pageNum, limit: limitNum });
 });
-router10.post("/members/:id/restore", async (req, res) => {
+router11.post("/members/:id/restore", async (req, res) => {
   const id = parseInt(req.params.id);
   const { reason } = req.body;
   if (!reason) return res.status(400).json({ error: "Reason required" });
   await db.update(membersTable).set({ isArchived: false, archiveReason: null, archivedAt: null, archivedBy: null }).where(eq(membersTable.id, id));
   res.json({ success: true });
 });
-router10.delete("/members/:id", requireRole(1), async (req, res) => {
+router11.delete("/members/:id", requireRole(1), async (req, res) => {
   const id = parseInt(req.params.id);
   const member = await db.select().from(membersTable).where(eq(membersTable.id, id)).limit(1);
   if (!member.length) return res.status(404).json({ error: "Member not found" });
@@ -49878,7 +45685,7 @@ router10.delete("/members/:id", requireRole(1), async (req, res) => {
   await db.delete(membersTable).where(eq(membersTable.id, id));
   res.json({ success: true });
 });
-router10.get("/first-timers", async (req, res) => {
+router11.get("/first-timers", async (req, res) => {
   const { page = "1", limit = "25" } = req.query;
   const pageNum = parseInt(page);
   const limitNum = Math.min(parseInt(limit), 100);
@@ -49902,24 +45709,24 @@ router10.get("/first-timers", async (req, res) => {
   }));
   res.json({ data: enriched, total: Number(total[0].count), page: pageNum, limit: limitNum });
 });
-router10.post("/first-timers/:id/restore", async (req, res) => {
+router11.post("/first-timers/:id/restore", async (req, res) => {
   const id = parseInt(req.params.id);
   const { reason } = req.body;
   if (!reason) return res.status(400).json({ error: "Reason required" });
   await db.update(firstTimersTable).set({ isArchived: false, archiveReason: null, archivedAt: null, archivedBy: null }).where(eq(firstTimersTable.id, id));
   res.json({ success: true });
 });
-var archives_default = router10;
+var archives_default = router11;
 
 // src/routes/admin.ts
-var import_express11 = __toESM(require_express2(), 1);
-import crypto6 from "crypto";
-var router11 = (0, import_express11.Router)();
-router11.use(authenticateToken);
-function hashPassword4(password) {
-  return crypto6.createHash("sha256").update(password + "ce_kumasi_salt").digest("hex");
+var import_express12 = __toESM(require_express2(), 1);
+import crypto7 from "crypto";
+var router12 = (0, import_express12.Router)();
+router12.use(authenticateToken);
+function hashPassword5(password) {
+  return crypto7.createHash("sha256").update(password + "ce_kumasi_salt").digest("hex");
 }
-router11.get("/users", requireRole(1), async (req, res) => {
+router12.get("/users", requireRole(1), async (req, res) => {
   const users = await db.select().from(usersTable).where(ne(usersTable.roleLevel, 5));
   const enriched = await Promise.all(users.map(async (u) => {
     let memberName = "";
@@ -49931,20 +45738,20 @@ router11.get("/users", requireRole(1), async (req, res) => {
   }));
   res.json(enriched);
 });
-router11.post("/users", requireRole(1), async (req, res) => {
+router12.post("/users", requireRole(1), async (req, res) => {
   const { username, password, roleLevel, roleSubtype, memberId } = req.body;
   if (!username || !password || !roleLevel || !memberId) return res.status(400).json({ error: "All fields required" });
   const existing = await db.select().from(usersTable).where(eq(usersTable.username, username)).limit(1);
   if (existing.length) return res.status(409).json({ error: "Username already exists" });
-  const created = await db.insert(usersTable).values({ username, passwordHash: hashPassword4(password), roleLevel, roleSubtype, memberId }).returning();
+  const created = await db.insert(usersTable).values({ username, passwordHash: hashPassword5(password), roleLevel, roleSubtype, memberId }).returning();
   const m = await db.select().from(membersTable).where(eq(membersTable.id, memberId)).limit(1);
   res.status(201).json({ id: created[0].id, username: created[0].username, roleLevel: created[0].roleLevel, roleSubtype: created[0].roleSubtype, memberId, memberName: m.length ? `${m[0].firstName} ${m[0].lastName}` : "" });
 });
-router11.patch("/users/:id", requireRole(1), async (req, res) => {
+router12.patch("/users/:id", requireRole(1), async (req, res) => {
   const id = parseInt(req.params.id);
   const { password, roleLevel, roleSubtype, isActive } = req.body;
   const update = {};
-  if (password) update.passwordHash = hashPassword4(password);
+  if (password) update.passwordHash = hashPassword5(password);
   if (roleLevel !== void 0) update.roleLevel = roleLevel;
   if (roleSubtype !== void 0) update.roleSubtype = roleSubtype;
   if (isActive !== void 0) update.isActive = isActive;
@@ -49952,49 +45759,56 @@ router11.patch("/users/:id", requireRole(1), async (req, res) => {
   if (!updated.length) return res.status(404).json({ error: "User not found" });
   res.json({ id: updated[0].id, username: updated[0].username, roleLevel: updated[0].roleLevel, roleSubtype: updated[0].roleSubtype, memberId: updated[0].memberId || 0, memberName: "" });
 });
-router11.delete("/users/:id", requireRole(1), async (req, res) => {
+router12.delete("/users/:id", requireRole(1), async (req, res) => {
   const id = parseInt(req.params.id);
   await db.delete(usersTable).where(eq(usersTable.id, id));
   res.json({ success: true });
 });
-router11.get("/activity-log", requireRole(1), async (req, res) => {
-  const limit = Math.min(parseInt(String(req.query.limit || "100")), 500);
-  const offset = parseInt(String(req.query.offset || "0"));
+router12.get("/activity-log", requireRole(1), async (req, res) => {
+  const pageSize = 10;
+  const page = Math.max(1, parseInt(String(req.query.page || "1")));
+  const offset = (page - 1) * pageSize;
   const search = String(req.query.search || "").trim();
-  let query = db.select().from(activityLogTable).$dynamic();
-  if (search) {
-    query = query.where(
-      or(
-        ilike(activityLogTable.description, `%${search}%`),
-        ilike(activityLogTable.type, `%${search}%`),
-        ilike(activityLogTable.memberName, `%${search}%`)
-      )
-    );
+  try {
+    const whereClause = search ? or(
+      ilike(activityLogTable.description, `%${search}%`),
+      ilike(activityLogTable.type, `%${search}%`),
+      ilike(activityLogTable.memberName, `%${search}%`),
+      ilike(activityLogTable.performedByName, `%${search}%`)
+    ) : void 0;
+    const [totalResult, items] = await Promise.all([
+      whereClause ? db.select({ count: count() }).from(activityLogTable).where(whereClause) : db.select({ count: count() }).from(activityLogTable),
+      whereClause ? db.select().from(activityLogTable).where(whereClause).orderBy(desc(activityLogTable.createdAt)).limit(pageSize).offset(offset) : db.select().from(activityLogTable).orderBy(desc(activityLogTable.createdAt)).limit(pageSize).offset(offset)
+    ]);
+    res.json({ items, total: Number(totalResult[0]?.count ?? 0), page, pageSize });
+  } catch (err) {
+    res.status(500).json({ error: err?.message });
   }
-  const logs = await query.orderBy(desc(activityLogTable.createdAt)).limit(limit).offset(offset);
-  res.json(logs);
 });
-router11.post("/activity-log", requireRole(1), async (req, res) => {
+router12.post("/activity-log", requireRole(1), async (req, res) => {
   const { type, description, memberId, memberName } = req.body;
   if (!type || !description) return res.status(400).json({ error: "type and description required" });
-  const created = await db.insert(activityLogTable).values({ type, description, memberId: memberId ?? null, memberName: memberName ?? null }).returning();
+  const actor = req.user;
+  const created = await db.insert(activityLogTable).values({
+    type,
+    description,
+    memberId: memberId ?? null,
+    memberName: memberName ?? null,
+    performedByUserId: actor?.id ?? null,
+    performedByName: actor?.username ?? null
+  }).returning();
   res.status(201).json(created[0]);
 });
-router11.delete("/activity-log/:id", requireRole(1), async (req, res) => {
-  const id = parseInt(req.params.id);
-  await db.delete(activityLogTable).where(eq(activityLogTable.id, id));
-  res.json({ success: true });
-});
-var admin_default = router11;
+var admin_default = router12;
 
 // src/routes/dashboard.ts
-var import_express12 = __toESM(require_express2(), 1);
-var router12 = (0, import_express12.Router)();
-router12.use(authenticateToken);
+var import_express13 = __toESM(require_express2(), 1);
+var router13 = (0, import_express13.Router)();
+router13.use(authenticateToken);
 function fmt7(m) {
   return m.title ? `${m.title} ${m.firstName} ${m.lastName}` : `${m.firstName} ${m.lastName}`;
 }
-router12.get("/summary", async (req, res) => {
+router13.get("/summary", async (req, res) => {
   const [
     totalMembersRes,
     totalVisitorsRes,
@@ -50058,7 +45872,7 @@ router12.get("/summary", async (req, res) => {
     totalFamilies: Number(totalFamiliesRes[0].count)
   });
 });
-router12.get("/birthdays", async (req, res) => {
+router13.get("/birthdays", async (req, res) => {
   const today = /* @__PURE__ */ new Date();
   function calcDaysUntil(dob) {
     const d = new Date(dob);
@@ -50099,7 +45913,7 @@ router12.get("/birthdays", async (req, res) => {
   const birthdayItems = [...memberItems, ...childItems, ...teenItems].sort((a, b2) => a.daysUntil - b2.daysUntil).slice(0, 15);
   res.json({ birthdays: birthdayItems, anniversaries: [] });
 });
-router12.get("/recent-activity", async (req, res) => {
+router13.get("/recent-activity", async (req, res) => {
   const activities = await db.select().from(activityLogTable).orderBy(activityLogTable.createdAt).limit(20);
   res.json(activities.map((a) => ({
     id: a.id,
@@ -50110,10 +45924,10 @@ router12.get("/recent-activity", async (req, res) => {
     memberName: a.memberName
   })));
 });
-var dashboard_default = router12;
+var dashboard_default = router13;
 
 // src/routes/online.ts
-var import_express13 = __toESM(require_express2(), 1);
+var import_express14 = __toESM(require_express2(), 1);
 
 // src/meetingBus.ts
 import { EventEmitter } from "events";
@@ -50128,8 +45942,8 @@ function subscribeMeeting(meetingId, fn) {
 }
 
 // src/routes/online.ts
-import crypto7 from "crypto";
-var router13 = (0, import_express13.Router)();
+import crypto8 from "crypto";
+var router14 = (0, import_express14.Router)();
 function getYoutubeId(url) {
   const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/);
   return m ? m[1] : null;
@@ -50147,17 +45961,17 @@ function extractYoutubeId(raw) {
   const ytId = getYoutubeId(raw);
   return ytId ?? raw.trim().slice(0, 20);
 }
-router13.get("/videos", async (_req, res) => {
+router14.get("/videos", async (_req, res) => {
   const videos = await db.select().from(videosTable).orderBy(desc(videosTable.createdAt));
   res.json(videos);
 });
-router13.get("/videos/:id", async (req, res) => {
+router14.get("/videos/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   const [video] = await db.select().from(videosTable).where(eq(videosTable.id, id)).limit(1);
   if (!video) return res.status(404).json({ error: "Video not found" });
   res.json(video);
 });
-router13.post("/videos", authenticateToken, requireRole(3), async (req, res) => {
+router14.post("/videos", authenticateToken, requireRole(3), async (req, res) => {
   const { title, youtubeUrl, date: date2, isLive, isRestricted, description } = req.body;
   if (!title || !youtubeUrl || !date2) return res.status(400).json({ error: "title, youtubeUrl and date are required" });
   const youtubeId = extractYoutubeId(youtubeUrl);
@@ -50176,7 +45990,7 @@ router13.post("/videos", authenticateToken, requireRole(3), async (req, res) => 
   }).returning();
   res.status(201).json(created);
 });
-router13.patch("/videos/:id", authenticateToken, requireRole(3), async (req, res) => {
+router14.patch("/videos/:id", authenticateToken, requireRole(3), async (req, res) => {
   const id = parseInt(req.params.id);
   const { title, youtubeUrl, date: date2, isRestricted, description } = req.body;
   const update = {};
@@ -50192,7 +46006,7 @@ router13.patch("/videos/:id", authenticateToken, requireRole(3), async (req, res
   if (!updated) return res.status(404).json({ error: "Video not found" });
   res.json(updated);
 });
-router13.post("/videos/:id/end-live", authenticateToken, requireRole(3), async (req, res) => {
+router14.post("/videos/:id/end-live", authenticateToken, requireRole(3), async (req, res) => {
   const id = parseInt(req.params.id);
   const [video] = await db.select().from(videosTable).where(eq(videosTable.id, id)).limit(1);
   if (!video) return res.status(404).json({ error: "Video not found" });
@@ -50204,12 +46018,12 @@ router13.post("/videos/:id/end-live", authenticateToken, requireRole(3), async (
   const [updated] = await db.update(videosTable).set({ isLive: false, liveEnded: true }).where(eq(videosTable.id, id)).returning();
   res.json(updated);
 });
-router13.delete("/videos/:id", authenticateToken, requireRole(3), async (req, res) => {
+router14.delete("/videos/:id", authenticateToken, requireRole(3), async (req, res) => {
   const id = parseInt(req.params.id);
   await db.delete(videosTable).where(eq(videosTable.id, id));
   res.json({ success: true });
 });
-router13.get("/videos/:id/watchers", authenticateToken, async (req, res) => {
+router14.get("/videos/:id/watchers", authenticateToken, async (req, res) => {
   const videoId = parseInt(req.params.id);
   const cutoff = new Date(Date.now() - 28e3);
   const rows = await db.select().from(videoWatchersTable).where(and(eq(videoWatchersTable.videoId, videoId), gt(videoWatchersTable.lastPing, cutoff)));
@@ -50229,7 +46043,7 @@ router13.get("/videos/:id/watchers", authenticateToken, async (req, res) => {
   }));
   res.json(result);
 });
-router13.get("/videos/:id/watcher-sessions", authenticateToken, requireRole(3), async (req, res) => {
+router14.get("/videos/:id/watcher-sessions", authenticateToken, requireRole(3), async (req, res) => {
   const videoId = parseInt(req.params.id);
   const sessions = await db.select().from(videoWatcherSessionsTable).where(eq(videoWatcherSessionsTable.videoId, videoId)).orderBy(videoWatcherSessionsTable.joinedAt);
   if (!sessions.length) return res.json([]);
@@ -50260,7 +46074,7 @@ router13.get("/videos/:id/watcher-sessions", authenticateToken, requireRole(3), 
   });
   res.json(result);
 });
-router13.post("/videos/:id/watch/join", authenticateToken, async (req, res) => {
+router14.post("/videos/:id/watch/join", authenticateToken, async (req, res) => {
   const videoId = parseInt(req.params.id);
   const userRecord = req.user;
   const memberId = userRecord?.memberId;
@@ -50290,7 +46104,7 @@ router13.post("/videos/:id/watch/join", authenticateToken, async (req, res) => {
   }
   res.json({ ok: true });
 });
-router13.post("/videos/:id/watch/leave", authenticateToken, async (req, res) => {
+router14.post("/videos/:id/watch/leave", authenticateToken, async (req, res) => {
   const videoId = parseInt(req.params.id);
   const memberId = req.user?.memberId;
   if (!memberId) return res.json({ ok: true });
@@ -50302,7 +46116,7 @@ router13.post("/videos/:id/watch/leave", authenticateToken, async (req, res) => 
   await db.delete(videoWatchersTable).where(and(eq(videoWatchersTable.videoId, videoId), eq(videoWatchersTable.memberId, memberId)));
   res.json({ ok: true });
 });
-router13.get("/videos/:id/access", authenticateToken, async (req, res) => {
+router14.get("/videos/:id/access", authenticateToken, async (req, res) => {
   const videoId = parseInt(req.params.id);
   const memberId = req.user?.memberId;
   if (!memberId) return res.json({ hasAccess: false, requestStatus: null, rejectionReason: null });
@@ -50314,7 +46128,7 @@ router13.get("/videos/:id/access", authenticateToken, async (req, res) => {
     rejectionReason: request[0]?.rejectionReason ?? null
   });
 });
-router13.post("/videos/:id/access-request", authenticateToken, async (req, res) => {
+router14.post("/videos/:id/access-request", authenticateToken, async (req, res) => {
   const videoId = parseInt(req.params.id);
   const memberId = req.user?.memberId;
   if (!memberId) return res.status(400).json({ error: "No member account linked to this user" });
@@ -50329,7 +46143,7 @@ router13.post("/videos/:id/access-request", authenticateToken, async (req, res) 
   const [created] = await db.insert(videoAccessRequestsTable).values({ videoId, memberId }).returning();
   res.status(201).json(created);
 });
-router13.get("/videos/:id/access-requests", authenticateToken, requireRole(3), async (req, res) => {
+router14.get("/videos/:id/access-requests", authenticateToken, requireRole(3), async (req, res) => {
   const videoId = parseInt(req.params.id);
   const requests = await db.select().from(videoAccessRequestsTable).where(and(eq(videoAccessRequestsTable.videoId, videoId), eq(videoAccessRequestsTable.status, "pending")));
   if (!requests.length) return res.json([]);
@@ -50341,7 +46155,7 @@ router13.get("/videos/:id/access-requests", authenticateToken, requireRole(3), a
   }));
   res.json(result);
 });
-router13.post("/videos/:id/access-grant/:memberId", authenticateToken, requireRole(3), async (req, res) => {
+router14.post("/videos/:id/access-grant/:memberId", authenticateToken, requireRole(3), async (req, res) => {
   const videoId = parseInt(req.params.id);
   const memberId = parseInt(req.params.memberId);
   const grantedBy = req.user?.id;
@@ -50364,7 +46178,7 @@ router13.post("/videos/:id/access-grant/:memberId", authenticateToken, requireRo
   }
   res.json({ ok: true });
 });
-router13.post("/videos/:id/access-reject/:memberId", authenticateToken, requireRole(3), async (req, res) => {
+router14.post("/videos/:id/access-reject/:memberId", authenticateToken, requireRole(3), async (req, res) => {
   const videoId = parseInt(req.params.id);
   const memberId = parseInt(req.params.memberId);
   const { reason } = req.body;
@@ -50385,7 +46199,7 @@ router13.post("/videos/:id/access-reject/:memberId", authenticateToken, requireR
   }
   res.json({ ok: true });
 });
-router13.get("/videos/:id/chat", authenticateToken, async (req, res) => {
+router14.get("/videos/:id/chat", authenticateToken, async (req, res) => {
   const videoId = parseInt(req.params.id);
   const afterId = parseInt(req.query.after ?? "0") || 0;
   const rows = await db.select().from(videoChatsTable).where(and(eq(videoChatsTable.videoId, videoId), gt(videoChatsTable.id, afterId))).orderBy(videoChatsTable.id).limit(50);
@@ -50404,7 +46218,7 @@ router13.get("/videos/:id/chat", authenticateToken, async (req, res) => {
   }));
   res.json(result);
 });
-router13.post("/videos/:id/chat", authenticateToken, async (req, res) => {
+router14.post("/videos/:id/chat", authenticateToken, async (req, res) => {
   const videoId = parseInt(req.params.id);
   const userRecord = req.user;
   const userId = userRecord.id;
@@ -50433,12 +46247,12 @@ router13.post("/videos/:id/chat", authenticateToken, async (req, res) => {
   }).returning();
   res.status(201).json({ ...created, member: member ?? null });
 });
-router13.delete("/videos/:id/chat", authenticateToken, requireRole(3), async (req, res) => {
+router14.delete("/videos/:id/chat", authenticateToken, requireRole(3), async (req, res) => {
   const videoId = parseInt(req.params.id);
   await db.delete(videoChatsTable).where(eq(videoChatsTable.videoId, videoId));
   res.json({ ok: true });
 });
-router13.get("/notifications/pending-requests", authenticateToken, async (req, res) => {
+router14.get("/notifications/pending-requests", authenticateToken, async (req, res) => {
   const user = req.user;
   const isEligible = user && (user.roleLevel === 1 || user.roleLevel === 3 && user.roleSubtype === "media");
   if (!isEligible) return res.status(403).json({ error: "Forbidden" });
@@ -50455,7 +46269,7 @@ router13.get("/notifications/pending-requests", authenticateToken, async (req, r
   }));
   return res.json(result);
 });
-router13.get("/notifications/summary", authenticateToken, async (req, res) => {
+router14.get("/notifications/summary", authenticateToken, async (req, res) => {
   const user = req.user;
   const isEligible = user && (user.roleLevel === 1 || user.roleLevel === 3 && user.roleSubtype === "media");
   if (!isEligible) return res.json({ pendingAccessRequests: 0, pendingMeetingJoinRequests: 0 });
@@ -50475,7 +46289,7 @@ router13.get("/notifications/summary", authenticateToken, async (req, res) => {
     pendingMeetingJoinRequests: meetingCount
   });
 });
-router13.get("/notifications/meeting-join-requests", authenticateToken, async (req, res) => {
+router14.get("/notifications/meeting-join-requests", authenticateToken, async (req, res) => {
   const user = req.user;
   const isEligible = user && (user.roleLevel === 1 || user.roleLevel === 3 && user.roleSubtype === "media");
   if (!isEligible) return res.json([]);
@@ -50508,18 +46322,18 @@ router13.get("/notifications/meeting-join-requests", authenticateToken, async (r
     res.json([]);
   }
 });
-router13.get("/online-meetings", async (_req, res) => {
+router14.get("/online-meetings", async (_req, res) => {
   const meetings = await db.select().from(onlineMeetingsTable).where(isNull(onlineMeetingsTable.endedAt)).orderBy(desc(onlineMeetingsTable.createdAt));
   res.json(meetings);
 });
-router13.get("/online-meetings/active", async (_req, res) => {
+router14.get("/online-meetings/active", async (_req, res) => {
   const [meeting] = await db.select().from(onlineMeetingsTable).where(eq(onlineMeetingsTable.isActive, true)).limit(1);
   res.json(meeting ?? null);
 });
-router13.post("/online-meetings", authenticateToken, requireRole(3), async (req, res) => {
+router14.post("/online-meetings", authenticateToken, requireRole(3), async (req, res) => {
   const { title, description, scheduledAt, meetingType, restrictedGroups } = req.body;
   if (!title) return res.status(400).json({ error: "title is required" });
-  const roomCode = `cek1-${crypto7.randomBytes(4).toString("hex")}`;
+  const roomCode = `cek1-${crypto8.randomBytes(4).toString("hex")}`;
   const adminUser = req.user;
   const [created] = await db.insert(onlineMeetingsTable).values({
     title,
@@ -50549,7 +46363,7 @@ router13.post("/online-meetings", authenticateToken, requireRole(3), async (req,
   }
   res.status(201).json(created);
 });
-router13.patch("/online-meetings/:id", authenticateToken, requireRole(3), async (req, res) => {
+router14.patch("/online-meetings/:id", authenticateToken, requireRole(3), async (req, res) => {
   const id = parseInt(req.params.id);
   const { isActive, restrictionOff, title, description, meetingType, restrictedGroups } = req.body;
   const update = {};
@@ -50608,7 +46422,7 @@ router13.patch("/online-meetings/:id", authenticateToken, requireRole(3), async 
   }
   res.json(updated);
 });
-router13.delete("/online-meetings/:id", authenticateToken, requireRole(1), async (req, res) => {
+router14.delete("/online-meetings/:id", authenticateToken, requireRole(1), async (req, res) => {
   const id = parseInt(req.params.id);
   try {
     await db.execute(sql`DELETE FROM meeting_signals WHERE meeting_id = ${id}`);
@@ -50622,7 +46436,7 @@ router13.delete("/online-meetings/:id", authenticateToken, requireRole(1), async
     res.status(500).json({ error: "Failed to delete meeting" });
   }
 });
-router13.get("/meetings/:id/my-join-status", authenticateToken, async (req, res) => {
+router14.get("/meetings/:id/my-join-status", authenticateToken, async (req, res) => {
   const meetingId = parseInt(req.params.id);
   const user = req.user;
   if (!user?.memberId) return res.json({ status: null });
@@ -50638,7 +46452,7 @@ router13.get("/meetings/:id/my-join-status", authenticateToken, async (req, res)
     res.json({ status: null });
   }
 });
-router13.post("/meetings/:id/join-request", authenticateToken, async (req, res) => {
+router14.post("/meetings/:id/join-request", authenticateToken, async (req, res) => {
   const meetingId = parseInt(req.params.id);
   const user = req.user;
   if (!user?.memberId) return res.status(400).json({ error: "No member linked to this account" });
@@ -50656,7 +46470,7 @@ router13.post("/meetings/:id/join-request", authenticateToken, async (req, res) 
     res.status(500).json({ error: "Failed to submit request" });
   }
 });
-router13.get("/meetings/:id/join-requests", authenticateToken, async (req, res) => {
+router14.get("/meetings/:id/join-requests", authenticateToken, async (req, res) => {
   const user = req.user;
   const isEligible = user && (user.roleLevel === 1 || user.roleLevel === 3 && user.roleSubtype === "media");
   if (!isEligible) return res.status(403).json({ error: "Forbidden" });
@@ -50686,7 +46500,7 @@ router13.get("/meetings/:id/join-requests", authenticateToken, async (req, res) 
     res.json([]);
   }
 });
-router13.post("/meetings/:id/join-requests/:memberId/approve", authenticateToken, async (req, res) => {
+router14.post("/meetings/:id/join-requests/:memberId/approve", authenticateToken, async (req, res) => {
   const user = req.user;
   const isEligible = user && (user.roleLevel === 1 || user.roleLevel === 3 && user.roleSubtype === "media");
   if (!isEligible) return res.status(403).json({ error: "Forbidden" });
@@ -50714,7 +46528,7 @@ router13.post("/meetings/:id/join-requests/:memberId/approve", authenticateToken
     res.status(500).json({ error: "Failed to approve" });
   }
 });
-router13.post("/meetings/:id/join-requests/:memberId/reject", authenticateToken, async (req, res) => {
+router14.post("/meetings/:id/join-requests/:memberId/reject", authenticateToken, async (req, res) => {
   const user = req.user;
   const isEligible = user && (user.roleLevel === 1 || user.roleLevel === 3 && user.roleSubtype === "media");
   if (!isEligible) return res.status(403).json({ error: "Forbidden" });
@@ -50744,7 +46558,7 @@ router13.post("/meetings/:id/join-requests/:memberId/reject", authenticateToken,
     res.status(500).json({ error: "Failed to reject" });
   }
 });
-router13.get("/reports/meeting-services", authenticateToken, requireRole(1), async (_req, res) => {
+router14.get("/reports/meeting-services", authenticateToken, requireRole(1), async (_req, res) => {
   try {
     const meetings = await db.execute(sql`
       SELECT
@@ -50777,7 +46591,7 @@ router13.get("/reports/meeting-services", authenticateToken, requireRole(1), asy
     res.status(500).json({ error: "Failed to load meeting services report" });
   }
 });
-router13.get("/meetings/:id/participants-report", authenticateToken, requireRole(1), async (req, res) => {
+router14.get("/meetings/:id/participants-report", authenticateToken, requireRole(1), async (req, res) => {
   const meetingId = parseInt(req.params.id);
   try {
     const rows = await db.execute(sql`
@@ -50819,7 +46633,7 @@ router13.get("/meetings/:id/participants-report", authenticateToken, requireRole
     res.status(500).json({ error: "Failed to load participants" });
   }
 });
-router13.get("/reports/online-services", authenticateToken, requireRole(1), async (_req, res) => {
+router14.get("/reports/online-services", authenticateToken, requireRole(1), async (_req, res) => {
   try {
     const videos = await db.select().from(videosTable).where(sql`(${videosTable.isLive} = true OR ${videosTable.liveEnded} = true)`).orderBy(desc(videosTable.liveStartedAt));
     if (!videos.length) return res.json([]);
@@ -50847,10 +46661,10 @@ router13.get("/reports/online-services", authenticateToken, requireRole(1), asyn
     res.status(500).json({ error: "Failed to load online services report" });
   }
 });
-var online_default = router13;
+var online_default = router14;
 
 // src/routes/conference.ts
-var import_express14 = __toESM(require_express2(), 1);
+var import_express15 = __toESM(require_express2(), 1);
 
 // ../node_modules/.pnpm/@bufbuild+protobuf@1.10.1/node_modules/@bufbuild/protobuf/dist/esm/private/assert.js
 function assert(condition, msg) {
@@ -53517,9 +49331,9 @@ import * as util2 from "node:util";
 var is_key_object_default = (obj) => util2.types.isKeyObject(obj);
 
 // ../node_modules/.pnpm/jose@5.10.0/node_modules/jose/dist/node/esm/runtime/webcrypto.js
-import * as crypto8 from "node:crypto";
+import * as crypto9 from "node:crypto";
 import * as util3 from "node:util";
-var webcrypto2 = crypto8.webcrypto;
+var webcrypto2 = crypto9.webcrypto;
 var webcrypto_default = webcrypto2;
 var isCryptoKey = (key) => util3.types.isCryptoKey(key);
 
@@ -54016,7 +49830,7 @@ function keyForCrypto(alg, key) {
 }
 
 // ../node_modules/.pnpm/jose@5.10.0/node_modules/jose/dist/node/esm/runtime/sign.js
-import * as crypto9 from "node:crypto";
+import * as crypto10 from "node:crypto";
 import { promisify } from "node:util";
 
 // ../node_modules/.pnpm/jose@5.10.0/node_modules/jose/dist/node/esm/runtime/hmac_digest.js
@@ -54059,11 +49873,11 @@ function getSignVerifyKey(alg, key, usage) {
 }
 
 // ../node_modules/.pnpm/jose@5.10.0/node_modules/jose/dist/node/esm/runtime/sign.js
-var oneShotSign = promisify(crypto9.sign);
+var oneShotSign = promisify(crypto10.sign);
 var sign2 = async (alg, key, data) => {
   const k = getSignVerifyKey(alg, key, "sign");
   if (alg.startsWith("HS")) {
-    const hmac2 = crypto9.createHmac(hmacDigest(alg), k);
+    const hmac2 = crypto10.createHmac(hmacDigest(alg), k);
     hmac2.update(data);
     return hmac2.digest();
   }
@@ -54467,9 +50281,9 @@ var AccessToken = class {
 };
 
 // src/routes/conference.ts
-var router14 = (0, import_express14.Router)();
+var router15 = (0, import_express15.Router)();
 var PARTICIPANT_TIMEOUT_MS = 15e3;
-router14.get("/:id/public-info", async (req, res) => {
+router15.get("/:id/public-info", async (req, res) => {
   const meetingId = parseInt(req.params.id);
   if (!meetingId) return res.status(400).json({ error: "Invalid meeting id" });
   try {
@@ -54499,7 +50313,7 @@ async function getActiveParticipants(meetingId) {
     )
   ).orderBy(meetingParticipantsTable.joinedAt);
 }
-router14.post("/:id/join", optionalAuth, async (req, res) => {
+router15.post("/:id/join", optionalAuth, async (req, res) => {
   const meetingId = parseInt(req.params.id);
   const user = req.user;
   const { peerId, displayName } = req.body;
@@ -54600,7 +50414,7 @@ function maybeCleanOldSignals(meetingId) {
   ).catch(() => {
   });
 }
-router14.post("/:id/ping", optionalAuth, async (req, res) => {
+router15.post("/:id/ping", optionalAuth, async (req, res) => {
   const meetingId = parseInt(req.params.id);
   const { peerId, isMuted } = req.body;
   if (!peerId) return res.status(400).json({ error: "peerId required" });
@@ -54627,7 +50441,7 @@ router14.post("/:id/ping", optionalAuth, async (req, res) => {
   }
   res.json({ ok: true, unmutingAllowed });
 });
-router14.post("/:id/leave", optionalAuth, async (req, res) => {
+router15.post("/:id/leave", optionalAuth, async (req, res) => {
   const meetingId = parseInt(req.params.id);
   const { peerId } = req.body;
   if (!peerId) return res.json({ ok: true });
@@ -54647,7 +50461,7 @@ router14.post("/:id/leave", optionalAuth, async (req, res) => {
   });
   res.json({ ok: true });
 });
-router14.get("/:id/participants", optionalAuth, async (req, res) => {
+router15.get("/:id/participants", optionalAuth, async (req, res) => {
   const meetingId = parseInt(req.params.id);
   try {
     const participants = await getActiveParticipants(meetingId);
@@ -54656,7 +50470,7 @@ router14.get("/:id/participants", optionalAuth, async (req, res) => {
     res.json([]);
   }
 });
-router14.get("/:id/signals/:peerId", optionalAuth, async (req, res) => {
+router15.get("/:id/signals/:peerId", optionalAuth, async (req, res) => {
   const meetingId = parseInt(req.params.id);
   const toPeer = req.params.peerId;
   const after = parseInt(req.query.after || "0") || 0;
@@ -54673,7 +50487,7 @@ router14.get("/:id/signals/:peerId", optionalAuth, async (req, res) => {
     res.json([]);
   }
 });
-router14.post("/:id/signal", optionalAuth, async (req, res) => {
+router15.post("/:id/signal", optionalAuth, async (req, res) => {
   const meetingId = parseInt(req.params.id);
   const { fromPeer, toPeer, signalType, payload } = req.body;
   if (!toPeer || !signalType || !payload || !fromPeer) {
@@ -54693,7 +50507,7 @@ router14.post("/:id/signal", optionalAuth, async (req, res) => {
     res.status(500).json({ error: "Signal store failed" });
   }
 });
-router14.get("/:id/messages", optionalAuth, async (req, res) => {
+router15.get("/:id/messages", optionalAuth, async (req, res) => {
   const meetingId = parseInt(req.params.id);
   const after = parseInt(req.query.after || "0") || 0;
   try {
@@ -54708,7 +50522,7 @@ router14.get("/:id/messages", optionalAuth, async (req, res) => {
     res.json([]);
   }
 });
-router14.post("/:id/message", optionalAuth, async (req, res) => {
+router15.post("/:id/message", optionalAuth, async (req, res) => {
   const meetingId = parseInt(req.params.id);
   const { peerId, content, msgType } = req.body;
   if (!peerId || !content) return res.status(400).json({ error: "peerId and content required" });
@@ -54733,7 +50547,7 @@ router14.post("/:id/message", optionalAuth, async (req, res) => {
     res.status(500).json({ error: "Message store failed" });
   }
 });
-router14.post("/:id/control", authenticateToken, async (req, res) => {
+router15.post("/:id/control", authenticateToken, async (req, res) => {
   const meetingId = parseInt(req.params.id);
   const { peerId, action, targetPeerId } = req.body;
   const [adminParticipant] = await db.select().from(meetingParticipantsTable).where(
@@ -54899,7 +50713,7 @@ router14.post("/:id/control", authenticateToken, async (req, res) => {
       return res.status(400).json({ error: `Unknown action: ${action}` });
   }
 });
-router14.post("/:id/broadcast", optionalAuth, async (req, res) => {
+router15.post("/:id/broadcast", optionalAuth, async (req, res) => {
   const meetingId = parseInt(req.params.id);
   const { fromPeer, signalType, payload } = req.body;
   if (!fromPeer || !signalType || !payload) {
@@ -54919,7 +50733,7 @@ router14.post("/:id/broadcast", optionalAuth, async (req, res) => {
     res.status(500).json({ error: "Broadcast failed" });
   }
 });
-router14.get("/:id/stream", optionalAuth, (req, res) => {
+router15.get("/:id/stream", optionalAuth, (req, res) => {
   const meetingId = parseInt(req.params.id);
   const peerId = req.query.peerId ?? "";
   const role = req.query.role ?? "";
@@ -54999,7 +50813,7 @@ data: ${JSON.stringify(data)}
     unsubscribe();
   });
 });
-router14.post("/:id/livekit-token", optionalAuth, async (req, res) => {
+router15.post("/:id/livekit-token", optionalAuth, async (req, res) => {
   const meetingId = parseInt(req.params.id);
   const { peerId } = req.body;
   if (!peerId) return res.status(400).json({ error: "peerId required" });
@@ -55049,7 +50863,7 @@ router14.post("/:id/livekit-token", optionalAuth, async (req, res) => {
     res.status(500).json({ error: "Failed to generate token" });
   }
 });
-router14.get("/:id/state", optionalAuth, async (req, res) => {
+router15.get("/:id/state", optionalAuth, async (req, res) => {
   const meetingId = parseInt(req.params.id);
   try {
     const r = await db.execute(
@@ -55071,12 +50885,12 @@ router14.get("/:id/state", optionalAuth, async (req, res) => {
     res.status(500).json({ error: "Failed to get meeting state" });
   }
 });
-var conference_default = router14;
+var conference_default = router15;
 
 // src/routes/home.ts
-var import_express15 = __toESM(require_express2(), 1);
-var router15 = (0, import_express15.Router)();
-router15.get("/home/feed", authenticateToken, async (req, res) => {
+var import_express16 = __toESM(require_express2(), 1);
+var router16 = (0, import_express16.Router)();
+router16.get("/home/feed", authenticateToken, async (req, res) => {
   try {
     const user = req.user;
     const memberId = user.memberId ?? null;
@@ -55197,12 +51011,12 @@ router15.get("/home/feed", authenticateToken, async (req, res) => {
     });
   }
 });
-var home_default = router15;
+var home_default = router16;
 
 // src/routes/announcements.ts
-var import_express16 = __toESM(require_express2(), 1);
-var router16 = (0, import_express16.Router)();
-router16.use(authenticateToken);
+var import_express17 = __toESM(require_express2(), 1);
+var router17 = (0, import_express17.Router)();
+router17.use(authenticateToken);
 async function getVisibleRows(memberId) {
   const now = /* @__PURE__ */ new Date();
   return db.select().from(announcementsTable).where(
@@ -55219,7 +51033,7 @@ async function getVisibleRows(memberId) {
     )
   ).orderBy(desc(announcementsTable.createdAt)).limit(50);
 }
-router16.get("/", async (req, res) => {
+router17.get("/", async (req, res) => {
   const user = req.user;
   const memberId = user.memberId ?? null;
   const rows = await getVisibleRows(memberId);
@@ -55228,7 +51042,7 @@ router16.get("/", async (req, res) => {
   const readIds = new Set(readRows.map((r) => r.announcementId));
   res.json(rows.map((r) => ({ ...r, isRead: readIds.has(r.id) })));
 });
-router16.post("/read-all", async (req, res) => {
+router17.post("/read-all", async (req, res) => {
   const user = req.user;
   const memberId = user.memberId ?? null;
   if (!memberId) return res.json({ ok: true });
@@ -55238,7 +51052,7 @@ router16.post("/read-all", async (req, res) => {
   }
   res.json({ ok: true, count: rows.length });
 });
-router16.post("/:id/read", async (req, res) => {
+router17.post("/:id/read", async (req, res) => {
   const user = req.user;
   const memberId = user.memberId ?? null;
   if (!memberId) return res.json({ ok: true });
@@ -55247,7 +51061,7 @@ router16.post("/:id/read", async (req, res) => {
   res.json({ ok: true });
 });
 var MAX_ACTIVE_ANNOUNCEMENTS = 5;
-router16.post("/", requireRole(1), async (req, res) => {
+router17.post("/", requireRole(1), async (req, res) => {
   const user = req.user;
   const { title, message: message2, emoji, expiresInHours, targetMemberId } = req.body;
   if (!title || !message2) return res.status(400).json({ error: "title and message required" });
@@ -55282,18 +51096,18 @@ router16.post("/", requireRole(1), async (req, res) => {
   }
   res.status(201).json(created);
 });
-router16.delete("/:id", requireRole(1), async (req, res) => {
+router17.delete("/:id", requireRole(1), async (req, res) => {
   const id = parseInt(req.params.id);
   await db.update(announcementsTable).set({ isActive: false }).where(eq(announcementsTable.id, id));
   res.json({ success: true });
 });
-var announcements_default = router16;
+var announcements_default = router17;
 
 // src/routes/prayer-requests.ts
-var import_express17 = __toESM(require_express2(), 1);
-var router17 = (0, import_express17.Router)();
-router17.use(authenticateToken);
-router17.post("/", async (req, res) => {
+var import_express18 = __toESM(require_express2(), 1);
+var router18 = (0, import_express18.Router)();
+router18.use(authenticateToken);
+router18.post("/", async (req, res) => {
   const user = req.user;
   const { request } = req.body;
   if (!request?.trim()) return res.status(400).json({ error: "request is required" });
@@ -55311,49 +51125,50 @@ router17.post("/", async (req, res) => {
   }).returning();
   res.status(201).json(created);
 });
-router17.get("/", requireRole(1), async (req, res) => {
+router18.get("/", requireRole(1), async (req, res) => {
   const rows = await db.select().from(prayerRequestsTable).orderBy(desc(prayerRequestsTable.createdAt)).limit(100);
   res.json(rows);
 });
-router17.patch("/:id/prayed", requireRole(1), async (req, res) => {
+router18.patch("/:id/prayed", requireRole(1), async (req, res) => {
   const user = req.user;
   const id = parseInt(req.params.id);
   const { note } = req.body;
   await db.update(prayerRequestsTable).set({ status: "prayed", prayedNote: note ?? null, prayedAt: /* @__PURE__ */ new Date(), prayedBy: user.id }).where(eq(prayerRequestsTable.id, id));
   res.json({ success: true });
 });
-router17.delete("/:id", requireRole(1), async (req, res) => {
+router18.delete("/:id", requireRole(1), async (req, res) => {
   const id = parseInt(req.params.id);
   await db.delete(prayerRequestsTable).where(eq(prayerRequestsTable.id, id));
   res.json({ success: true });
 });
-var prayer_requests_default = router17;
+var prayer_requests_default = router18;
 
 // src/routes/index.ts
-var router18 = (0, import_express18.Router)();
-router18.use(health_default);
-router18.use("/auth", auth_default);
-router18.use("/conference", conference_default);
-router18.use("/members", members_default);
-router18.use("/", fellowships_default);
-router18.use("/departments", departments_default);
-router18.use("/", children_default);
-router18.use("/families", families_default);
-router18.use("/", attendance_default);
-router18.use("/", finance_default);
-router18.use("/archives", archives_default);
-router18.use("/admin", admin_default);
-router18.use("/dashboard", dashboard_default);
-router18.use("/", online_default);
-router18.use("/", home_default);
-router18.use("/announcements", announcements_default);
-router18.use("/prayer-requests", prayer_requests_default);
-var routes_default = router18;
+var router19 = (0, import_express19.Router)();
+router19.use(health_default);
+router19.use("/auth", auth_default);
+router19.use("/", public_default);
+router19.use("/conference", conference_default);
+router19.use("/members", members_default);
+router19.use("/", fellowships_default);
+router19.use("/departments", departments_default);
+router19.use("/", children_default);
+router19.use("/families", families_default);
+router19.use("/", attendance_default);
+router19.use("/", finance_default);
+router19.use("/archives", archives_default);
+router19.use("/admin", admin_default);
+router19.use("/dashboard", dashboard_default);
+router19.use("/", online_default);
+router19.use("/", home_default);
+router19.use("/announcements", announcements_default);
+router19.use("/prayer-requests", prayer_requests_default);
+var routes_default = router19;
 
 // src/lib/logger.ts
-var import_pino = __toESM(require_pino(), 1);
+import pino from "pino";
 var isProduction = process.env.NODE_ENV === "production";
-var logger = (0, import_pino.default)({
+var logger = pino({
   level: process.env.LOG_LEVEL ?? "info",
   redact: [
     "req.headers.authorization",
@@ -55369,8 +51184,8 @@ var logger = (0, import_pino.default)({
 });
 
 // src/app.ts
-var __dirname2 = path.dirname(fileURLToPath(import.meta.url));
-var app = (0, import_express19.default)();
+var __dirname = path.dirname(fileURLToPath(import.meta.url));
+var app = (0, import_express20.default)();
 app.set("trust proxy", 1);
 async function ensureTables() {
   const steps = [
@@ -55554,8 +51369,35 @@ async function ensureTables() {
     } catch {
     }
   }
+  const columnMigrations = [
+    `ALTER TABLE activity_log ADD COLUMN IF NOT EXISTS performed_by_user_id INTEGER`,
+    `ALTER TABLE activity_log ADD COLUMN IF NOT EXISTS performed_by_name TEXT`
+  ];
+  for (const m of columnMigrations) {
+    try {
+      await db.execute(sql.raw(m));
+    } catch {
+    }
+  }
 }
 ensureTables();
+async function seedSuperAdmin() {
+  const hash = (await import("crypto")).createHash("sha256").update("admince_kumasi_salt").digest("hex");
+  try {
+    await db.execute(sql.raw(`
+      INSERT INTO users (username, password_hash, role_level, is_active)
+      VALUES ('admin', '${hash}', 1, true)
+      ON CONFLICT (username) DO UPDATE
+        SET password_hash = EXCLUDED.password_hash,
+            role_level    = EXCLUDED.role_level,
+            is_active     = EXCLUDED.is_active
+    `));
+    logger.info("Super admin seeded: admin/admin");
+  } catch (err) {
+    logger.warn({ err: err?.message }, "seedSuperAdmin: non-fatal warning");
+  }
+}
+seedSuperAdmin();
 app.use((0, import_compression.default)({
   filter: (req, res) => {
     if (req.headers.accept?.includes("text/event-stream")) return false;
@@ -55564,7 +51406,7 @@ app.use((0, import_compression.default)({
   }
 }));
 app.use(
-  (0, import_pino_http.default)({
+  pinoHttp({
     logger,
     serializers: {
       req(req) {
@@ -55580,8 +51422,8 @@ app.use((0, import_cors.default)({
   origin: process.env.CORS_ORIGIN || true,
   credentials: true
 }));
-app.use(import_express19.default.json({ limit: "10mb" }));
-app.use(import_express19.default.urlencoded({ limit: "10mb", extended: true }));
+app.use(import_express20.default.json({ limit: "10mb" }));
+app.use(import_express20.default.urlencoded({ limit: "10mb", extended: true }));
 function isConferencePoll(path2) {
   return /^\/conference\/\d+\/(signals|participants|messages|ping|stream)/.test(path2) || /^\/meetings\/\d+\/join-requests/.test(path2) || /^\/online-meetings/.test(path2);
 }
@@ -55610,9 +51452,9 @@ app.get("/health", (_req, res) => {
   res.json({ status: "ok", ts: Date.now() });
 });
 app.use("/api", routes_default);
-var frontendDist = path.resolve(__dirname2, "../../church-portal/dist/public");
+var frontendDist = path.resolve(__dirname, "../../church-portal/dist/public");
 if (fs2.existsSync(frontendDist)) {
-  app.use(import_express19.default.static(frontendDist, {
+  app.use(import_express20.default.static(frontendDist, {
     maxAge: "1d",
     etag: true,
     setHeaders: (res, filePath) => {

@@ -2,7 +2,6 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { build as esbuild } from "esbuild";
-import esbuildPluginPino from "esbuild-plugin-pino";
 import { rm } from "node:fs/promises";
 
 // Plugins (e.g. 'esbuild-plugin-pino') may use `require` to resolve dependencies
@@ -17,6 +16,7 @@ async function buildAll() {
   await esbuild({
     entryPoints: [path.resolve(artifactDir, "src/index.ts")],
     platform: "node",
+    target: "node20",
     bundle: true,
     format: "esm",
     outdir: distDir,
@@ -29,6 +29,10 @@ async function buildAll() {
     // - use path traversal to read files (e.g. @google-cloud/secret-manager loads sibling .proto files)
     external: [
       "*.node",
+      "pino",
+      "pino-http",
+      "pino-pretty",
+      "thread-stream",
       "sharp",
       "better-sqlite3",
       "sqlite3",
@@ -102,10 +106,7 @@ async function buildAll() {
       "electron",
     ],
     sourcemap: false,
-    plugins: [
-      // pino relies on workers to handle logging, instead of externalizing it we use a plugin to handle it
-      esbuildPluginPino({ transports: ["pino-pretty"] })
-    ],
+    plugins: [],
     // Make sure packages that are cjs only (e.g. express) but are bundled continue to work in our esm output file
     banner: {
       js: `import { createRequire as __bannerCrReq } from 'node:module';

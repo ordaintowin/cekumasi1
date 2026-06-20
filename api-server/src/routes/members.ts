@@ -276,10 +276,13 @@ router.post("/", async (req, res) => {
     firstName, lastName, gender, phone1, memberType, pin, ...rest,
   }).returning();
 
+  const actor = (req as any).user;
   await db.insert(activityLogTable).values({
     type: "new_member",
     description: `${memberType === "visitor" ? "Visitor" : "Member"} ${created[0].title ? created[0].title + " " : ""}${firstName} ${lastName} was added`,
     memberId: created[0].id, memberName: `${firstName} ${lastName}`,
+    performedByUserId: actor?.id ?? null,
+    performedByName: actor?.username ?? null,
   });
 
   if (memberType === "member") {

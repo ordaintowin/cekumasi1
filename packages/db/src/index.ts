@@ -69,6 +69,7 @@ export const activityLogTable = pgTable("activity_log", {
   description: text("description").notNull(),
   memberId: integer("member_id"),
   memberName: text("member_name"),
+  performedByName: text("performed_by_name"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

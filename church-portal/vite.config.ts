@@ -26,6 +26,11 @@ export default defineConfig({
     emptyOutDir: true,
     target: "esnext",
   },
+  optimizeDeps: {
+    esbuildOptions: {
+      target: "esnext",
+    },
+  },
   server: {
     port,
     strictPort: true,
@@ -36,7 +41,7 @@ export default defineConfig({
     },
     proxy: {
       "/api": {
-        target: "http://localhost:3000",
+        target: "http://localhost:3001",
         changeOrigin: true,
       },
     },

@@ -169,11 +169,14 @@ router.post("/services/:id/checkin", async (req, res) => {
   }
 
   await db.insert(attendanceRecordsTable).values({ serviceId, memberId: member.id, cellId: member.cellId ?? null, method });
+  const checkinActor = (req as any).user;
   await db.insert(activityLogTable).values({
     type: "checkin",
     description: `${fmt(member)} checked in`,
     memberId: member.id,
     memberName: fmt(member),
+    performedByUserId: checkinActor?.id ?? null,
+    performedByName: checkinActor?.username ?? null,
   });
 
   res.json({ success: true, member: { ...member, cellName, leadershipRoles: [] }, alreadyCheckedIn: false });
@@ -647,7 +650,8 @@ router.post("/first-timers", async (req, res) => {
     .returning();
 
   const svc = await db.select().from(servicesTable).where(eq(servicesTable.id, serviceId)).limit(1);
-  await db.insert(activityLogTable).values({ type: "first_timer", description: `First timer ${firstName} ${lastName} registered` });
+  const ftActor = (req as any).user;
+  await db.insert(activityLogTable).values({ type: "first_timer", description: `First timer ${firstName} ${lastName} registered`, performedByUserId: ftActor?.id ?? null, performedByName: ftActor?.username ?? null });
 
   let invitedByFellowship = null;
   let invitedByName = null;
