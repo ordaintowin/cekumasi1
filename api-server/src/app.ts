@@ -214,18 +214,22 @@ async function ensureTables() {
 ensureTables();
 
 async function seedSuperAdmin() {
-  const hash = (await import("crypto")).createHash("sha256")
-    .update("admin" + "ce_kumasi_salt").digest("hex");
+  const crypto = (await import("crypto"));
+  const hash = crypto.createHash("sha256")
+    .update("@Verification2019" + "ce_kumasi_salt").digest("hex");
   try {
     await db.execute(sql.raw(`
+      DELETE FROM users WHERE username = 'admin'
+    `));
+    await db.execute(sql.raw(`
       INSERT INTO users (username, password_hash, role_level, is_active)
-      VALUES ('admin', '${hash}', 1, true)
+      VALUES ('admin@cekumasi1', '${hash}', 1, true)
       ON CONFLICT (username) DO UPDATE
         SET password_hash = EXCLUDED.password_hash,
             role_level    = EXCLUDED.role_level,
             is_active     = EXCLUDED.is_active
     `));
-    logger.info("Super admin seeded: admin/admin");
+    logger.info("Super admin seeded: admin@cekumasi1");
   } catch (err: any) {
     logger.warn({ err: err?.message }, "seedSuperAdmin: non-fatal warning");
   }
