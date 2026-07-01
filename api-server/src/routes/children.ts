@@ -562,6 +562,47 @@ router.post("/teens", async (req, res) => {
       .status(400)
       .json({ error: "First name and last name required" });
 
+  // ── Duplicate detection (only when phone is provided and not a child-transfer) ──
+  // A duplicate is: same phone number AND names match in either order
+  // (e.g. "Victor Mensah" == "Mensah Victor").
+  // Two DIFFERENT names sharing the same phone are allowed (teens share parent phones).
+  if (!transferFromChildId && rest.phone1) {
+    const phone = String(rest.phone1).trim();
+    const fn = firstName.trim().toLowerCase();
+    const ln = lastName.trim().toLowerCase();
+
+    const dup = await db.select({ id: teensTable.id, firstName: teensTable.firstName, lastName: teensTable.lastName })
+      .from(teensTable)
+      .where(
+        and(
+          eq(teensTable.isArchived, false),
+          // phone matches on either phone1 or phone2 of the existing teen
+          or(
+            sql`LOWER(TRIM(${teensTable.phone1})) = LOWER(TRIM(${phone}))`,
+            sql`LOWER(TRIM(${teensTable.phone2})) = LOWER(TRIM(${phone}))`
+          ),
+          // names match in either order (catches first/last name swaps)
+          or(
+            and(
+              sql`LOWER(TRIM(${teensTable.firstName})) = ${fn}`,
+              sql`LOWER(TRIM(${teensTable.lastName})) = ${ln}`
+            ),
+            and(
+              sql`LOWER(TRIM(${teensTable.firstName})) = ${ln}`,
+              sql`LOWER(TRIM(${teensTable.lastName})) = ${fn}`
+            )
+          )
+        )
+      ).limit(1);
+
+    if (dup.length) {
+      const existing = dup[0];
+      return res.status(409).json({
+        error: `A teen named ${existing.firstName} ${existing.lastName} with this phone number already exists. Please check for duplicates.`,
+      });
+    }
+  }
+
   // If promoting from a child, carry over their existing membership ID so it stays permanent
   let membershipId: string;
   if (transferFromChildId) {

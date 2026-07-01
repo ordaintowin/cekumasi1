@@ -24,6 +24,7 @@ import {
   Banknote, ChevronLeft, ChevronRight, Church, Clock,
   Mail, Edit2, Camera, Users, Home, Crown, Baby, Smile, Info, Download, QrCode,
 } from "lucide-react";
+import { PasswordInput } from "@/components/ui/password-input";
 
 const getToken = () => typeof localStorage !== "undefined" ? localStorage.getItem("token") : null;
 
@@ -686,17 +687,17 @@ function TeenProfile({ user }: { user: any }) {
           <form onSubmit={handleChangePin} className="space-y-4 pt-1">
             <div className="space-y-1.5">
               <Label>Current PIN</Label>
-              <Input type="password" inputMode="numeric" maxLength={6} placeholder="Enter current PIN"
+              <PasswordInput inputMode="numeric" maxLength={6} placeholder="Enter current PIN"
                 value={pinForm.currentPin} onChange={e => setPinForm(f => ({ ...f, currentPin: e.target.value.replace(/\D/g, "") }))} required />
             </div>
             <div className="space-y-1.5">
               <Label>New PIN</Label>
-              <Input type="password" inputMode="numeric" maxLength={6} placeholder="3–6 digits"
+              <PasswordInput inputMode="numeric" maxLength={6} placeholder="3–6 digits"
                 value={pinForm.newPin} onChange={e => setPinForm(f => ({ ...f, newPin: e.target.value.replace(/\D/g, "") }))} required />
             </div>
             <div className="space-y-1.5">
               <Label>Confirm New PIN</Label>
-              <Input type="password" inputMode="numeric" maxLength={6} placeholder="Repeat new PIN"
+              <PasswordInput inputMode="numeric" maxLength={6} placeholder="Repeat new PIN"
                 value={pinForm.confirmPin} onChange={e => setPinForm(f => ({ ...f, confirmPin: e.target.value.replace(/\D/g, "") }))} required />
             </div>
             <div className="flex gap-3 pt-1">
@@ -1391,8 +1392,7 @@ export default function Profile() {
           <form onSubmit={handleChangePin} className="space-y-4 pt-1">
             <div className="space-y-1.5">
               <Label>Current PIN</Label>
-              <Input
-                type="password"
+              <PasswordInput
                 inputMode="numeric"
                 maxLength={6}
                 placeholder="Enter current PIN"
@@ -1403,8 +1403,7 @@ export default function Profile() {
             </div>
             <div className="space-y-1.5">
               <Label>New PIN</Label>
-              <Input
-                type="password"
+              <PasswordInput
                 inputMode="numeric"
                 maxLength={6}
                 placeholder="Enter new PIN (3–6 digits)"
@@ -1415,8 +1414,7 @@ export default function Profile() {
             </div>
             <div className="space-y-1.5">
               <Label>Confirm New PIN</Label>
-              <Input
-                type="password"
+              <PasswordInput
                 inputMode="numeric"
                 maxLength={6}
                 placeholder="Repeat new PIN"

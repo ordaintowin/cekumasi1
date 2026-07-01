@@ -5,6 +5,7 @@ import { useLogin } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -105,9 +106,8 @@ export default function Login() {
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="password" className="text-gray-700">Password</Label>
-                    <Input
+                    <PasswordInput
                       id="password"
-                      type="password"
                       placeholder="••••••••"
                       value={adminPassword}
                       onChange={(e) => setAdminPassword(e.target.value)}
@@ -146,9 +146,8 @@ export default function Login() {
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="pin" className="text-gray-700">4-Digit PIN</Label>
-                    <Input
+                    <PasswordInput
                       id="pin"
-                      type="password"
                       inputMode="numeric"
                       placeholder="••••"
                       maxLength={4}

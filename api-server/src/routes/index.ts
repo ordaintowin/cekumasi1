@@ -18,6 +18,7 @@ import conferenceRouter from "./conference";
 import homeRouter from "./home";
 import announcementsRouter from "./announcements";
 import prayerRequestsRouter from "./prayer-requests";
+import pushRouter from "./push";
 
 const router: IRouter = Router();
 
@@ -51,5 +52,6 @@ router.use("/", onlineRouter);
 router.use("/", homeRouter);
 router.use("/announcements", announcementsRouter);
 router.use("/prayer-requests", prayerRequestsRouter);
+router.use("/push", pushRouter);
 
 export default router;

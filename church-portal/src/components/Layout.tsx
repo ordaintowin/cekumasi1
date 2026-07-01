@@ -1,4 +1,5 @@
 import { ReactNode, useState, useEffect, useRef } from "react";
+import { usePushSubscription } from "@/hooks/usePushSubscription";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -136,6 +137,17 @@ export default function Layout({ children }: { children: ReactNode }) {
     const id = setInterval(fetchAnnouncements, 30_000);
     return () => clearInterval(id);
   }, [user]);
+
+  const { status: pushStatus, subscribe: subscribePush } = usePushSubscription(!!user);
+  const [pushPromptDismissed, setPushPromptDismissed] = useState(() =>
+    typeof localStorage !== "undefined" && localStorage.getItem("push_prompt_dismissed") === "1"
+  );
+  const showPushPrompt = !pushPromptDismissed && (pushStatus === "unsubscribed");
+
+  function dismissPushPrompt() {
+    localStorage.setItem("push_prompt_dismissed", "1");
+    setPushPromptDismissed(true);
+  }
 
   const [birthdayDismissed, setBirthdayDismissed] = useState(() => {
     const year = new Date().getFullYear();
@@ -346,6 +358,25 @@ export default function Layout({ children }: { children: ReactNode }) {
 
           <div className="flex-1 overflow-auto p-4 md:p-6">
             <div className="max-w-5xl mx-auto w-full">
+            {/* Push notification permission banner */}
+            {showPushPrompt && (
+              <div className="mb-4 flex items-center gap-3 bg-purple-50 border border-purple-200 rounded-xl px-4 py-3 shadow-sm">
+                <span className="text-2xl select-none">🔔</span>
+                <div className="flex-1">
+                  <p className="font-semibold text-purple-900 text-sm leading-tight">Enable push notifications</p>
+                  <p className="text-xs text-purple-700 mt-0.5">Get notified about announcements even when the app is closed.</p>
+                </div>
+                <button
+                  onClick={() => { subscribePush(); setPushPromptDismissed(true); }}
+                  className="text-xs bg-purple-700 text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-purple-800 transition-colors flex-shrink-0"
+                >
+                  Enable
+                </button>
+                <button onClick={dismissPushPrompt} className="text-purple-400 hover:text-purple-700 transition-colors p-1 rounded-full hover:bg-purple-100 flex-shrink-0">
+                  <span className="text-lg font-bold leading-none">×</span>
+                </button>
+              </div>
+            )}
             {/* Birthday banner */}
             {(() => {
               const dob = (user as any).dateOfBirth as string | null | undefined;

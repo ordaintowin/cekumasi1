@@ -21,6 +21,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Search, Trash2, KeyRound, Megaphone, Send, Clock, CalendarRange, Edit2, Lock, AlertTriangle, Info } from "lucide-react";
+import { PasswordInput } from "@/components/ui/password-input";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 
@@ -356,7 +357,7 @@ export default function Settings() {
                   </div>
                   <div className="space-y-1.5">
                     <Label>Password</Label>
-                    <Input type="password" value={form.password} onChange={(e) => setForm(f => ({ ...f, password: e.target.value }))} required />
+                    <PasswordInput value={form.password} onChange={(e) => setForm(f => ({ ...f, password: e.target.value }))} required />
                   </div>
                 </div>
 
@@ -485,7 +486,7 @@ export default function Settings() {
           <form onSubmit={handleResetPassword} className="space-y-4 pt-2">
             <div className="space-y-1.5">
               <Label>New Password</Label>
-              <Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Enter new password" required minLength={6} />
+              <PasswordInput value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Enter new password" required minLength={6} />
             </div>
             <Button type="submit" className="w-full bg-purple-700 text-white" disabled={isResetting}>
               {isResetting ? "Resetting..." : "Reset Password"}

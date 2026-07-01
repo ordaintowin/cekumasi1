@@ -16,10 +16,29 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+// Receive a Web Push message and show an OS notification
+self.addEventListener("push", (event) => {
+  let data = {};
+  try { data = event.data ? event.data.json() : {}; } catch (_) {}
+
+  const title   = data.title ?? "Christ Embassy Kumasi 1";
+  const options = {
+    body:      data.body ?? "",
+    icon:      data.icon ?? "/icon-192.png",
+    badge:     "/icon-192.png",
+    tag:       data.tag ?? "ce-kumasi1",
+    renotify:  true,
+    data:      { url: data.url ?? "/my-notifications" },
+    vibrate:   [200, 100, 200],
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
 // Open (or focus) the app when a notification is tapped, then navigate to the target URL
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const targetUrl = (event.notification.data && event.notification.data.url) || "/online-portal";
+  const targetUrl = (event.notification.data && event.notification.data.url) || "/my-notifications";
   event.waitUntil(
     clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
       for (const client of list) {

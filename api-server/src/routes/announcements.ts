@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db, announcementsTable, announcementReadsTable } from "@workspace/db";
 import { eq, and, or, isNull, gte, desc, asc } from "drizzle-orm";
 import { authenticateToken, requireRole } from "../middlewares/auth";
+import { sendPushToAll } from "../lib/push";
 
 const router = Router();
 router.use(authenticateToken);
@@ -127,6 +128,14 @@ router.post("/", requireRole(1), async (req, res) => {
   }
 
   res.status(201).json(created);
+
+  // Fire-and-forget Web Push to all subscribers
+  sendPushToAll({
+    title: `${emoji || "📢"} ${title}`,
+    body: message,
+    url: "/my-notifications",
+    tag: `announcement-${created.id}`,
+  }).catch(() => {});
 });
 
 router.delete("/:id", requireRole(1), async (req, res) => {
