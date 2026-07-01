@@ -3,17 +3,23 @@ import {
   useListFamilies, getListFamiliesQueryKey,
   useCreateFamilyConnection, useUpdateFamilyConnection, useDeleteFamilyConnection,
   useListMembers, useListChildren, useListTeens,
+  useGetChildParentSummary, getChildParentSummaryQueryKey,
+  useGetTeenParentSummary, getTeenParentSummaryQueryKey,
+  useUpdateChildBasicInfo, useUpdateTeenBasicInfo,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Home, Plus, Search, Users, Crown, Baby, Smile, UserCheck,
-  Pencil, Trash2, X, Loader2,
+  Pencil, Trash2, X, Loader2, CalendarDays, Gift, ChevronDown, ChevronUp,
+  UserCog, Check,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -312,9 +318,219 @@ function FamilyForm({
   );
 }
 
+function fmt(date: string | null | undefined) {
+  if (!date) return "—";
+  try { return new Date(date).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }); }
+  catch { return date; }
+}
+
+function ChildParentCard({ child }: { child: any }) {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const isChild = child.source === "child";
+  const isTeen = child.source === "teen";
+
+  const childQuery = useGetChildParentSummary(child.id, { query: { enabled: isChild } });
+  const teenQuery = useGetTeenParentSummary(child.id, { query: { enabled: isTeen } });
+  const summary: any = isChild ? childQuery.data : teenQuery.data;
+  const loading = isChild ? childQuery.isLoading : teenQuery.isLoading;
+
+  const [editOpen, setEditOpen] = useState(false);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [dob, setDob] = useState("");
+
+  const updateChild = useUpdateChildBasicInfo({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getChildParentSummaryQueryKey(child.id) });
+        setEditOpen(false);
+        toast({ title: "Updated successfully" });
+      },
+      onError: (e: any) => toast({ title: "Error", description: e?.message, variant: "destructive" }),
+    },
+  });
+  const updateTeen = useUpdateTeenBasicInfo({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getTeenParentSummaryQueryKey(child.id) });
+        setEditOpen(false);
+        toast({ title: "Updated successfully" });
+      },
+      onError: (e: any) => toast({ title: "Error", description: e?.message, variant: "destructive" }),
+    },
+  });
+
+  const openEdit = () => {
+    setFirstName(summary?.firstName ?? child.name.split(" ")[0] ?? "");
+    setLastName(summary?.lastName ?? child.name.split(" ").slice(1).join(" ") ?? "");
+    setDob(summary?.dateOfBirth ?? "");
+    setEditOpen(true);
+  };
+
+  const handleSave = () => {
+    if (!firstName.trim() || !lastName.trim()) return;
+    if (isChild) updateChild.mutate({ id: child.id, data: { firstName, lastName, dateOfBirth: dob || undefined } });
+    else updateTeen.mutate({ id: child.id, data: { firstName, lastName, dateOfBirth: dob || undefined } });
+  };
+
+  const saving = updateChild.isPending || updateTeen.isPending;
+
+  const attendance: any[] = summary?.attendance ?? [];
+  const givings: any[] = summary?.givings ?? [];
+  const totalGiven = givings.reduce((a: number, g: any) => a + parseFloat(g.amount || "0"), 0);
+
+  return (
+    <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
+      <div className="px-4 py-3 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${isTeen ? "bg-blue-100" : "bg-green-100"}`}>
+            {isTeen ? <Smile className="w-4 h-4 text-blue-600" /> : <Baby className="w-4 h-4 text-green-600" />}
+          </div>
+          <div className="min-w-0">
+            {loading ? (
+              <Skeleton className="h-4 w-32 mb-1" />
+            ) : (
+              <p className="font-semibold text-gray-900 truncate">
+                {summary ? `${summary.firstName} ${summary.lastName}` : child.name}
+              </p>
+            )}
+            <div className="flex items-center gap-2 flex-wrap">
+              <Badge variant="outline" className={`text-xs ${isTeen ? "bg-blue-50 text-blue-700 border-blue-200" : "bg-green-50 text-green-700 border-green-200"}`}>
+                {isTeen ? "Teens Church" : "Children's Church"}
+              </Badge>
+              {summary?.dateOfBirth && (
+                <span className="text-xs text-gray-400 flex items-center gap-1">
+                  <CalendarDays className="w-3 h-3" /> {fmt(summary.dateOfBirth)}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+        <Button size="sm" variant="outline" className="flex-shrink-0 h-7 text-xs gap-1" onClick={openEdit}>
+          <Pencil className="w-3 h-3" /> Edit
+        </Button>
+      </div>
+
+      {loading ? (
+        <div className="border-t px-4 py-3 space-y-2">
+          <Skeleton className="h-3 w-full" />
+          <Skeleton className="h-3 w-3/4" />
+        </div>
+      ) : (
+        <div className="border-t">
+          <Tabs defaultValue="attendance" className="w-full">
+            <TabsList className="w-full rounded-none border-b bg-gray-50 h-8 px-2 gap-1">
+              <TabsTrigger value="attendance" className="flex-1 text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm h-6">
+                <CalendarDays className="w-3 h-3 mr-1" /> Attendance ({attendance.length})
+              </TabsTrigger>
+              <TabsTrigger value="givings" className="flex-1 text-xs data-[state=active]:bg-white data-[state=active]:shadow-sm h-6">
+                <Gift className="w-3 h-3 mr-1" /> Givings ({givings.length})
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="attendance" className="m-0">
+              {attendance.length === 0 ? (
+                <p className="text-center text-xs text-gray-400 py-4">No attendance records yet</p>
+              ) : (
+                <div className="divide-y max-h-48 overflow-y-auto">
+                  {attendance.map((a: any, i: number) => (
+                    <div key={i} className="flex items-center justify-between px-4 py-2 text-xs">
+                      <div className="flex items-center gap-2">
+                        <Check className="w-3 h-3 text-green-500 flex-shrink-0" />
+                        <span className="text-gray-700 font-medium">{a.serviceName ?? "Service"}</span>
+                        {a.serviceType && <span className="text-gray-400 capitalize">· {a.serviceType}</span>}
+                      </div>
+                      <span className="text-gray-400 flex-shrink-0">{a.serviceDate ?? fmt(a.registeredAt)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="givings" className="m-0">
+              {givings.length === 0 ? (
+                <p className="text-center text-xs text-gray-400 py-4">No giving records yet</p>
+              ) : (
+                <div className="divide-y max-h-48 overflow-y-auto">
+                  <div className="px-4 py-2 bg-purple-50 flex items-center justify-between text-xs font-medium text-purple-700">
+                    <span>Total given</span>
+                    <span>GH₵ {totalGiven.toFixed(2)}</span>
+                  </div>
+                  {givings.map((g: any) => (
+                    <div key={g.id} className="flex items-center justify-between px-4 py-2 text-xs">
+                      <div>
+                        <span className="text-gray-700 font-medium">{g.givingType}</span>
+                        {g.notes && <span className="text-gray-400 ml-1">· {g.notes}</span>}
+                      </div>
+                      <div className="text-right flex-shrink-0 ml-2">
+                        <span className="text-gray-800 font-semibold">GH₵ {parseFloat(g.amount).toFixed(2)}</span>
+                        <span className="text-gray-400 ml-1.5">{g.date}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </div>
+      )}
+
+      <Dialog open={editOpen} onOpenChange={open => { if (!open) setEditOpen(false); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Edit {isTeen ? "Teen" : "Child"} Info</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-1">
+            <p className="text-xs text-gray-400">You can update the name and birthday for your {isTeen ? "teen" : "child"}.</p>
+            <div className="space-y-1.5">
+              <Label>First Name</Label>
+              <Input value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="First name" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Last Name</Label>
+              <Input value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Last name" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Date of Birth</Label>
+              <Input type="date" value={dob} onChange={e => setDob(e.target.value)} />
+            </div>
+            <div className="flex gap-2 pt-1">
+              <Button variant="outline" className="flex-1" onClick={() => setEditOpen(false)}>Cancel</Button>
+              <Button className="flex-1 bg-purple-700 text-white"
+                disabled={saving || !firstName.trim() || !lastName.trim()}
+                onClick={handleSave}>
+                {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
+                Save
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function MemberChildCard({ child }: { child: any }) {
+  return (
+    <div className="bg-white border rounded-xl shadow-sm px-4 py-3 flex items-center gap-3">
+      <div className="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+        <UserCog className="w-4 h-4 text-purple-600" />
+      </div>
+      <div className="min-w-0">
+        <p className="font-semibold text-gray-900 truncate">{child.name}</p>
+        <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700 border-purple-200 mt-0.5">
+          Adult Member
+        </Badge>
+      </div>
+    </div>
+  );
+}
+
 export default function Families() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 350);
@@ -323,9 +539,23 @@ export default function Families() {
   const [deleteFamily, setDeleteFamily] = useState<any>(null);
   const [expanded, setExpanded] = useState<number | null>(null);
 
+  // Determine if we should auto-filter to this user's family
+  const isAdmin = user && user.roleLevel <= 3;
+  const isLeader = user && user.roleLevel === 4;
+  const isTeen = user?.roleSubtype === "teen";
+  const canManage = isAdmin; // only admins can create/edit/delete families
+
+  // Build query params based on role
+  const familyQueryParams = (() => {
+    if (isAdmin || isLeader) return { search: debouncedSearch || undefined };
+    if (isTeen && user?.teenId) return { teenId: user.teenId };
+    if (user?.memberId) return { memberId: user.memberId };
+    return { search: debouncedSearch || undefined };
+  })();
+
   const { data: families, isLoading } = useListFamilies(
-    { search: debouncedSearch || undefined },
-    { query: { queryKey: getListFamiliesQueryKey({ search: debouncedSearch }) } }
+    familyQueryParams,
+    { query: { queryKey: getListFamiliesQueryKey(familyQueryParams) } }
   );
 
   // Invalidate by prefix so ALL family queries across the app are cleared
@@ -365,22 +595,28 @@ export default function Families() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Families</h1>
-          <p className="text-sm text-gray-500 mt-1">Manage church family connections</p>
+          <p className="text-sm text-gray-500 mt-1">
+            {canManage ? "Manage church family connections" : "Your family record"}
+          </p>
         </div>
-        <Button className="bg-purple-700 hover:bg-purple-800 text-white" onClick={() => setCreateOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" /> Add Family
-        </Button>
+        {canManage && (
+          <Button className="bg-purple-700 hover:bg-purple-800 text-white" onClick={() => setCreateOpen(true)}>
+            <Plus className="w-4 h-4 mr-2" /> Add Family
+          </Button>
+        )}
       </div>
 
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input
-          className="pl-9"
-          placeholder="Search families by parent name..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
-      </div>
+      {canManage && (
+        <div className="relative max-w-sm">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            className="pl-9"
+            placeholder="Search families by parent name..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+        </div>
+      )}
 
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -389,14 +625,16 @@ export default function Families() {
       ) : familyList.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-gray-400">
           <Home className="w-12 h-12 mb-3 opacity-30" />
-          <p className="font-medium">{search ? "No families found matching your search" : "No families recorded yet"}</p>
-          {!search && (
+          <p className="font-medium">
+            {canManage && search ? "No families found matching your search" : canManage ? "No families recorded yet" : "You are not linked to any family yet"}
+          </p>
+          {canManage && !search && (
             <Button className="mt-4 bg-purple-700 text-white" size="sm" onClick={() => setCreateOpen(true)}>
               <Plus className="w-4 h-4 mr-1" /> Add First Family
             </Button>
           )}
         </div>
-      ) : (
+      ) : canManage ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {familyList.map((fam: any) => {
             const isOpen = expanded === fam.id;
@@ -465,6 +703,50 @@ export default function Families() {
               </div>
             );
           })}
+        </div>
+      ) : (
+        /* Parent / Teen view — full family detail with child attendance & givings */
+        <div className="space-y-8">
+          {familyList.map((fam: any) => (
+            <div key={fam.id} className="space-y-4">
+              {/* Family header */}
+              <div className="flex items-center gap-3 pb-1 border-b">
+                <div className="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+                  <Home className="w-4 h-4 text-purple-600" />
+                </div>
+                <div>
+                  <h2 className="font-bold text-gray-900">{fam.name}</h2>
+                  <div className="flex flex-wrap gap-3 text-xs text-gray-500 mt-0.5">
+                    {fam.fatherName && (
+                      <span className="flex items-center gap-1">
+                        <UserCheck className="w-3 h-3 text-blue-400" /> {fam.fatherName}
+                      </span>
+                    )}
+                    {fam.motherName && (
+                      <span className="flex items-center gap-1">
+                        <UserCheck className="w-3 h-3 text-pink-400" /> {fam.motherName}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Children/Teens cards */}
+              {(fam.children ?? []).length === 0 ? (
+                <p className="text-sm text-gray-400">No children or teens linked to this family.</p>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {(fam.children ?? []).map((c: any) =>
+                    c.source === "member" ? (
+                      <MemberChildCard key={`member-${c.id}`} child={c} />
+                    ) : (
+                      <ChildParentCard key={`${c.source}-${c.id}`} child={c} />
+                    )
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       )}
 

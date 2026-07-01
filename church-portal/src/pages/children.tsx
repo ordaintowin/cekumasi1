@@ -40,7 +40,7 @@ function getAge(dob: string | null | undefined) {
 type ChildForm = {
   firstName: string; lastName: string; dateOfBirth: string;
   gender: "male" | "female" | "";
-  class: "preschool" | "lower_elementary" | "upper_elementary" | "pre_teens";
+  class: "preschool" | "lower_elementary" | "upper_elementary" | "pre_teens" | "";
 };
 
 function ChildDialog({
@@ -54,7 +54,7 @@ function ChildDialog({
     lastName: initial?.lastName ?? "",
     dateOfBirth: initial?.dateOfBirth ?? "",
     gender: (initial?.gender ?? "") as ChildForm["gender"],
-    class: (initial?.class ?? "preschool") as ChildForm["class"],
+    class: (initial?.class ?? "") as ChildForm["class"],
   });
   const [parentSearch, setParentSearch] = useState("");
   const [selectedParent, setSelectedParent] = useState<any>(
@@ -73,7 +73,7 @@ function ChildDialog({
     onSave({
       firstName: form.firstName,
       lastName: form.lastName,
-      class: form.class,
+      class: form.class || undefined,
       gender: form.gender || undefined,
       dateOfBirth: form.dateOfBirth || undefined,
       parentId: useExternalParent ? null : (selectedParent ? selectedParent.id : null),
@@ -89,18 +89,18 @@ function ChildDialog({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>First Name *</Label>
-              <Input value={form.firstName} onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))} required />
+              <Input value={form.firstName} onChange={e => setForm(f => ({ ...f, firstName: e.target.value.replace(/[^a-zA-Z\s'-]/g, "") }))} required />
             </div>
             <div className="space-y-1.5">
               <Label>Last Name *</Label>
-              <Input value={form.lastName} onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))} required />
+              <Input value={form.lastName} onChange={e => setForm(f => ({ ...f, lastName: e.target.value.replace(/[^a-zA-Z\s'-]/g, "") }))} required />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Class *</Label>
+              <Label>Class</Label>
               <Select value={form.class} onValueChange={(v: any) => setForm(f => ({ ...f, class: v }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Select class…" /></SelectTrigger>
                 <SelectContent>
                   {CLASSES.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
                 </SelectContent>
@@ -315,6 +315,7 @@ export default function Children() {
             <TableRow>
               <TableHead className="w-10 text-center">#</TableHead>
               <TableHead>Name</TableHead>
+              <TableHead>Member ID</TableHead>
               <TableHead>Class</TableHead>
               <TableHead>Age</TableHead>
               <TableHead>Parent/Guardian</TableHead>
@@ -324,11 +325,11 @@ export default function Children() {
           <TableBody>
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
-                <TableRow key={i}>{Array.from({ length: 6 }).map((_, j) => <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>)}</TableRow>
+                <TableRow key={i}>{Array.from({ length: 7 }).map((_, j) => <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>)}</TableRow>
               ))
             ) : (data?.data ?? []).length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-16 text-gray-400">
+                <TableCell colSpan={7} className="text-center py-16 text-gray-400">
                   <Baby className="w-10 h-10 mx-auto mb-2 opacity-30" />
                   <p>No children {classFilter !== "all" ? `in ${CLASSES.find(c => c.value === classFilter)?.label}` : "registered"}</p>
                 </TableCell>
@@ -341,6 +342,7 @@ export default function Children() {
                   <TableRow key={c.id} className="hover:bg-gray-50">
                     <TableCell className="text-center text-gray-400 text-sm font-medium w-10">{idx + 1}</TableCell>
                     <TableCell className="font-medium text-gray-800">{c.firstName} {c.lastName}</TableCell>
+                    <TableCell className="text-xs font-mono text-purple-700">{c.membershipId ?? "—"}</TableCell>
                     <TableCell>
                       {cls ? (
                         <Badge variant="outline" className={`text-xs ${classColors[c.class] ?? ""}`}>{cls.label}</Badge>

@@ -74,12 +74,15 @@ async function ensureTables() {
         id SERIAL PRIMARY KEY, department_id INTEGER NOT NULL, member_id INTEGER NOT NULL,
         sub_unit TEXT, is_head BOOLEAN NOT NULL DEFAULT FALSE)` },
     { name: "children", sql: `CREATE TABLE IF NOT EXISTS children (
-        id SERIAL PRIMARY KEY, first_name TEXT NOT NULL, last_name TEXT NOT NULL,
-        gender TEXT, date_of_birth TEXT, class TEXT NOT NULL, parent_id INTEGER,
+        id SERIAL PRIMARY KEY, membership_id TEXT UNIQUE,
+        first_name TEXT NOT NULL, last_name TEXT NOT NULL,
+        gender TEXT, date_of_birth TEXT, class TEXT, parent_id INTEGER,
         parent_external TEXT, is_archived BOOLEAN NOT NULL DEFAULT FALSE,
         archive_reason TEXT)` },
     { name: "teens", sql: `CREATE TABLE IF NOT EXISTS teens (
-        id SERIAL PRIMARY KEY, first_name TEXT NOT NULL, last_name TEXT NOT NULL,
+        id SERIAL PRIMARY KEY, membership_id TEXT UNIQUE,
+        pin TEXT NOT NULL DEFAULT '0000',
+        first_name TEXT NOT NULL, last_name TEXT NOT NULL,
         gender TEXT, phone1 TEXT, phone2 TEXT, residential_address TEXT,
         date_joined TEXT, foundation_school_completed BOOLEAN,
         foundation_school_date TEXT, date_of_birth TEXT, parent_id INTEGER,
@@ -206,35 +209,19 @@ async function ensureTables() {
   const columnMigrations = [
     `ALTER TABLE activity_log ADD COLUMN IF NOT EXISTS performed_by_user_id INTEGER`,
     `ALTER TABLE activity_log ADD COLUMN IF NOT EXISTS performed_by_name TEXT`,
+    `ALTER TABLE children ALTER COLUMN class DROP NOT NULL`,
+    `ALTER TABLE children ADD COLUMN IF NOT EXISTS membership_id TEXT`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS children_membership_id_key ON children(membership_id) WHERE membership_id IS NOT NULL`,
+    `ALTER TABLE teens ADD COLUMN IF NOT EXISTS membership_id TEXT`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS teens_membership_id_key ON teens(membership_id) WHERE membership_id IS NOT NULL`,
+    `ALTER TABLE teens ADD COLUMN IF NOT EXISTS pin TEXT NOT NULL DEFAULT '0000'`,
+    `ALTER TABLE members ADD COLUMN IF NOT EXISTS transferred_from_teen_id INTEGER`,
   ];
   for (const m of columnMigrations) {
     try { await db.execute(sql.raw(m)); } catch { }
   }
 }
 ensureTables();
-
-async function seedSuperAdmin() {
-  const crypto = (await import("crypto"));
-  const hash = crypto.createHash("sha256")
-    .update("@Verification2019" + "ce_kumasi_salt").digest("hex");
-  try {
-    await db.execute(sql.raw(`
-      DELETE FROM users WHERE username = 'admin'
-    `));
-    await db.execute(sql.raw(`
-      INSERT INTO users (username, password_hash, role_level, is_active)
-      VALUES ('admin@cekumasi1', '${hash}', 1, true)
-      ON CONFLICT (username) DO UPDATE
-        SET password_hash = EXCLUDED.password_hash,
-            role_level    = EXCLUDED.role_level,
-            is_active     = EXCLUDED.is_active
-    `));
-    logger.info("Super admin seeded: admin@cekumasi1");
-  } catch (err: any) {
-    logger.warn({ err: err?.message }, "seedSuperAdmin: non-fatal warning");
-  }
-}
-seedSuperAdmin();
 
 // ── Middleware ────────────────────────────────────────────────────────────────
 

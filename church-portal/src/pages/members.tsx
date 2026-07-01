@@ -168,11 +168,6 @@ function MemberForm({ onSubmit, loading, cells, seniorCells, initialValues, isEd
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (form.memberType === "member" && !form.cellId) {
-      setCellError(true);
-      return;
-    }
-    setCellError(false);
     const payload: any = {
       title: (form.title && form.title !== "none") ? form.title : null,
       firstName: form.firstName, lastName: form.lastName, gender: form.gender,
@@ -245,11 +240,11 @@ function MemberForm({ onSubmit, loading, cells, seniorCells, initialValues, isEd
           </div>
           <div className="space-y-1.5">
             <Label>First Name *</Label>
-            <Input value={form.firstName} onChange={e => set("firstName", e.target.value)} required />
+            <Input value={form.firstName} onChange={e => set("firstName", e.target.value.replace(/[^a-zA-Z\s'-]/g, ""))} required />
           </div>
           <div className="space-y-1.5">
             <Label>Last Name *</Label>
-            <Input value={form.lastName} onChange={e => set("lastName", e.target.value)} required />
+            <Input value={form.lastName} onChange={e => set("lastName", e.target.value.replace(/[^a-zA-Z\s'-]/g, ""))} required />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -297,7 +292,7 @@ function MemberForm({ onSubmit, loading, cells, seniorCells, initialValues, isEd
 
         <div className="space-y-1.5">
           <Label>Phone 1 *</Label>
-          <Input value={form.phone1} onChange={e => set("phone1", e.target.value)} required />
+          <Input inputMode="numeric" value={form.phone1} onChange={e => set("phone1", e.target.value.replace(/\D/g, ""))} required />
         </div>
 
         <div className="space-y-1.5">
@@ -337,11 +332,10 @@ function MemberForm({ onSubmit, loading, cells, seniorCells, initialValues, isEd
         {/* Member-only fields */}
         {!isVisitor && (
           <>
-            {/* Cell — mandatory for members */}
             <div className="space-y-1.5">
-              <Label>Cell <span className="text-red-500">*</span></Label>
-              <Select value={form.cellId} onValueChange={v => { set("cellId", v); setCellError(false); }}>
-                <SelectTrigger className={cellError ? "border-red-400 focus:ring-red-400" : ""}>
+              <Label>Cell</Label>
+              <Select value={form.cellId} onValueChange={v => set("cellId", v)}>
+                <SelectTrigger>
                   <SelectValue placeholder="Select a cell..." />
                 </SelectTrigger>
                 <SelectContent className="max-h-64">
@@ -363,13 +357,12 @@ function MemberForm({ onSubmit, loading, cells, seniorCells, initialValues, isEd
                   )}
                 </SelectContent>
               </Select>
-              {cellError && <p className="text-xs text-red-500 mt-1">Cell is required for members</p>}
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Phone 2</Label>
-                <Input value={form.phone2} onChange={e => set("phone2", e.target.value)} />
+                <Input inputMode="numeric" value={form.phone2} onChange={e => set("phone2", e.target.value.replace(/\D/g, ""))} />
               </div>
               <div className="space-y-1.5">
                 <Label>Email</Label>

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { usersTable, membersTable, activityLogTable } from "@workspace/db";
+import { usersTable, membersTable, activityLogTable, teensTable } from "@workspace/db";
 import { eq, and, ne, desc, ilike, or, count, sql } from "drizzle-orm";
 import { authenticateToken, requireRole } from "../middlewares/auth";
 import crypto from "crypto";
@@ -85,6 +85,49 @@ router.get("/activity-log", requireRole(1), async (req, res) => {
   } catch (err: any) {
     res.status(500).json({ error: err?.message });
   }
+});
+
+// ── Teen PIN management (super admin only) ───────────────────────────────────
+
+router.get("/teen-pins", requireRole(1), async (req, res) => {
+  const { search, page = "1", limit = "25" } = req.query as any;
+  const pageNum = Math.max(1, parseInt(page));
+  const limitNum = Math.min(50, Math.max(1, parseInt(limit)));
+  const offset = (pageNum - 1) * limitNum;
+
+  try {
+    const baseWhere = eq(teensTable.isArchived, false);
+    const whereClause = search
+      ? and(baseWhere, or(ilike(teensTable.firstName, `%${search}%`), ilike(teensTable.lastName, `%${search}%`), ilike(teensTable.membershipId, `%${search}%`)))
+      : baseWhere;
+
+    const [totalResult, items] = await Promise.all([
+      db.select({ count: count() }).from(teensTable).where(whereClause),
+      db.select({
+        id: teensTable.id,
+        membershipId: teensTable.membershipId,
+        firstName: teensTable.firstName,
+        lastName: teensTable.lastName,
+        pin: teensTable.pin,
+        dateOfBirth: teensTable.dateOfBirth,
+      }).from(teensTable).where(whereClause).orderBy(teensTable.firstName).limit(limitNum).offset(offset),
+    ]);
+
+    res.json({ items, total: Number(totalResult[0]?.count ?? 0), page: pageNum, pageSize: limitNum });
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message });
+  }
+});
+
+router.patch("/teen-pins/:id", requireRole(1), async (req, res) => {
+  const id = parseInt(req.params.id);
+  const { pin } = req.body;
+  if (!pin || !/^\d{4}$/.test(String(pin))) {
+    return res.status(400).json({ error: "PIN must be exactly 4 digits" });
+  }
+  const updated = await db.update(teensTable).set({ pin: String(pin) }).where(eq(teensTable.id, id)).returning({ id: teensTable.id });
+  if (!updated.length) return res.status(404).json({ error: "Teen not found" });
+  res.json({ success: true, id, pin });
 });
 
 router.post("/activity-log", requireRole(1), async (req, res) => {

@@ -8,6 +8,7 @@ import {
   useGetMemberGivingsHistory, getGetMemberGivingsHistoryQueryKey,
   useListMinistryYears,
   useListFamilies, getListFamiliesQueryKey,
+  useGetTeenParentSummary,
 } from "@workspace/api-client-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -261,6 +262,12 @@ function GivingsTab({ memberId }: { memberId: number }) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <GivingTypePill name={g.givingTypeName} />
+                    {g.stage === "teen" && (
+                      <span className="text-[10px] bg-violet-100 text-violet-700 rounded px-1.5 py-0.5 font-medium">Teen era</span>
+                    )}
+                    {g.stage === "child" && (
+                      <span className="text-[10px] bg-blue-100 text-blue-700 rounded px-1.5 py-0.5 font-medium">Child era</span>
+                    )}
                   </div>
                   <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
                     <Calendar className="w-3 h-3" />
@@ -282,6 +289,425 @@ function GivingsTab({ memberId }: { memberId: number }) {
           <Pagination page={page} totalPages={totalPages} onPrev={() => setPage(p => p - 1)} onNext={() => setPage(p => p + 1)} />
         </>
       )}
+    </div>
+  );
+}
+
+// ─── Teen Portal ────────────────────────────────────────────────────────────
+
+function TeenProfile({ user }: { user: any }) {
+  const { toast } = useToast();
+  const [showQR, setShowQR] = useState(false);
+  const [pinOpen, setPinOpen] = useState(false);
+  const [pinForm, setPinForm] = useState({ currentPin: "", newPin: "", confirmPin: "" });
+  const [isSavingPin, setIsSavingPin] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editForm, setEditForm] = useState({ firstName: "", lastName: "", phone1: "", phone2: "" });
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+
+  const { data, isLoading, refetch } = useGetTeenParentSummary(user.teenId ?? 0, {
+    query: { enabled: !!user.teenId },
+  });
+  const teen = data as any;
+
+  const downloadQR = useCallback(() => {
+    const svg = document.getElementById("teen-qr-svg");
+    if (!svg || !teen) return;
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const canvas = document.createElement("canvas");
+    const size = 256;
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d");
+    const img = new Image();
+    img.onload = () => {
+      ctx!.fillStyle = "#ffffff";
+      ctx!.fillRect(0, 0, size, size);
+      ctx!.drawImage(img, 0, 0, size, size);
+      const a = document.createElement("a");
+      a.download = `${teen.membershipId}-qr.png`;
+      a.href = canvas.toDataURL("image/png");
+      a.click();
+    };
+    img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
+  }, [teen]);
+
+  const handleChangePin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (pinForm.newPin.length < 3 || pinForm.newPin.length > 6) {
+      toast({ title: "Invalid PIN", description: "PIN must be 3–6 digits.", variant: "destructive" });
+      return;
+    }
+    if (pinForm.newPin !== pinForm.confirmPin) {
+      toast({ title: "PINs don't match", description: "New PIN and confirmation don't match.", variant: "destructive" });
+      return;
+    }
+    setIsSavingPin(true);
+    try {
+      const res = await fetch("/api/auth/change-pin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+        body: JSON.stringify({ currentPin: pinForm.currentPin, newPin: pinForm.newPin }),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error);
+      toast({ title: "PIN changed", description: "Your PIN has been updated successfully." });
+      setPinOpen(false);
+      setPinForm({ currentPin: "", newPin: "", confirmPin: "" });
+    } catch (err: any) {
+      toast({ title: "Error", description: err?.message || "Failed to change PIN", variant: "destructive" });
+    }
+    setIsSavingPin(false);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <h1 className="text-2xl font-bold text-gray-900">My Profile</h1>
+        <Skeleton className="h-40 w-full rounded-xl" />
+        <Skeleton className="h-8 w-full rounded-xl" />
+        <Skeleton className="h-48 w-full rounded-xl" />
+      </div>
+    );
+  }
+
+  if (!teen) {
+    return (
+      <div className="space-y-4">
+        <h1 className="text-2xl font-bold text-gray-900">My Profile</h1>
+        <Card>
+          <CardContent className="pt-8 pb-8 text-center text-gray-400">
+            <User className="w-10 h-10 mx-auto mb-3 opacity-30" />
+            <p className="text-sm">Could not load profile. Please try again.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const initials = `${teen.firstName?.[0] ?? ""}${teen.lastName?.[0] ?? ""}`.toUpperCase();
+  const attendance: any[] = teen.attendance ?? [];
+  const givings: any[] = teen.givings ?? [];
+  const totalGiving = givings.reduce((s: number, g: any) => s + Number(g.amount), 0);
+
+  const byType: Record<string, number> = {};
+  for (const g of givings) {
+    byType[g.givingType] = (byType[g.givingType] ?? 0) + Number(g.amount);
+  }
+
+  return (
+    <div className="space-y-6 max-w-2xl">
+      <h1 className="text-2xl font-bold text-gray-900">My Profile</h1>
+
+      {/* Header card */}
+      <Card className="border-purple-100">
+        <CardContent className="pt-5 pb-5">
+          <div className="flex items-start gap-4">
+            {/* Avatar */}
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-violet-500 to-purple-700 flex items-center justify-center text-white font-bold text-xl flex-shrink-0 select-none">
+              {initials || <User className="w-7 h-7" />}
+            </div>
+
+            {/* Info */}
+            <div className="flex-1 min-w-0">
+              <h2 className="text-base font-bold text-gray-900 leading-snug">
+                {teen.firstName} {teen.lastName}
+              </h2>
+              <p className="text-xs text-gray-400 font-mono mt-0.5 truncate">{teen.membershipId}</p>
+
+              {/* Action buttons */}
+              <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                {teen.membershipId && (
+                  <Button size="sm" variant="outline" className="h-7 text-xs border-purple-200 text-purple-700 hover:bg-purple-50 px-2 gap-1" onClick={() => setShowQR(true)}>
+                    <QrCode className="w-3 h-3" /> QR
+                  </Button>
+                )}
+                <Button size="sm" variant="outline" className="h-7 text-xs border-purple-200 text-purple-700 hover:bg-purple-50 px-2 gap-1" onClick={() => {
+                  setEditForm({ firstName: teen.firstName ?? "", lastName: teen.lastName ?? "", phone1: teen.phone1 ?? "", phone2: teen.phone2 ?? "" });
+                  setEditOpen(true);
+                }}>
+                  <Edit2 className="w-3 h-3" /> Edit
+                </Button>
+                <Button size="sm" variant="outline" className="h-7 text-xs border-gray-200 text-gray-600 hover:bg-gray-50 px-2" onClick={() => setPinOpen(true)}>
+                  Change PIN
+                </Button>
+              </div>
+
+              {/* Badges */}
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                <Badge className="bg-violet-100 text-violet-700 border-0 text-xs">Teen</Badge>
+                {teen.foundationSchoolCompleted && (
+                  <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 text-xs">Foundation School ✓</Badge>
+                )}
+                {teen.gender && (
+                  <Badge variant="outline" className="text-xs text-gray-600 border-gray-200">{teen.gender}</Badge>
+                )}
+              </div>
+
+              {/* Detail fields */}
+              <div className="mt-3 space-y-1.5 text-sm">
+                {teen.phone1 && (
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Phone className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                    <span>{teen.phone1}{teen.phone2 ? <span className="text-gray-400"> / {teen.phone2}</span> : null}</span>
+                  </div>
+                )}
+                {teen.dateOfBirth && (
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Calendar className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                    <span>{fmt(teen.dateOfBirth, { day: "numeric", month: "long", year: "numeric" })}</span>
+                  </div>
+                )}
+                {teen.dateJoined && (
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <span className="text-gray-400 text-xs flex-shrink-0">Joined:</span>
+                    <span>{fmt(teen.dateJoined, { month: "long", year: "numeric" })}</span>
+                  </div>
+                )}
+                {teen.residentialAddress && (
+                  <div className="flex items-start gap-2 text-gray-600">
+                    <Home className="w-3.5 h-3.5 text-gray-400 flex-shrink-0 mt-0.5" />
+                    <span>{teen.residentialAddress}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* QR Dialog */}
+      {showQR && teen.membershipId && (
+        <Dialog open onOpenChange={() => setShowQR(false)}>
+          <DialogContent className="max-w-xs text-center">
+            <DialogHeader><DialogTitle>My Attendance QR Code</DialogTitle></DialogHeader>
+            <div className="flex flex-col items-center gap-4 pt-2">
+              <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold text-sm">
+                {initials}
+              </div>
+              <p className="font-semibold text-gray-800">{teen.firstName} {teen.lastName}</p>
+              <p className="text-xs text-gray-400 font-mono">{teen.membershipId}</p>
+              <div className="p-4 bg-white border rounded-xl">
+                <QRCode
+                  id="teen-qr-svg"
+                  value={teen.membershipId}
+                  size={180}
+                  fgColor="#6d28d9"
+                  bgColor="#ffffff"
+                />
+              </div>
+              <p className="text-xs text-gray-400">Show this QR code to register your attendance</p>
+              <div className="flex gap-2 w-full">
+                <Button variant="outline" className="flex-1 gap-1.5 border-purple-200 text-purple-700 hover:bg-purple-50" onClick={downloadQR}>
+                  <Download className="w-3.5 h-3.5" /> Save
+                </Button>
+                <Button className="flex-1 bg-purple-700 text-white hover:bg-purple-800" onClick={() => setShowQR(false)}>Close</Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Tabs */}
+      <Tabs defaultValue="attendance">
+        <TabsList className="bg-purple-50 w-full">
+          <TabsTrigger value="attendance" className="flex-1 gap-1.5 data-[state=active]:bg-purple-700 data-[state=active]:text-white">
+            <CheckCircle2 className="w-4 h-4" /> Attendance
+          </TabsTrigger>
+          <TabsTrigger value="givings" className="flex-1 gap-1.5 data-[state=active]:bg-purple-700 data-[state=active]:text-white">
+            <Banknote className="w-4 h-4" /> Givings
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Attendance tab */}
+        <TabsContent value="attendance" className="pt-4">
+          {attendance.length === 0 ? (
+            <div className="text-center py-14 border rounded-xl bg-gray-50 text-gray-400">
+              <Church className="w-10 h-10 mx-auto mb-3 opacity-30" />
+              <p className="font-medium text-gray-500">No attendance recorded yet</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Recent Services</p>
+                <p className="text-2xl font-bold text-purple-700">{attendance.length}</p>
+              </div>
+              <div className="space-y-2">
+                {attendance.map((rec: any, idx: number) => (
+                  <div key={idx} className="flex items-center gap-4 p-3.5 rounded-xl border border-gray-100 bg-white hover:border-purple-100 hover:bg-purple-50/30 transition-colors">
+                    <div className="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+                      <CheckCircle2 className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-gray-900 text-sm truncate">{rec.serviceName ?? "Service"}</p>
+                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                        {rec.serviceDate && (
+                          <span className="flex items-center gap-1 text-xs text-gray-500">
+                            <Calendar className="w-3 h-3" />
+                            {fmt(rec.serviceDate)}
+                          </span>
+                        )}
+                        {rec.serviceType && <ServiceTypeBadge type={rec.serviceType} />}
+                      </div>
+                    </div>
+                    {rec.registeredAt && (
+                      <div className="text-right flex-shrink-0 text-xs text-gray-400 flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {new Date(rec.registeredAt).toLocaleTimeString("en-GH", { hour: "2-digit", minute: "2-digit" })}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </TabsContent>
+
+        {/* Givings tab */}
+        <TabsContent value="givings" className="pt-4">
+          {givings.length === 0 ? (
+            <div className="text-center py-14 border rounded-xl bg-gray-50 text-gray-400">
+              <Banknote className="w-10 h-10 mx-auto mb-3 opacity-30" />
+              <p className="font-medium text-gray-500">No giving records yet</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Recent Givings</p>
+                <p className="text-2xl font-bold text-emerald-700">
+                  GHS {totalGiving.toLocaleString("en-GH", { minimumFractionDigits: 2 })}
+                </p>
+              </div>
+
+              {Object.keys(byType).length > 1 && (
+                <div className="flex flex-wrap gap-2">
+                  {Object.entries(byType).map(([type, amount]) => (
+                    <div key={type} className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 rounded-lg px-3 py-1.5">
+                      <GivingTypePill name={type} />
+                      <span className="text-xs font-semibold text-gray-700">
+                        GHS {amount.toLocaleString("en-GH", { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="space-y-2">
+                {givings.map((g: any) => (
+                  <div key={`${g.stage ?? "t"}-${g.id}`} className="flex items-center gap-4 p-3.5 rounded-xl border border-gray-100 bg-white hover:border-emerald-100 hover:bg-emerald-50/20 transition-colors">
+                    <div className="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                      <Banknote className="w-5 h-5 text-emerald-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <GivingTypePill name={g.givingType} />
+                        {g.stage === "child" && (
+                          <span className="text-[10px] bg-blue-100 text-blue-700 rounded px-1.5 py-0.5 font-medium">Child era</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
+                        <Calendar className="w-3 h-3" />
+                        {fmt(g.date)}
+                        {g.notes && (
+                          <span className="ml-2 text-gray-400 italic truncate max-w-[140px]">· {g.notes}</span>
+                        )}
+                      </div>
+                    </div>
+                    <p className="font-bold text-emerald-700 text-sm flex-shrink-0">
+                      GHS {Number(g.amount).toLocaleString("en-GH", { minimumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+
+      {/* Edit profile dialog */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Edit My Profile</DialogTitle></DialogHeader>
+          <form onSubmit={async (e) => {
+            e.preventDefault();
+            if (!editForm.firstName.trim() || !editForm.lastName.trim()) {
+              toast({ title: "Name required", description: "First and last name cannot be empty.", variant: "destructive" });
+              return;
+            }
+            setIsSavingEdit(true);
+            try {
+              const res = await fetch(`/api/teens/${user.teenId}/basic-info`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+                body: JSON.stringify(editForm),
+              });
+              const d = await res.json();
+              if (!res.ok) throw new Error(d.error);
+              toast({ title: "Profile updated", description: "Your changes have been saved." });
+              setEditOpen(false);
+              refetch();
+            } catch (err: any) {
+              toast({ title: "Error", description: err?.message || "Failed to save changes", variant: "destructive" });
+            }
+            setIsSavingEdit(false);
+          }} className="space-y-4 pt-1">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>First Name</Label>
+                <Input value={editForm.firstName} onChange={e => setEditForm(f => ({ ...f, firstName: e.target.value.replace(/[^a-zA-Z\s'-]/g, "") }))} required />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Last Name</Label>
+                <Input value={editForm.lastName} onChange={e => setEditForm(f => ({ ...f, lastName: e.target.value.replace(/[^a-zA-Z\s'-]/g, "") }))} required />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Primary Phone</Label>
+              <Input inputMode="numeric" value={editForm.phone1} onChange={e => setEditForm(f => ({ ...f, phone1: e.target.value.replace(/\D/g, "") }))} placeholder="0XX XXX XXXX" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Secondary Phone</Label>
+              <Input inputMode="numeric" value={editForm.phone2} onChange={e => setEditForm(f => ({ ...f, phone2: e.target.value.replace(/\D/g, "") }))} placeholder="Optional" />
+            </div>
+            <div className="flex gap-3 pt-1">
+              <Button type="button" variant="outline" className="flex-1" onClick={() => setEditOpen(false)}>Cancel</Button>
+              <Button type="submit" className="flex-1 bg-purple-700 hover:bg-purple-800 text-white" disabled={isSavingEdit}>
+                {isSavingEdit ? "Saving..." : "Save Changes"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Change PIN dialog */}
+      <Dialog open={pinOpen} onOpenChange={(o) => { setPinOpen(o); if (!o) setPinForm({ currentPin: "", newPin: "", confirmPin: "" }); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Change Login PIN</DialogTitle></DialogHeader>
+          <form onSubmit={handleChangePin} className="space-y-4 pt-1">
+            <div className="space-y-1.5">
+              <Label>Current PIN</Label>
+              <Input type="password" inputMode="numeric" maxLength={6} placeholder="Enter current PIN"
+                value={pinForm.currentPin} onChange={e => setPinForm(f => ({ ...f, currentPin: e.target.value.replace(/\D/g, "") }))} required />
+            </div>
+            <div className="space-y-1.5">
+              <Label>New PIN</Label>
+              <Input type="password" inputMode="numeric" maxLength={6} placeholder="3–6 digits"
+                value={pinForm.newPin} onChange={e => setPinForm(f => ({ ...f, newPin: e.target.value.replace(/\D/g, "") }))} required />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Confirm New PIN</Label>
+              <Input type="password" inputMode="numeric" maxLength={6} placeholder="Repeat new PIN"
+                value={pinForm.confirmPin} onChange={e => setPinForm(f => ({ ...f, confirmPin: e.target.value.replace(/\D/g, "") }))} required />
+            </div>
+            <div className="flex gap-3 pt-1">
+              <Button type="button" variant="outline" className="flex-1" onClick={() => setPinOpen(false)}>Cancel</Button>
+              <Button type="submit" className="flex-1 bg-purple-700 hover:bg-purple-800 text-white" disabled={isSavingPin}>
+                {isSavingPin ? "Saving..." : "Change PIN"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -349,6 +775,8 @@ function LeaderFellowshipWidget({ user }: { user: any }) {
 
 export default function Profile() {
   const { user } = useAuth();
+
+  // All hooks must be declared unconditionally (rules of hooks)
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
@@ -369,6 +797,23 @@ export default function Profile() {
   const [pinOpen, setPinOpen] = useState(false);
   const [pinForm, setPinForm] = useState({ currentPin: "", newPin: "", confirmPin: "" });
   const [isSavingPin, setIsSavingPin] = useState(false);
+
+  const [childGivingsOpen, setChildGivingsOpen] = useState(false);
+  const [childGivingsData, setChildGivingsData] = useState<{ dependents: any[]; grouped: Record<string, any> } | null>(null);
+  const [childGivingsLoading, setChildGivingsLoading] = useState(false);
+
+  const openChildGivings = async () => {
+    setChildGivingsOpen(true);
+    setChildGivingsLoading(true);
+    try {
+      const res = await fetch(`/api/members/${user?.memberId}/dependents-givings`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      if (res.ok) setChildGivingsData(await res.json());
+    } finally {
+      setChildGivingsLoading(false);
+    }
+  };
 
   const handleChangePin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -461,6 +906,11 @@ export default function Profile() {
     };
     img.src = "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svgData)));
   }, [m]);
+
+  // Teens get their own dedicated view — guard placed after all hooks
+  if ((user as any)?.roleSubtype === "teen") {
+    return <TeenProfile user={user} />;
+  }
 
   const roleLabel = {
     1: "Super Admin", 2: "Finance Admin", 3: "Staff", 4: "Leader", 5: "Member",
@@ -706,11 +1156,11 @@ export default function Profile() {
               </div>
               <div className="space-y-1.5">
                 <Label>Primary Phone <span className="text-red-500">*</span></Label>
-                <Input value={editForm.phone1} onChange={e => setEditForm(f => ({ ...f, phone1: e.target.value }))} placeholder="0XX XXX XXXX" required />
+                <Input inputMode="numeric" value={editForm.phone1} onChange={e => setEditForm(f => ({ ...f, phone1: e.target.value.replace(/\D/g, "") }))} placeholder="0XX XXX XXXX" required />
               </div>
               <div className="space-y-1.5">
                 <Label>Secondary Phone</Label>
-                <Input value={editForm.phone2} onChange={e => setEditForm(f => ({ ...f, phone2: e.target.value }))} placeholder="Optional" />
+                <Input inputMode="numeric" value={editForm.phone2} onChange={e => setEditForm(f => ({ ...f, phone2: e.target.value.replace(/\D/g, "") }))} placeholder="Optional" />
               </div>
             </div>
 
@@ -750,6 +1200,14 @@ export default function Profile() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <Button
+        variant="outline"
+        className="w-full border-green-200 text-green-700 hover:bg-green-50 gap-2 justify-start font-medium"
+        onClick={openChildGivings}
+      >
+        <Baby className="w-4 h-4" /> Children's Givings
+      </Button>
 
       <Tabs defaultValue="info">
         <TabsList className="bg-purple-50 w-full">
@@ -855,6 +1313,74 @@ export default function Profile() {
           </div>
         </div>
       )}
+
+      {/* Children's Givings dialog */}
+      <Dialog open={childGivingsOpen} onOpenChange={setChildGivingsOpen}>
+        <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Baby className="w-4 h-4 text-green-600" /> Children's Giving Records
+            </DialogTitle>
+          </DialogHeader>
+          {childGivingsLoading ? (
+            <div className="space-y-3 pt-2">
+              {[1, 2, 3].map(i => <Skeleton key={i} className="h-20 w-full rounded-xl" />)}
+            </div>
+          ) : !childGivingsData || childGivingsData.dependents.length === 0 ? (
+            <div className="text-center py-12 text-gray-400">
+              <Baby className="w-10 h-10 mx-auto mb-3 opacity-30" />
+              <p className="text-sm font-medium text-gray-500">No linked children or teens found</p>
+              <p className="text-xs mt-1">Only non-promoted children and teens appear here</p>
+            </div>
+          ) : (
+            <div className="space-y-5 pt-2">
+              {childGivingsData.dependents.map((dep: any) => {
+                const entry = childGivingsData.grouped[dep.name];
+                const givings: any[] = entry?.givings ?? [];
+                const total: number = entry?.total ?? 0;
+                return (
+                  <div key={`${dep.stage}-${dep.id}`} className="border border-gray-100 rounded-xl overflow-hidden">
+                    <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 border-b border-gray-100">
+                      {dep.stage === "teen"
+                        ? <Smile className="w-4 h-4 text-violet-500 flex-shrink-0" />
+                        : <Baby className="w-4 h-4 text-green-500 flex-shrink-0" />}
+                      <span className="font-semibold text-gray-800 text-sm">{dep.name}</span>
+                      <span className="text-[10px] ml-1 bg-gray-200 text-gray-600 rounded px-1.5 py-0.5 capitalize">{dep.stage}</span>
+                      {total > 0 && (
+                        <span className="ml-auto text-sm font-bold text-emerald-700">
+                          GHS {total.toLocaleString("en-GH", { minimumFractionDigits: 2 })}
+                        </span>
+                      )}
+                    </div>
+                    {givings.length === 0 ? (
+                      <div className="px-4 py-4 text-center text-xs text-gray-400">No giving records yet</div>
+                    ) : (
+                      <div className="divide-y divide-gray-50">
+                        {givings.map((g: any, idx: number) => (
+                          <div key={idx} className="flex items-center gap-3 px-4 py-2.5">
+                            <Banknote className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-semibold text-gray-700">{g.givingTypeName}</p>
+                              <p className="text-[11px] text-gray-400 flex items-center gap-1">
+                                <Calendar className="w-3 h-3" />
+                                {fmt(g.date)}
+                                {g.notes && <span className="italic truncate max-w-[100px]">· {g.notes}</span>}
+                              </p>
+                            </div>
+                            <p className="font-bold text-emerald-700 text-xs flex-shrink-0">
+                              GHS {Number(g.amount).toLocaleString("en-GH", { minimumFractionDigits: 2 })}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Change PIN dialog */}
       <Dialog open={pinOpen} onOpenChange={(o) => { setPinOpen(o); if (!o) setPinForm({ currentPin: "", newPin: "", confirmPin: "" }); }}>

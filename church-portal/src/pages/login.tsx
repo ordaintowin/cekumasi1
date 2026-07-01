@@ -36,12 +36,12 @@ export default function Login() {
         else if (roleLevel === 3 && roleSubtype === "media") setLocation("/online-portal");
         else if (roleLevel === 3 && roleSubtype === "children") setLocation("/children");
         else if (roleLevel === 3 && roleSubtype === "registration") setLocation("/attendance");
-        else setLocation("/profile");
+        else setLocation("/home");
       },
       onError: (err: any) => {
         toast({
           title: "Login failed",
-          description: err?.message || "Invalid credentials. Please check your username and password.",
+          description: err?.message || "Invalid credentials. Please check your ID and PIN.",
           variant: "destructive",
         });
       },
@@ -82,11 +82,11 @@ export default function Login() {
           <CardContent>
             <Tabs defaultValue="admin" className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-5 bg-purple-50">
-                <TabsTrigger value="admin" className="data-[state=active]:bg-purple-700 data-[state=active]:text-white">
+                <TabsTrigger value="admin" className="data-[state=active]:bg-purple-700 data-[state=active]:text-white text-sm">
                   Admin Login
                 </TabsTrigger>
-                <TabsTrigger value="member" className="data-[state=active]:bg-purple-700 data-[state=active]:text-white">
-                  Leader/Member Login
+                <TabsTrigger value="member" className="data-[state=active]:bg-purple-700 data-[state=active]:text-white text-sm">
+                  Member Login
                 </TabsTrigger>
               </TabsList>
 
@@ -137,7 +137,7 @@ export default function Login() {
                     <Label htmlFor="memberId" className="text-gray-700">Membership ID</Label>
                     <Input
                       id="memberId"
-                      placeholder="e.g. CEK1-XXXXX"
+                      placeholder="e.g. CEKSI-XXXXX"
                       value={memberId}
                       onChange={(e) => setMemberId(e.target.value)}
                       className="border-gray-200 focus:border-purple-400"
@@ -166,6 +166,11 @@ export default function Login() {
                     {loginMutation.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
                     Access Portal
                   </Button>
+                  <div className="text-center">
+                    <button type="button" onClick={() => setForgotOpen(true)} className="text-xs text-purple-500 hover:text-purple-700 underline">
+                      Forgot PIN?
+                    </button>
+                  </div>
                 </form>
               </TabsContent>
             </Tabs>
@@ -180,14 +185,15 @@ export default function Login() {
       <Dialog open={forgotOpen} onOpenChange={setForgotOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Forgot Password?</DialogTitle>
+            <DialogTitle>Forgot Password / PIN?</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 text-sm text-gray-600">
-            <p>To reset your password, please contact your <strong>Super Administrator</strong>.</p>
-            <p className="text-gray-500">Your admin can reset your password or PIN from the Settings or Member Management page.</p>
-            <div className="bg-purple-50 border border-purple-100 rounded-lg p-3">
-              <p className="text-xs text-purple-700 font-medium">For members:</p>
-              <p className="text-xs text-purple-600 mt-1">Your admin can reset your 4-digit PIN from the Members page.</p>
+            <p>To reset your password or PIN, please contact your <strong>Super Administrator</strong>.</p>
+            <div className="bg-purple-50 border border-purple-100 rounded-lg p-3 space-y-1.5">
+              <p className="text-xs text-purple-700 font-medium">For adult members:</p>
+              <p className="text-xs text-purple-600">Your admin can reset your 4-digit PIN from the Members page.</p>
+              <p className="text-xs text-purple-700 font-medium mt-1">For teens:</p>
+              <p className="text-xs text-purple-600">Your admin can view and reset your PIN from the Teens Church page.</p>
             </div>
             <Button className="w-full bg-purple-700 hover:bg-purple-800 text-white" onClick={() => setForgotOpen(false)}>
               OK, Got it

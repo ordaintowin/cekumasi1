@@ -6,8 +6,14 @@ import {
   membersTable,
   familiesTable,
   familyChildrenTable,
+  serviceChildrenAttendanceTable,
+  serviceTeensAttendanceTable,
+  servicesTable,
+  givingsTable,
+  givingTypesTable,
+  ministryYearsTable,
 } from "@workspace/db";
-import { eq, and, ilike, or, ne, sql } from "drizzle-orm";
+import { eq, and, ilike, or, ne, sql, desc, inArray } from "drizzle-orm";
 import { authenticateToken } from "../middlewares/auth";
 
 const router = Router();
@@ -23,6 +29,23 @@ async function generateMembershipId(firstName: string, lastName: string): Promis
   let max = 0;
   for (const row of existing) {
     const num = parseInt(row.membershipId.slice(prefix.length), 10);
+    if (!isNaN(num) && num > max) max = num;
+  }
+  return `${prefix}${String(max + 1).padStart(3, "0")}`;
+}
+
+async function generateUniversalId(firstName: string, lastName: string): Promise<string> {
+  const initials = ((firstName[0] ?? "X") + (lastName[0] ?? "X")).toUpperCase();
+  const prefix = `CEKSI-${initials}`;
+  const [m, t, c] = await Promise.all([
+    db.select({ mid: membersTable.membershipId }).from(membersTable).where(ilike(membersTable.membershipId, `${prefix}%`)),
+    db.select({ mid: teensTable.membershipId }).from(teensTable).where(ilike(teensTable.membershipId, `${prefix}%`)),
+    db.select({ mid: childrenTable.membershipId }).from(childrenTable).where(ilike(childrenTable.membershipId, `${prefix}%`)),
+  ]);
+  let max = 0;
+  for (const { mid } of [...m, ...t, ...c]) {
+    if (!mid) continue;
+    const num = parseInt(mid.slice(prefix.length), 10);
     if (!isNaN(num) && num > max) max = num;
   }
   return `${prefix}${String(max + 1).padStart(3, "0")}`;
@@ -205,19 +228,22 @@ router.post("/children", async (req, res) => {
     parentId,
     parentExternal,
   } = req.body;
-  if (!firstName || !lastName || !childClass)
+  if (!firstName || !lastName)
     return res
       .status(400)
-      .json({ error: "First name, last name, and class required" });
+      .json({ error: "First name and last name required" });
+
+  const membershipId = await generateUniversalId(firstName, lastName);
 
   const created = await db
     .insert(childrenTable)
     .values({
+      membershipId,
       firstName,
       lastName,
       dateOfBirth,
       gender: gender || null,
-      class: childClass,
+      class: childClass || null,
       parentId: parentId || null,
       parentExternal,
     })
@@ -325,6 +351,158 @@ router.delete("/children/:id", async (req, res) => {
   res.json({ success: true });
 });
 
+// Parent summary for a child — name, dob, last 20 services attended, last 20 givings
+router.get("/children/:id/parent-summary", async (req, res) => {
+  const id = parseInt(req.params.id);
+  const child = await db.select().from(childrenTable).where(and(eq(childrenTable.id, id), eq(childrenTable.isArchived, false))).limit(1);
+  if (!child.length) return res.status(404).json({ error: "Child not found" });
+
+  const attendanceRows = await db
+    .select({ serviceId: serviceChildrenAttendanceTable.serviceId, registeredAt: serviceChildrenAttendanceTable.registeredAt })
+    .from(serviceChildrenAttendanceTable)
+    .where(eq(serviceChildrenAttendanceTable.childId, id))
+    .orderBy(desc(serviceChildrenAttendanceTable.registeredAt))
+    .limit(20);
+
+  const serviceIds = [...new Set(attendanceRows.map(r => r.serviceId))];
+  let servicesMap: Record<number, any> = {};
+  if (serviceIds.length) {
+    const svcs = await db.select().from(servicesTable).where(sql`${servicesTable.id} = ANY(ARRAY[${sql.join(serviceIds.map(id => sql`${id}`), sql`, `)}])`);
+    svcs.forEach(s => { servicesMap[s.id] = s; });
+  }
+
+  const attendance = attendanceRows.map(r => ({
+    serviceId: r.serviceId,
+    registeredAt: r.registeredAt,
+    serviceDate: servicesMap[r.serviceId]?.date ?? null,
+    serviceName: servicesMap[r.serviceId]?.name ?? null,
+    serviceType: servicesMap[r.serviceId]?.type ?? null,
+  }));
+
+  const givingRows = await db
+    .select()
+    .from(givingsTable)
+    .where(and(eq(givingsTable.childId, id), eq(givingsTable.isArchived, false)))
+    .orderBy(desc(givingsTable.date))
+    .limit(20);
+
+  const typeIds = [...new Set(givingRows.map(g => g.givingTypeId).filter(Boolean))];
+  let typesMap: Record<number, string> = {};
+  if (typeIds.length) {
+    const gts = await db.select().from(givingTypesTable).where(sql`${givingTypesTable.id} = ANY(ARRAY[${sql.join(typeIds.map(id => sql`${id}`), sql`, `)}])`);
+    gts.forEach(gt => { typesMap[gt.id] = gt.name; });
+  }
+
+  const givings = givingRows.map(g => ({
+    id: g.id, date: g.date, amount: g.amount,
+    givingType: typesMap[g.givingTypeId!] ?? "Gift",
+    notes: g.notes,
+  }));
+
+  res.json({ ...child[0], attendance, givings });
+});
+
+// Parent summary for a teen
+router.get("/teens/:id/parent-summary", async (req, res) => {
+  const id = parseInt(req.params.id);
+  const teen = await db.select().from(teensTable).where(and(eq(teensTable.id, id), eq(teensTable.isArchived, false))).limit(1);
+  if (!teen.length) return res.status(404).json({ error: "Teen not found" });
+
+  const attendanceRows = await db
+    .select({ serviceId: serviceTeensAttendanceTable.serviceId, registeredAt: serviceTeensAttendanceTable.registeredAt })
+    .from(serviceTeensAttendanceTable)
+    .where(eq(serviceTeensAttendanceTable.teenId, id))
+    .orderBy(desc(serviceTeensAttendanceTable.registeredAt))
+    .limit(20);
+
+  const serviceIds = [...new Set(attendanceRows.map(r => r.serviceId))];
+  let servicesMap: Record<number, any> = {};
+  if (serviceIds.length) {
+    const svcs = await db.select().from(servicesTable).where(sql`${servicesTable.id} = ANY(ARRAY[${sql.join(serviceIds.map(id => sql`${id}`), sql`, `)}])`);
+    svcs.forEach(s => { servicesMap[s.id] = s; });
+  }
+
+  const attendance = attendanceRows.map(r => ({
+    serviceId: r.serviceId,
+    registeredAt: r.registeredAt,
+    serviceDate: servicesMap[r.serviceId]?.date ?? null,
+    serviceName: servicesMap[r.serviceId]?.name ?? null,
+    serviceType: servicesMap[r.serviceId]?.type ?? null,
+  }));
+
+  // Only show givings from non-closed (active) ministry years
+  const openYears = await db.select({ id: ministryYearsTable.id }).from(ministryYearsTable).where(eq(ministryYearsTable.isClosed, false));
+  const openYearIds = openYears.map(y => y.id);
+
+  // Fetch givings from teen stage + child stage (if this teen was promoted from children)
+  const teenGivingRows = openYearIds.length ? await db
+    .select()
+    .from(givingsTable)
+    .where(and(eq(givingsTable.teenId, id), eq(givingsTable.isArchived, false), inArray(givingsTable.ministryYearId, openYearIds)))
+    .orderBy(desc(givingsTable.date))
+    .limit(50) : [];
+
+  let childGivingRows: typeof teenGivingRows = [];
+  if (teen[0].transferredFromChildId) {
+    childGivingRows = openYearIds.length ? await db
+      .select()
+      .from(givingsTable)
+      .where(and(eq(givingsTable.childId, teen[0].transferredFromChildId), eq(givingsTable.isArchived, false), inArray(givingsTable.ministryYearId, openYearIds)))
+      .orderBy(desc(givingsTable.date))
+      .limit(50) : [];
+  }
+
+  const allGivingRows = [...teenGivingRows, ...childGivingRows]
+    .sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""))
+    .slice(0, 50);
+
+  const typeIds = [...new Set(allGivingRows.map(g => g.givingTypeId).filter((x): x is number => x != null))];
+  let typesMap: Record<number, string> = {};
+  if (typeIds.length) {
+    const gts = await db.select().from(givingTypesTable).where(inArray(givingTypesTable.id, typeIds));
+    gts.forEach(gt => { typesMap[gt.id] = gt.name; });
+  }
+
+  const givings = allGivingRows.map(g => ({
+    id: g.id, date: g.date, amount: g.amount,
+    givingType: typesMap[g.givingTypeId!] ?? "Gift",
+    notes: g.notes,
+    stage: g.teenId ? "teen" : "child",
+  }));
+
+  res.json({ ...teen[0], attendance, givings });
+});
+
+// Parent can update only name and birthday of their child
+router.patch("/children/:id/basic-info", async (req, res) => {
+  const id = parseInt(req.params.id);
+  const { firstName, lastName, dateOfBirth } = req.body;
+  const update: any = {};
+  if (firstName !== undefined) update.firstName = firstName.trim();
+  if (lastName !== undefined) update.lastName = lastName.trim();
+  if (dateOfBirth !== undefined) update.dateOfBirth = dateOfBirth || null;
+  if (!Object.keys(update).length) return res.status(400).json({ error: "Nothing to update" });
+  const updated = await db.update(childrenTable).set(update).where(eq(childrenTable.id, id)).returning();
+  if (!updated.length) return res.status(404).json({ error: "Child not found" });
+  res.json(updated[0]);
+});
+
+// Parent can update only name and birthday of their teen
+router.patch("/teens/:id/basic-info", async (req, res) => {
+  const id = parseInt(req.params.id);
+  const { firstName, lastName, dateOfBirth, phone1, phone2 } = req.body;
+  const update: any = {};
+  if (firstName !== undefined) update.firstName = firstName.trim();
+  if (lastName !== undefined) update.lastName = lastName.trim();
+  if (dateOfBirth !== undefined) update.dateOfBirth = dateOfBirth || null;
+  if (phone1 !== undefined) update.phone1 = phone1.trim();
+  if (phone2 !== undefined) update.phone2 = phone2.trim() || null;
+  if (!Object.keys(update).length) return res.status(400).json({ error: "Nothing to update" });
+  const updated = await db.update(teensTable).set(update).where(eq(teensTable.id, id)).returning();
+  if (!updated.length) return res.status(404).json({ error: "Teen not found" });
+  res.json(updated[0]);
+});
+
 // TEENS
 router.get("/teens", async (req, res) => {
   const { search, page = "1", limit = "25" } = req.query as any;
@@ -384,25 +562,35 @@ router.post("/teens", async (req, res) => {
       .status(400)
       .json({ error: "First name and last name required" });
 
-  let data: any = { firstName, lastName, parentId: parentId || null, ...rest };
+  // If promoting from a child, carry over their existing membership ID so it stays permanent
+  let membershipId: string;
+  if (transferFromChildId) {
+    const childRow = await db.select({ membershipId: childrenTable.membershipId })
+      .from(childrenTable).where(eq(childrenTable.id, transferFromChildId)).limit(1);
+    membershipId = (childRow.length && childRow[0].membershipId)
+      ? childRow[0].membershipId
+      : await generateUniversalId(firstName, lastName);
+  } else {
+    membershipId = await generateUniversalId(firstName, lastName);
+  }
+  const pin = String(Math.floor(1000 + Math.random() * 9000));
+
+  let data: any = { membershipId, pin, firstName, lastName, parentId: parentId || null, ...rest };
   if (transferFromChildId) {
     data.transferredFromChildId = transferFromChildId;
-    // Find linked families before archiving the child
-    const transferLinked = await db.select({ familyId: familyChildrenTable.familyId })
-      .from(familyChildrenTable)
-      .where(and(eq(familyChildrenTable.childId, transferFromChildId), eq(familyChildrenTable.type, "child")));
     await db.update(childrenTable)
       .set({ isArchived: true, archiveReason: "Transferred to Teens Church" })
       .where(eq(childrenTable.id, transferFromChildId));
-    await db.delete(familyChildrenTable).where(
-      and(eq(familyChildrenTable.childId, transferFromChildId), eq(familyChildrenTable.type, "child"))
-    );
-    for (const { familyId } of transferLinked) {
-      await cleanupFamilyIfUndersized(familyId);
-    }
   }
 
   const created = await db.insert(teensTable).values(data).returning();
+
+  if (transferFromChildId) {
+    // Migrate the family_children row child→teen so the family link is preserved
+    await db.update(familyChildrenTable)
+      .set({ type: "teen", teenId: created[0].id, childId: null })
+      .where(and(eq(familyChildrenTable.childId, transferFromChildId), eq(familyChildrenTable.type, "child")));
+  }
 
   let parentName = null;
   if (parentId) {
@@ -429,9 +617,11 @@ router.patch("/teens/:id", async (req, res) => {
   if (!current.length) return res.status(404).json({ error: "Teen not found" });
   const oldParentId = current[0].parentId;
 
+  // Never allow membership ID to change — strip it from any incoming update
+  const { membershipId: _ignored, ...safeBody } = req.body;
   const updated = await db
     .update(teensTable)
-    .set(req.body)
+    .set(safeBody)
     .where(eq(teensTable.id, id))
     .returning();
   if (!updated.length)
@@ -477,41 +667,35 @@ router.post("/teens/:id/promote", async (req, res) => {
   if (!teens.length) return res.status(404).json({ error: "Teen not found" });
   const teen = teens[0];
 
-  const membershipId = await generateMembershipId(teen.firstName, teen.lastName);
-  const pin = String(Math.floor(1000 + Math.random() * 9000));
+  // Carry over the teen's existing membership ID and PIN — both are permanent across promotions
+  const membershipId = teen.membershipId ?? await generateUniversalId(teen.firstName, teen.lastName);
+  const pin = teen.pin ?? "0000";
 
   const created = await db.insert(membersTable).values({
     membershipId,
     firstName: teen.firstName,
     lastName: teen.lastName,
     gender,
-    phone1: teen.phone1 ?? undefined,
+    phone1: teen.phone1 ?? "",
     phone2: teen.phone2 ?? undefined,
-    residentialAddress: teen.residentialAddress ?? undefined,
+    residentialAddress: teen.residentialAddress ?? "",
     dateJoined: teen.dateJoined ?? undefined,
     dateOfBirth: teen.dateOfBirth ?? undefined,
     foundationSchoolDate: teen.foundationSchoolDate ?? undefined,
     isBaptized: false,
     memberType: "member",
     pin,
+    transferredFromTeenId: id,
   }).returning();
-
-  // Find linked families before archiving
-  const promoteLinked = await db.select({ familyId: familyChildrenTable.familyId })
-    .from(familyChildrenTable)
-    .where(and(eq(familyChildrenTable.teenId, id), eq(familyChildrenTable.type, "teen")));
 
   await db.update(teensTable)
     .set({ isArchived: true, archiveReason: "Promoted to Adult Members" })
     .where(eq(teensTable.id, id));
 
-  await db.delete(familyChildrenTable).where(
-    and(eq(familyChildrenTable.teenId, id), eq(familyChildrenTable.type, "teen"))
-  );
-
-  for (const { familyId } of promoteLinked) {
-    await cleanupFamilyIfUndersized(familyId);
-  }
+  // Migrate the family_children row teen→member so the family link is preserved
+  await db.update(familyChildrenTable)
+    .set({ type: "member", memberId: created[0].id, teenId: null })
+    .where(and(eq(familyChildrenTable.teenId, id), eq(familyChildrenTable.type, "teen")));
 
   res.status(201).json(created[0]);
 });

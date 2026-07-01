@@ -34,6 +34,26 @@ async function generateMembershipId(firstName: string, lastName: string): Promis
   return `${prefix}${String(max + 1).padStart(3, "0")}`;
 }
 
+async function generateUniversalId(firstName: string, lastName: string): Promise<string> {
+  const initials = ((firstName[0] ?? "X") + (lastName[0] ?? "X")).toUpperCase();
+  const prefix = `CEKSI-${initials}`;
+  const [m, t, c] = await Promise.all([
+    db.select({ mid: membersTable.membershipId }).from(membersTable).where(ilike(membersTable.membershipId, `${prefix}%`)),
+    db.select({ mid: teensTable.membershipId }).from(teensTable).where(ilike(teensTable.membershipId, `${prefix}%`)),
+    db.select({ mid: childrenTable.membershipId }).from(childrenTable).where(ilike(childrenTable.membershipId, `${prefix}%`)),
+  ]);
+  let max = 0;
+  for (const { mid } of [...m, ...t, ...c]) {
+    if (!mid) continue;
+    const num = parseInt(mid.slice(prefix.length), 10);
+    if (!isNaN(num) && num > max) max = num;
+  }
+  return `${prefix}${String(max + 1).padStart(3, "0")}`;
+}
+
+const generateTeenMembershipId = generateUniversalId;
+const generateChildMembershipId = generateUniversalId;
+
 // ── Family helper — same logic as children.ts ──────────────────────────────
 async function linkChildToParentFamily(
   parentId: number,
@@ -300,7 +320,7 @@ router.post("/public/register/member", async (req, res) => {
 router.post("/public/register/child", async (req, res) => {
   try {
     const { firstName, lastName, gender, dateOfBirth, class: childClass, parentId, parentExternal } = req.body;
-    if (!firstName || !lastName || !childClass) {
+    if (!firstName || !lastName) {
       return res.status(400).json({ error: "First name, last name and class are required." });
     }
 
@@ -329,7 +349,10 @@ router.post("/public/register/child", async (req, res) => {
       }
     }
 
+    const childMembershipId = await generateChildMembershipId(firstName, lastName);
+
     const created = await db.insert(childrenTable).values({
+      membershipId: childMembershipId,
       firstName, lastName,
       gender: gender || null,
       dateOfBirth: dateOfBirth || null,
@@ -343,7 +366,7 @@ router.post("/public/register/child", async (req, res) => {
       await linkChildToParentFamily(pid, "child", created[0].id);
     }
 
-    res.status(201).json({ id: created[0].id, firstName, lastName });
+    res.status(201).json({ id: created[0].id, membershipId: childMembershipId, firstName, lastName });
   } catch (err: any) {
     res.status(500).json({ error: err?.message ?? "Registration failed" });
   }
@@ -389,7 +412,12 @@ router.post("/public/register/teen", async (req, res) => {
 
     const address = placeOfResidence || residentialAddress || null;
 
+    const teenPin = generatePin();
+    const teenMembershipId = await generateTeenMembershipId(firstName, lastName);
+
     const created = await db.insert(teensTable).values({
+      membershipId: teenMembershipId,
+      pin: teenPin,
       firstName, lastName,
       gender: gender || null,
       phone1: phone1 || null,
@@ -408,7 +436,7 @@ router.post("/public/register/teen", async (req, res) => {
       await linkChildToParentFamily(pid, "teen", created[0].id);
     }
 
-    res.status(201).json({ id: created[0].id, firstName, lastName });
+    res.status(201).json({ id: created[0].id, membershipId: teenMembershipId, pin: teenPin, name: `${firstName} ${lastName}` });
   } catch (err: any) {
     res.status(500).json({ error: err?.message ?? "Registration failed" });
   }

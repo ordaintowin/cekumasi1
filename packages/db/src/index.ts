@@ -55,6 +55,7 @@ export const membersTable = pgTable("members", {
   archivedAt: timestamp("archived_at"),
   archivedBy: integer("archived_by"),
   createdAt: timestamp("created_at").notNull().default(sql`now()`),
+  transferredFromTeenId: integer("transferred_from_teen_id"),
 });
 
 export const leadershipRolesTable = pgTable("leadership_roles", {
@@ -157,11 +158,12 @@ export const departmentMembersTable = pgTable("department_members", {
 
 export const childrenTable = pgTable("children", {
   id: serial("id").primaryKey(),
+  membershipId: text("membership_id").unique(),
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
   gender: text("gender"),
   dateOfBirth: text("date_of_birth"),
-  class: text("class").notNull(),
+  class: text("class"),
   parentId: integer("parent_id"),
   parentExternal: text("parent_external"),
   isArchived: boolean("is_archived").notNull().default(false),
@@ -170,6 +172,8 @@ export const childrenTable = pgTable("children", {
 
 export const teensTable = pgTable("teens", {
   id: serial("id").primaryKey(),
+  membershipId: text("membership_id").unique(),
+  pin: text("pin").notNull().default("0000"),
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
   gender: text("gender"),

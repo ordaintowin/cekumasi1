@@ -1,19 +1,22 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { usersTable, membersTable, cellsTable, seniorCellsTable, pcfsTable } from "@workspace/db";
+import { usersTable, membersTable, cellsTable, seniorCellsTable, pcfsTable, teensTable } from "@workspace/db";
 import { eq, and, gte } from "drizzle-orm";
 import crypto from "crypto";
+import jwt from "jsonwebtoken";
 import { authenticateToken } from "../middlewares/auth";
 
 const router = Router();
+
+const JWT_SECRET = process.env.SESSION_SECRET;
+if (!JWT_SECRET) throw new Error("SESSION_SECRET environment variable must be set");
 
 function hashPassword(password: string): string {
   return crypto.createHash("sha256").update(password + "ce_kumasi_salt").digest("hex");
 }
 
 function generateToken(userId: number): string {
-  const payload = JSON.stringify({ userId, iat: Date.now() });
-  return Buffer.from(payload).toString("base64");
+  return jwt.sign({ userId }, JWT_SECRET!, { expiresIn: "7d" });
 }
 
 function getRoleString(level: number, subtype: string | null): string {
@@ -63,43 +66,93 @@ router.post("/login", async (req, res) => {
     return res.status(400).json({ error: "Username and password required" });
   }
 
-  // Member PIN login: look up by membershipId, compare PIN
-  if (loginType === "member_pin") {
-    const member = await db.select().from(membersTable)
-      .where(and(eq(membersTable.membershipId, username), eq(membersTable.isArchived, false))).limit(1);
-    if (!member.length || member[0].pin !== password) {
+  // Teen PIN login: look up teen by membershipId, compare PIN
+  if (loginType === "teen_pin") {
+    const teen = await db.select().from(teensTable)
+      .where(and(eq(teensTable.membershipId, username), eq(teensTable.isArchived, false))).limit(1);
+    if (!teen.length || teen[0].pin !== password) {
       return res.status(401).json({ error: "Invalid membership ID or PIN" });
     }
-
-    // Find or auto-create portal account for this member (only member/leader accounts, not admin)
-    let memberUser = await db.select().from(usersTable)
-      .where(and(eq(usersTable.memberId, member[0].id), gte(usersTable.roleLevel, 4))).limit(1);
-    if (!memberUser.length) {
-      // Auto-create a member-level portal account on first login
-      const newUser = await db.insert(usersTable).values({
-        username: member[0].membershipId.toLowerCase(),
-        passwordHash: hashPassword(member[0].pin ?? ""),
-        roleLevel: 5,
-        roleSubtype: null,
-        memberId: member[0].id,
-        isActive: true,
-      }).returning();
-      memberUser = newUser;
-    }
-
-    const u = memberUser[0];
-    const token = generateToken(u.id);
-    const cellInfo = await getLeaderCellInfo(u.memberId);
+    const t = teen[0];
+    const token = generateToken(-t.id);
     return res.json({
       token,
       user: {
-        id: u.id, username: u.username,
-        role: getRoleString(u.roleLevel, u.roleSubtype),
-        roleLevel: u.roleLevel, memberId: u.memberId,
-        memberName: `${member[0].firstName} ${member[0].lastName}`,
-        ...cellInfo,
-      }
+        id: -t.id,
+        username: t.membershipId ?? "",
+        role: "member",
+        roleLevel: 5,
+        roleSubtype: "teen",
+        memberId: null,
+        teenId: t.id,
+        memberName: `${t.firstName} ${t.lastName}`,
+        leadsCellId: null, leadsCellName: null,
+        leadsSeniorCellId: null, leadsSeniorCellName: null,
+        leadsPcfId: null, leadsPcfName: null,
+      },
     });
+  }
+
+  // Member PIN login: look up by membershipId in members first, then fall through to teens
+  if (loginType === "member_pin") {
+    const member = await db.select().from(membersTable)
+      .where(and(eq(membersTable.membershipId, username), eq(membersTable.isArchived, false))).limit(1);
+
+    if (member.length && member[0].pin === password) {
+      // Found in members table — proceed as member
+      let memberUser = await db.select().from(usersTable)
+        .where(and(eq(usersTable.memberId, member[0].id), gte(usersTable.roleLevel, 4))).limit(1);
+      if (!memberUser.length) {
+        const newUser = await db.insert(usersTable).values({
+          username: member[0].membershipId.toLowerCase(),
+          passwordHash: hashPassword(member[0].pin ?? ""),
+          roleLevel: 5,
+          roleSubtype: null,
+          memberId: member[0].id,
+          isActive: true,
+        }).returning();
+        memberUser = newUser;
+      }
+      const u = memberUser[0];
+      const token = generateToken(u.id);
+      const cellInfo = await getLeaderCellInfo(u.memberId);
+      return res.json({
+        token,
+        user: {
+          id: u.id, username: u.username,
+          role: getRoleString(u.roleLevel, u.roleSubtype),
+          roleLevel: u.roleLevel, memberId: u.memberId,
+          memberName: `${member[0].firstName} ${member[0].lastName}`,
+          ...cellInfo,
+        }
+      });
+    }
+
+    // Not found in members — try teens table
+    const teen = await db.select().from(teensTable)
+      .where(and(eq(teensTable.membershipId, username), eq(teensTable.isArchived, false))).limit(1);
+    if (teen.length && teen[0].pin === password) {
+      const t = teen[0];
+      const token = generateToken(-t.id);
+      return res.json({
+        token,
+        user: {
+          id: -t.id,
+          username: t.membershipId ?? "",
+          role: "member",
+          roleLevel: 5,
+          roleSubtype: "teen",
+          memberId: null,
+          teenId: t.id,
+          memberName: `${t.firstName} ${t.lastName}`,
+          leadsCellId: null, leadsCellName: null,
+          leadsSeniorCellId: null, leadsSeniorCellName: null,
+          leadsPcfId: null, leadsPcfName: null,
+        },
+      });
+    }
+
+    return res.status(401).json({ error: "Invalid membership ID or PIN" });
   }
 
   const users = await db.select().from(usersTable).where(eq(usersTable.username, username)).limit(1);
@@ -144,6 +197,27 @@ router.post("/logout", (req, res) => {
 
 router.get("/me", authenticateToken, async (req, res) => {
   const user = (req as any).user;
+
+  // Teen user path
+  if (user.teenId) {
+    const teen = await db.select().from(teensTable).where(eq(teensTable.id, user.teenId)).limit(1);
+    if (!teen.length) return res.status(401).json({ error: "Teen not found" });
+    const t = teen[0];
+    return res.json({
+      id: user.id,
+      username: user.username,
+      role: "member",
+      roleLevel: 5,
+      roleSubtype: "teen",
+      memberId: null,
+      teenId: t.id,
+      memberName: `${t.firstName} ${t.lastName}`,
+      leadsCellId: null, leadsCellName: null,
+      leadsSeniorCellId: null, leadsSeniorCellName: null,
+      leadsPcfId: null, leadsPcfName: null,
+    });
+  }
+
   let memberName: string | null = null;
   let dateOfBirth: string | null = null;
   if (user.memberId) {
@@ -168,6 +242,20 @@ router.get("/me", authenticateToken, async (req, res) => {
 router.post("/change-pin", authenticateToken, async (req, res) => {
   const user = (req as any).user;
   const { currentPin, newPin } = req.body;
+  if (!newPin || String(newPin).length < 3 || String(newPin).length > 6) {
+    return res.status(400).json({ error: "New PIN must be 3–6 digits" });
+  }
+
+  // Teen PIN change
+  if (user.teenId) {
+    const teen = await db.select().from(teensTable).where(eq(teensTable.id, user.teenId)).limit(1);
+    if (!teen.length) return res.status(404).json({ error: "Teen not found" });
+    if (teen[0].pin !== currentPin) return res.status(401).json({ error: "Current PIN is incorrect" });
+    await db.update(teensTable).set({ pin: newPin }).where(eq(teensTable.id, user.teenId));
+    return res.json({ success: true });
+  }
+
+  // Member PIN change
   if (!user.memberId) return res.status(403).json({ error: "Not a member" });
   const member = await db.select().from(membersTable).where(eq(membersTable.id, user.memberId)).limit(1);
   if (!member.length) return res.status(404).json({ error: "Member not found" });

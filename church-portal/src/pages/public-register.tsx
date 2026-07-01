@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Link } from "wouter";
 import { Camera, X, ChevronLeft, CheckCircle, User, Baby, Smile, ArrowRight, LogIn, Download, Copy, Search, Loader2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type RegType = "member" | "child" | "teen";
 type Step = "welcome" | "form" | "review" | "success";
@@ -27,7 +28,7 @@ const EMPTY_MEMBER = {
 const EMPTY_CHILD = {
   firstName: "", lastName: "", dateOfBirth: "",
   gender: "" as "male" | "female" | "",
-  class: "preschool",
+  class: "",
 };
 
 const EMPTY_TEEN = {
@@ -71,23 +72,33 @@ function Sel({ label, value, onChange, options, required, placeholder }: {
   return (
     <div className="space-y-1.5">
       <label className="text-sm font-medium text-gray-700">{label}{required && <span className="text-red-500 ml-1">*</span>}</label>
-      <select value={value} onChange={e => onChange(e.target.value)} required={required}
-        className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500">
-        <option value="">{placeholder ?? "Select..."}</option>
-        {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-      </select>
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger>
+          <SelectValue placeholder={placeholder ?? "Select..."} />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+        </SelectContent>
+      </Select>
     </div>
   );
 }
 
-function Inp({ label, value, onChange, type = "text", required, placeholder }: {
+function Inp({ label, value, onChange, type = "text", required, placeholder, lettersOnly }: {
   label: string; value: string; onChange: (v: string) => void;
-  type?: string; required?: boolean; placeholder?: string;
+  type?: string; required?: boolean; placeholder?: string; lettersOnly?: boolean;
 }) {
+  function filter(raw: string) {
+    if (type === "tel") return raw.replace(/\D/g, "");
+    if (lettersOnly) return raw.replace(/[^a-zA-Z\s'-]/g, "");
+    return raw;
+  }
   return (
     <div className="space-y-1.5">
       <label className="text-sm font-medium text-gray-700">{label}{required && <span className="text-red-500 ml-1">*</span>}</label>
-      <input type={type} value={value} onChange={e => onChange(e.target.value)}
+      <input type={type} value={value}
+        onChange={e => onChange(filter(e.target.value))}
+        inputMode={type === "tel" ? "numeric" : undefined}
         required={required} placeholder={placeholder}
         className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
     </div>
@@ -350,11 +361,6 @@ export default function PublicRegister() {
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (regType === "member" && memberForm.memberType === "member" && !memberForm.cellId) {
-      setCellError(true);
-      return;
-    }
-    setCellError(false);
     setError(null);
     setStep("review");
     window.scrollTo(0, 0);
@@ -396,7 +402,7 @@ export default function PublicRegister() {
         body = {
           firstName: childForm.firstName,
           lastName: childForm.lastName,
-          class: childForm.class,
+          class: childForm.class || undefined,
           gender: childForm.gender || undefined,
           dateOfBirth: childForm.dateOfBirth || undefined,
           parentId: childUseExternal ? null : (childSelectedParent ? childSelectedParent.id : null),
@@ -454,7 +460,6 @@ export default function PublicRegister() {
   };
 
   const selectedCell = cells.find(c => String(c.id) === memberForm.cellId);
-  const isVisitor = memberForm.memberType === "visitor";
 
   const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString("en-GH", { day: "numeric", month: "long", year: "numeric" }) : "";
 
@@ -464,7 +469,7 @@ export default function PublicRegister() {
 
       {/* Header */}
       <div className="bg-gradient-to-b from-black/30 to-transparent pt-8 pb-6 px-4 text-center">
-        <img src="/icon-192.png" alt="Christ Embassy Kumasi 1" className="w-16 h-16 mx-auto mb-3 rounded-2xl shadow-xl"
+        <img src="/logo.png" alt="Christ Embassy Kumasi 1" className="w-16 h-16 mx-auto mb-3 rounded-2xl shadow-xl"
           onError={e => (e.currentTarget.style.display = "none")} />
         <h1 className="text-xl font-bold text-white tracking-wide">Christ Embassy Kumasi 1</h1>
         <p className="text-purple-300 text-xs mt-1 tracking-wider uppercase">Member Registration Portal</p>
@@ -481,7 +486,7 @@ export default function PublicRegister() {
             </div>
 
             {[
-              { type: "member" as RegType, icon: <User className="w-6 h-6 text-purple-700" />, bg: "bg-purple-100", hover: "group-hover:bg-purple-200", label: "Member / Visitor", desc: "Adult church member or visitor" },
+              { type: "member" as RegType, icon: <User className="w-6 h-6 text-purple-700" />, bg: "bg-purple-100", hover: "group-hover:bg-purple-200", label: "Member", desc: "Adult church member" },
               { type: "child" as RegType, icon: <Baby className="w-6 h-6 text-yellow-700" />, bg: "bg-yellow-100", hover: "group-hover:bg-yellow-200", label: "Children", desc: "Children's church (age 0–12)" },
               { type: "teen" as RegType, icon: <Smile className="w-6 h-6 text-blue-700" />, bg: "bg-blue-100", hover: "group-hover:bg-blue-200", label: "Teens", desc: "Teens church (age 13–17)" },
             ].map(({ type, icon, bg, hover, label, desc }) => (
@@ -514,7 +519,7 @@ export default function PublicRegister() {
               </button>
               <div>
                 <p className="text-white font-bold">
-                  {regType === "member" ? "Member / Visitor Registration" : regType === "child" ? "Children Registration" : "Teens Registration"}
+                  {regType === "member" ? "Member Registration" : regType === "child" ? "Children Registration" : "Teens Registration"}
                 </p>
                 <p className="text-white/70 text-xs">Fill in the details below</p>
               </div>
@@ -561,22 +566,28 @@ export default function PublicRegister() {
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-sm font-medium text-gray-700">First Name <span className="text-red-500">*</span></label>
-                      <input value={memberForm.firstName} onChange={e => setM("firstName", e.target.value)} required
+                      <input value={memberForm.firstName} onChange={e => setM("firstName", e.target.value.replace(/[^a-zA-Z\s'-]/g, ""))} required
                         className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-sm font-medium text-gray-700">Last Name <span className="text-red-500">*</span></label>
-                      <input value={memberForm.lastName} onChange={e => setM("lastName", e.target.value)} required
+                      <input value={memberForm.lastName} onChange={e => setM("lastName", e.target.value.replace(/[^a-zA-Z\s'-]/g, ""))} required
                         className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500" />
                     </div>
                   </div>
 
-                  {/* Gender + Type — 2-column */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <Sel label="Gender" value={memberForm.gender} onChange={v => setM("gender", v)} required
-                      options={[{ value: "male", label: "Male" }, { value: "female", label: "Female" }]} />
-                    <Sel label="Type" value={memberForm.memberType} onChange={v => { setM("memberType", v); if (v === "visitor") setCellError(false); }} required
-                      options={[{ value: "member", label: "Member" }, { value: "visitor", label: "Visitor" }]} />
+                  {/* Gender — toggle buttons */}
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-gray-700">Gender <span className="text-red-500">*</span></label>
+                    <div className="flex gap-2">
+                      {(["male", "female"] as const).map(g => (
+                        <button key={g} type="button"
+                          className={`flex-1 py-2.5 rounded-lg border text-sm font-medium capitalize transition-colors ${memberForm.gender === g ? "bg-purple-700 text-white border-purple-700" : "bg-white text-gray-700 border-gray-200 hover:border-purple-300"}`}
+                          onClick={() => setM("gender", g)}>
+                          {g}
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
                   {/* Duplicate warning */}
@@ -602,58 +613,62 @@ export default function PublicRegister() {
                   <Inp label="Phone 1" value={memberForm.phone1} onChange={v => setM("phone1", v)} required placeholder="e.g. 0244000000" type="tel" />
                   <Inp label="Residential Address" value={memberForm.residentialAddress} onChange={v => setM("residentialAddress", v)} required placeholder="e.g. Adum, Kumasi" />
 
-                  {/* Non-visitor fields */}
-                  {!isVisitor && (
+                  <Sel label="Marital Status" value={memberForm.maritalStatus} onChange={v => setM("maritalStatus", v)}
+                    options={["single", "married", "widowed", "divorced"].map(s => ({ value: s, label: s.charAt(0).toUpperCase() + s.slice(1) }))} />
+
+                  {memberForm.maritalStatus === "married" && (
                     <>
-                      <Sel label="Marital Status" value={memberForm.maritalStatus} onChange={v => setM("maritalStatus", v)}
-                        options={["single", "married", "widowed", "divorced"].map(s => ({ value: s, label: s.charAt(0).toUpperCase() + s.slice(1) }))} />
-
-                      {memberForm.maritalStatus === "married" && (
-                        <>
-                          <MemberSearchPicker
-                            label="Spouse (search member)"
-                            selectedMember={spouseMember}
-                            onSelect={m => { setSpouseMember(m); setSpouseId(m.id); }}
-                            onClear={() => { setSpouseMember(null); setSpouseId(null); }}
-                            placeholder="Search spouse in members..."
-                          />
-                          <Inp label="Wedding Date" value={memberForm.weddingDate} onChange={v => setM("weddingDate", v)} type="date" />
-                        </>
-                      )}
-
-                      {/* Cell — required for members */}
-                      <div className="space-y-1.5">
-                        <label className="text-sm font-medium text-gray-700">Cell <span className="text-red-500">*</span></label>
-                        <select value={memberForm.cellId} onChange={e => { setM("cellId", e.target.value); setCellError(false); }}
-                          className={`w-full border rounded-lg px-3 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-500 ${cellError ? "border-red-400" : "border-gray-200"}`}>
-                          <option value="">Select a cell...</option>
-                          {cells.map(c => (
-                            <option key={c.id} value={String(c.id)}>
-                              {c.name}{c.seniorCellName ? ` › ${c.seniorCellName}` : ""}{c.pcfName ? ` › ${c.pcfName}` : ""}
-                            </option>
-                          ))}
-                          {cells.length === 0 && <option disabled>No cells available</option>}
-                        </select>
-                        {cellError && <p className="text-xs text-red-500 mt-1">Cell is required for members</p>}
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-3">
-                        <Inp label="Phone 2" value={memberForm.phone2} onChange={v => setM("phone2", v)} type="tel" />
-                        <Inp label="Email" value={memberForm.email} onChange={v => setM("email", v)} type="email" />
-                      </div>
-                      <Inp label="Occupation" value={memberForm.occupation} onChange={v => setM("occupation", v)} placeholder="e.g. Teacher, Nurse" />
-                      <Inp label="Emergency Contact" value={memberForm.emergencyContact} onChange={v => setM("emergencyContact", v)} placeholder="Name and phone" />
-                      <div className="grid grid-cols-2 gap-3">
-                        <Inp label="Date of Birth" value={memberForm.dateOfBirth} onChange={v => setM("dateOfBirth", v)} type="date" />
-                        <Inp label="Date Joined" value={memberForm.dateJoined} onChange={v => setM("dateJoined", v)} type="date" />
-                      </div>
-                      <Inp label="Foundation School Completion Date" value={memberForm.foundationSchoolDate} onChange={v => setM("foundationSchoolDate", v)} type="date" />
-                      <label className="flex items-center gap-2 cursor-pointer py-1">
-                        <input type="checkbox" checked={memberForm.isBaptized} onChange={e => setM("isBaptized", e.target.checked)} className="w-4 h-4 accent-purple-700" />
-                        <span className="text-sm text-gray-700">Baptized</span>
-                      </label>
+                      <MemberSearchPicker
+                        label="Spouse (search member)"
+                        selectedMember={spouseMember}
+                        onSelect={m => { setSpouseMember(m); setSpouseId(m.id); }}
+                        onClear={() => { setSpouseMember(null); setSpouseId(null); }}
+                        placeholder="Search spouse in members..."
+                      />
+                      <Inp label="Wedding Date" value={memberForm.weddingDate} onChange={v => setM("weddingDate", v)} type="date" />
                     </>
                   )}
+
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-gray-700">Cell</label>
+                    <Select value={memberForm.cellId} onValueChange={v => setM("cellId", v)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a cell..." />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-64">
+                        {cells.map(c => (
+                          <SelectItem key={c.id} value={String(c.id)}>
+                            <span className="font-medium">{c.name}</span>
+                            {(c.seniorCellName || c.pcfName) && (
+                              <span className="text-gray-400 text-xs ml-1">
+                                {c.seniorCellName && <> › {c.seniorCellName}</>}
+                                {c.pcfName && <> › {c.pcfName}</>}
+                              </span>
+                            )}
+                          </SelectItem>
+                        ))}
+                        {cells.length === 0 && (
+                          <div className="px-3 py-4 text-center text-gray-400 text-sm">No cells available</div>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <Inp label="Phone 2" value={memberForm.phone2} onChange={v => setM("phone2", v)} type="tel" />
+                    <Inp label="Email" value={memberForm.email} onChange={v => setM("email", v)} type="email" />
+                  </div>
+                  <Inp label="Occupation" value={memberForm.occupation} onChange={v => setM("occupation", v)} placeholder="e.g. Teacher, Nurse" />
+                  <Inp label="Emergency Contact" value={memberForm.emergencyContact} onChange={v => setM("emergencyContact", v)} placeholder="Name and phone" />
+                  <div className="grid grid-cols-2 gap-3">
+                    <Inp label="Date of Birth" value={memberForm.dateOfBirth} onChange={v => setM("dateOfBirth", v)} type="date" />
+                    <Inp label="Date Joined" value={memberForm.dateJoined} onChange={v => setM("dateJoined", v)} type="date" />
+                  </div>
+                  <Inp label="Foundation School Completion Date" value={memberForm.foundationSchoolDate} onChange={v => setM("foundationSchoolDate", v)} type="date" />
+                  <label className="flex items-center gap-2 cursor-pointer py-1">
+                    <input type="checkbox" checked={memberForm.isBaptized} onChange={e => setM("isBaptized", e.target.checked)} className="w-4 h-4 accent-purple-700" />
+                    <span className="text-sm text-gray-700">Baptized</span>
+                  </label>
                 </>
               )}
 
@@ -661,12 +676,12 @@ export default function PublicRegister() {
               {regType === "child" && (
                 <>
                   <div className="grid grid-cols-2 gap-3">
-                    <Inp label="First Name" value={childForm.firstName} onChange={v => setC("firstName", v)} required />
-                    <Inp label="Last Name" value={childForm.lastName} onChange={v => setC("lastName", v)} required />
+                    <Inp label="First Name" value={childForm.firstName} onChange={v => setC("firstName", v)} required lettersOnly />
+                    <Inp label="Last Name" value={childForm.lastName} onChange={v => setC("lastName", v)} required lettersOnly />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <Sel label="Class" value={childForm.class} onChange={v => setC("class", v)} required
-                      options={CHILD_CLASSES} />
+                    <Sel label="Class" value={childForm.class} onChange={v => setC("class", v)}
+                      options={CHILD_CLASSES} placeholder="Select class..." />
                     <Sel label="Gender" value={childForm.gender} onChange={v => setC("gender", v)}
                       options={[{ value: "male", label: "Male" }, { value: "female", label: "Female" }]} placeholder="Select..." />
                   </div>
@@ -692,8 +707,8 @@ export default function PublicRegister() {
               {regType === "teen" && (
                 <>
                   <div className="grid grid-cols-2 gap-3">
-                    <Inp label="First Name" value={teenForm.firstName} onChange={v => setT("firstName", v)} required />
-                    <Inp label="Last Name" value={teenForm.lastName} onChange={v => setT("lastName", v)} required />
+                    <Inp label="First Name" value={teenForm.firstName} onChange={v => setT("firstName", v)} required lettersOnly />
+                    <Inp label="Last Name" value={teenForm.lastName} onChange={v => setT("lastName", v)} required lettersOnly />
                   </div>
 
                   {/* Gender toggle buttons (matching admin) */}
@@ -788,21 +803,20 @@ export default function PublicRegister() {
                   {memberForm.title && <Field label="Title" value={memberForm.title} />}
                   <Field label="Full Name" value={`${memberForm.firstName} ${memberForm.lastName}`} />
                   <Field label="Gender" value={memberForm.gender === "male" ? "Male" : "Female"} />
-                  <Field label="Type" value={memberForm.memberType === "member" ? "Member" : "Visitor"} />
                   <Field label="Phone 1" value={memberForm.phone1} />
                   <Field label="Residential Address" value={memberForm.residentialAddress} />
-                  {!isVisitor && memberForm.maritalStatus && <Field label="Marital Status" value={memberForm.maritalStatus.charAt(0).toUpperCase() + memberForm.maritalStatus.slice(1)} />}
-                  {!isVisitor && memberForm.maritalStatus === "married" && spouseMember && <Field label="Spouse" value={`${spouseMember.firstName} ${spouseMember.lastName}`} />}
-                  {!isVisitor && memberForm.weddingDate && <Field label="Wedding Date" value={fmtDate(memberForm.weddingDate)} />}
-                  {!isVisitor && selectedCell && <Field label="Cell" value={`${selectedCell.name}${selectedCell.seniorCellName ? ` › ${selectedCell.seniorCellName}` : ""}${selectedCell.pcfName ? ` › ${selectedCell.pcfName}` : ""}`} />}
-                  {!isVisitor && memberForm.phone2 && <Field label="Phone 2" value={memberForm.phone2} />}
-                  {!isVisitor && memberForm.email && <Field label="Email" value={memberForm.email} />}
-                  {!isVisitor && memberForm.occupation && <Field label="Occupation" value={memberForm.occupation} />}
-                  {!isVisitor && memberForm.emergencyContact && <Field label="Emergency Contact" value={memberForm.emergencyContact} />}
-                  {!isVisitor && memberForm.dateOfBirth && <Field label="Date of Birth" value={fmtDate(memberForm.dateOfBirth)} />}
-                  {!isVisitor && memberForm.dateJoined && <Field label="Date Joined" value={fmtDate(memberForm.dateJoined)} />}
-                  {!isVisitor && memberForm.foundationSchoolDate && <Field label="Foundation School" value={fmtDate(memberForm.foundationSchoolDate)} />}
-                  {!isVisitor && <Field label="Baptized" value={memberForm.isBaptized ? "Yes" : "No"} />}
+                  {memberForm.maritalStatus && <Field label="Marital Status" value={memberForm.maritalStatus.charAt(0).toUpperCase() + memberForm.maritalStatus.slice(1)} />}
+                  {memberForm.maritalStatus === "married" && spouseMember && <Field label="Spouse" value={`${spouseMember.firstName} ${spouseMember.lastName}`} />}
+                  {memberForm.weddingDate && <Field label="Wedding Date" value={fmtDate(memberForm.weddingDate)} />}
+                  {selectedCell && <Field label="Cell" value={`${selectedCell.name}${selectedCell.seniorCellName ? ` › ${selectedCell.seniorCellName}` : ""}${selectedCell.pcfName ? ` › ${selectedCell.pcfName}` : ""}`} />}
+                  {memberForm.phone2 && <Field label="Phone 2" value={memberForm.phone2} />}
+                  {memberForm.email && <Field label="Email" value={memberForm.email} />}
+                  {memberForm.occupation && <Field label="Occupation" value={memberForm.occupation} />}
+                  {memberForm.emergencyContact && <Field label="Emergency Contact" value={memberForm.emergencyContact} />}
+                  {memberForm.dateOfBirth && <Field label="Date of Birth" value={fmtDate(memberForm.dateOfBirth)} />}
+                  {memberForm.dateJoined && <Field label="Date Joined" value={fmtDate(memberForm.dateJoined)} />}
+                  {memberForm.foundationSchoolDate && <Field label="Foundation School" value={fmtDate(memberForm.foundationSchoolDate)} />}
+                  <Field label="Baptized" value={memberForm.isBaptized ? "Yes" : "No"} />
                 </div>
               )}
 
@@ -876,7 +890,7 @@ export default function PublicRegister() {
                 </div>
               </div>
 
-              {regType === "member" && successData && (
+              {(regType === "member" || regType === "teen") && successData && (
                 <div className="p-5 space-y-4">
                   <p className="text-sm text-gray-600 text-center font-medium">
                     Welcome, <strong>{successData.name}</strong>! Save your login details below.
@@ -902,7 +916,7 @@ export default function PublicRegister() {
                   </div>
 
                   <div className="flex flex-col items-center gap-2 py-2">
-                    <p className="text-xs text-gray-500 font-medium">Your Member QR Code</p>
+                    <p className="text-xs text-gray-500 font-medium">Your QR Code</p>
                     <div className="bg-white border-4 border-purple-100 rounded-2xl p-3 shadow-inner">
                       <img
                         src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(successData.membershipId)}&bgcolor=ffffff&color=4B0082&margin=4`}
@@ -939,12 +953,15 @@ export default function PublicRegister() {
                 </div>
               )}
 
-              {(regType === "child" || regType === "teen") && (
+              {regType === "child" && (
                 <div className="p-5">
-                  <div className="bg-green-50 rounded-xl p-4 border border-green-100 text-center">
+                  <div className="bg-green-50 rounded-xl p-4 border border-green-100 text-center space-y-1">
                     <p className="text-sm text-gray-700">
-                      <strong>{regType === "child" ? "Child" : "Teen"}</strong> has been registered successfully in our database.
+                      <strong>Child</strong> has been registered successfully in our database.
                     </p>
+                    {successData?.membershipId && (
+                      <p className="text-xs text-gray-500 font-mono">ID: {successData.membershipId}</p>
+                    )}
                   </div>
                 </div>
               )}

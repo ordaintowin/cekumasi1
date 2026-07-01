@@ -214,12 +214,14 @@ function MemberAttendanceReport({
   const cellId = fellowship.startsWith("cell-") ? parseInt(fellowship.slice(5)) : undefined;
   const scId   = fellowship.startsWith("sc-")   ? parseInt(fellowship.slice(3)) : undefined;
   const pcfId  = fellowship.startsWith("pcf-")  ? parseInt(fellowship.slice(4)) : undefined;
+  const isNoFellowship = fellowship === "no-fellowship";
 
   const params = {
     month,
     cellId:        lockedCellId        ?? cellId,
     seniorCellId:  lockedSeniorCellId  ?? scId,
     pcfId:         lockedPcfId         ?? pcfId,
+    noFellowship:  isNoFellowship ? true : undefined,
     search:        search || undefined,
     page,
     limit: 20,
@@ -270,6 +272,7 @@ function MemberAttendanceReport({
               </SelectTrigger>
               <SelectContent className="max-h-80 overflow-y-auto">
                 {!isChildrenAdmin && <SelectItem value="all">All fellowships</SelectItem>}
+                {!isChildrenAdmin && <SelectItem value="no-fellowship">— No Fellowship</SelectItem>}
                 <SelectItem value="children">👶 Children&apos;s Church</SelectItem>
                 <SelectItem value="teens">😊 Teens Church</SelectItem>
                 {!isChildrenAdmin && pcfs.map((pcf: any) => (
@@ -543,8 +546,9 @@ function FellowshipAttendanceReport({
   const grandMbrs: Record<number, number> = {};
   const grandFt: Record<number, number> = {};
   for (const s of services) {
-    // MBRS = fellowship members + returningFtNoFellowship + visitors + teensCount + childrenCount
+    // MBRS = fellowship members + noFellowshipMembers + returningFtNoFellowship + visitors + teensCount + childrenCount
     grandMbrs[s.id] = [...pcfs, ...standaloneSCs, ...standaloneCells].reduce((a: number, g: any) => a + svcMbrs(g.serviceAttendance, s.id), 0)
+                    + (s.noFellowshipMemberCount ?? 0)
                     + (s.returningFtNoFellowshipCount ?? 0)
                     + (s.visitorCount ?? 0)
                     + (s.teensCount ?? 0)
@@ -811,7 +815,7 @@ function FellowshipAttendanceReport({
                     <td className="px-3 py-2 text-center text-orange-300 text-xs border-r">—</td>
                     <td className="px-3 py-2 text-xs text-gray-500 italic border-r">No Fellowship</td>
                     {services.map((svc: any) => {
-                      const mbrs = (svc.returningFtNoFellowshipCount ?? 0) + (svc.visitorCount ?? 0);
+                      const mbrs = (svc.noFellowshipMemberCount ?? 0) + (svc.returningFtNoFellowshipCount ?? 0) + (svc.visitorCount ?? 0);
                       const ft   = svc.ftNotInFellowshipCount ?? 0;
                       return (
                         <Fragment key={svc.id}>

@@ -40,6 +40,8 @@ export type AuthUser = {
   roleLevel: number;
   roleSubtype?: string | null;
   memberId?: number | null;
+  teenId?: number | null;
+  memberName?: string | null;
   leadsCellId?: number | null;
   leadsCellName?: string | null;
 };
@@ -569,13 +571,74 @@ export function getListFamiliesQueryKey(params?: any) {
   return ["/api/families", params ?? {}];
 }
 export function useListFamilies(
-  params: { search?: string; memberId?: number } = {},
+  params: { search?: string; memberId?: number; teenId?: number } = {},
   options?: { query?: { enabled?: boolean; queryKey?: any[] } }
 ) {
   return useQuery({
     queryKey: options?.query?.queryKey ?? getListFamiliesQueryKey(params),
     queryFn: () => apiFetch(`/families?${buildParams(params)}`),
     ...options?.query,
+  });
+}
+
+export function getListTeenPinsQueryKey(params?: any) {
+  return ["/api/admin/teen-pins", params ?? {}];
+}
+export function useListTeenPins(
+  params: { search?: string; page?: number; limit?: number } = {},
+  options?: { query?: { enabled?: boolean } }
+) {
+  return useQuery({
+    queryKey: getListTeenPinsQueryKey(params),
+    queryFn: () => apiFetch(`/admin/teen-pins?${buildParams(params)}`),
+    ...options?.query,
+  });
+}
+export function useResetTeenPin(options?: { mutation?: { onSuccess?: (data: any) => void; onError?: (err: any) => void } }) {
+  return useMutation({
+    mutationFn: ({ id, pin }: { id: number; pin: string }) =>
+      apiFetch(`/admin/teen-pins/${id}`, { method: "PATCH", body: JSON.stringify({ pin }) }),
+    ...options?.mutation,
+  });
+}
+
+export function getChildParentSummaryQueryKey(id: number) {
+  return ["/api/children", id, "parent-summary"];
+}
+export function useGetChildParentSummary(id: number, options?: { query?: { enabled?: boolean } }) {
+  return useQuery({
+    queryKey: getChildParentSummaryQueryKey(id),
+    queryFn: () => apiFetch(`/children/${id}/parent-summary`),
+    enabled: !!id,
+    ...options?.query,
+  });
+}
+
+export function getTeenParentSummaryQueryKey(id: number) {
+  return ["/api/teens", id, "parent-summary"];
+}
+export function useGetTeenParentSummary(id: number, options?: { query?: { enabled?: boolean } }) {
+  return useQuery({
+    queryKey: getTeenParentSummaryQueryKey(id),
+    queryFn: () => apiFetch(`/teens/${id}/parent-summary`),
+    enabled: !!id,
+    ...options?.query,
+  });
+}
+
+export function useUpdateChildBasicInfo(options?: { mutation?: { onSuccess?: (data: any) => void; onError?: (err: any) => void } }) {
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: { firstName?: string; lastName?: string; dateOfBirth?: string } }) =>
+      apiFetch(`/children/${id}/basic-info`, { method: "PATCH", body: JSON.stringify(data) }),
+    ...options?.mutation,
+  });
+}
+
+export function useUpdateTeenBasicInfo(options?: { mutation?: { onSuccess?: (data: any) => void; onError?: (err: any) => void } }) {
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: { firstName?: string; lastName?: string; dateOfBirth?: string } }) =>
+      apiFetch(`/teens/${id}/basic-info`, { method: "PATCH", body: JSON.stringify(data) }),
+    ...options?.mutation,
   });
 }
 
@@ -976,7 +1039,7 @@ export function getGetMembersAttendanceReportQueryKey(params?: any) {
   return ["/api/reports/members-attendance", params ?? {}];
 }
 export function useGetMembersAttendanceReport(
-  params: { month?: string; serviceId?: number; cellId?: number; search?: string; page?: number; limit?: number } = {},
+  params: { month?: string; serviceId?: number; cellId?: number; seniorCellId?: number; pcfId?: number; noFellowship?: boolean; search?: string; page?: number; limit?: number } = {},
   options?: { query?: { enabled?: boolean; queryKey?: any[] } }
 ) {
   return useQuery<any>({

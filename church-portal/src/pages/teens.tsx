@@ -7,8 +7,10 @@ import {
   usePromoteTeenToMember,
   useListMembers, getListMembersQueryKey,
   useListChildren, getListChildrenQueryKey,
+  useResetTeenPin,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,7 +19,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, Search, Smile, ChevronLeft, ChevronRight, X, ArrowUpRight, Edit2, UserCheck } from "lucide-react";
+import { Plus, Trash2, Search, Smile, ChevronLeft, ChevronRight, X, ArrowUpRight, Edit2, UserCheck, KeyRound, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 function getAge(dob: string | null | undefined) {
@@ -46,11 +48,11 @@ function TeenFormFields({
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
           <Label>First Name *</Label>
-          <Input value={form.firstName} onChange={e => setForm((f: any) => ({ ...f, firstName: e.target.value }))} required />
+          <Input value={form.firstName} onChange={e => setForm((f: any) => ({ ...f, firstName: e.target.value.replace(/[^a-zA-Z\s'-]/g, "") }))} required />
         </div>
         <div className="space-y-1.5">
           <Label>Last Name *</Label>
-          <Input value={form.lastName} onChange={e => setForm((f: any) => ({ ...f, lastName: e.target.value }))} required />
+          <Input value={form.lastName} onChange={e => setForm((f: any) => ({ ...f, lastName: e.target.value.replace(/[^a-zA-Z\s'-]/g, "") }))} required />
         </div>
       </div>
       <div className="space-y-1.5">
@@ -68,11 +70,11 @@ function TeenFormFields({
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
           <Label>Phone 1</Label>
-          <Input value={form.phone1} onChange={e => setForm((f: any) => ({ ...f, phone1: e.target.value }))} />
+          <Input inputMode="numeric" value={form.phone1} onChange={e => setForm((f: any) => ({ ...f, phone1: e.target.value.replace(/\D/g, "") }))} />
         </div>
         <div className="space-y-1.5">
           <Label>Phone 2</Label>
-          <Input value={form.phone2} onChange={e => setForm((f: any) => ({ ...f, phone2: e.target.value }))} />
+          <Input inputMode="numeric" value={form.phone2} onChange={e => setForm((f: any) => ({ ...f, phone2: e.target.value.replace(/\D/g, "") }))} />
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
@@ -220,6 +222,8 @@ function EditTeenDialog({ teen, onClose, saving, onSave }: {
 export default function Teens() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const isSuperAdmin = user?.roleLevel === 1;
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [addOpen, setAddOpen] = useState(false);
@@ -241,6 +245,10 @@ export default function Teens() {
 
   const [promoteTarget, setPromoteTarget] = useState<any>(null);
   const [promoteGender, setPromoteGender] = useState("male");
+
+  const [pinTarget, setPinTarget] = useState<any>(null);
+  const [revealPin, setRevealPin] = useState(false);
+  const [newPin, setNewPin] = useState("");
 
   const { data, isLoading } = useListTeens(
     { page, limit: 25, search },
@@ -292,6 +300,18 @@ export default function Teens() {
         toast({ title: "Teen promoted to Adult Members ✓", description: `${promoteTarget?.firstName} ${promoteTarget?.lastName} has been moved to the Members list.` });
       },
       onError: (e: any) => toast({ title: "Promotion failed", description: e?.message, variant: "destructive" }),
+    },
+  });
+
+  const resetPin = useResetTeenPin({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListTeensQueryKey() });
+        setPinTarget(null);
+        setNewPin("");
+        toast({ title: "PIN reset successfully" });
+      },
+      onError: (e: any) => toast({ title: "Error", description: e?.message, variant: "destructive" }),
     },
   });
 
@@ -432,6 +452,7 @@ export default function Teens() {
             <TableRow>
               <TableHead className="w-10 text-center">#</TableHead>
               <TableHead>Name</TableHead>
+              <TableHead>Member ID</TableHead>
               <TableHead>Age</TableHead>
               <TableHead className="hidden sm:table-cell">Phone</TableHead>
               <TableHead className="hidden md:table-cell">Parent</TableHead>
@@ -443,12 +464,12 @@ export default function Teens() {
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
-                  {Array.from({ length: 7 }).map((_, j) => <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>)}
+                  {Array.from({ length: 8 }).map((_, j) => <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>)}
                 </TableRow>
               ))
             ) : (data?.data ?? []).length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-16 text-gray-400">
+                <TableCell colSpan={8} className="text-center py-16 text-gray-400">
                   <Smile className="w-10 h-10 mx-auto mb-2 opacity-30" />
                   <p>No teens registered yet</p>
                 </TableCell>
@@ -460,6 +481,7 @@ export default function Teens() {
                   <TableRow key={t.id} className="hover:bg-gray-50">
                     <TableCell className="text-center text-gray-400 text-sm font-medium w-10">{idx + 1}</TableCell>
                     <TableCell className="font-medium text-gray-800">{t.firstName} {t.lastName}</TableCell>
+                    <TableCell className="text-xs font-mono text-purple-700">{t.membershipId ?? "—"}</TableCell>
                     <TableCell className="text-gray-600">{age != null ? `${age} yrs` : "—"}</TableCell>
                     <TableCell className="hidden sm:table-cell text-gray-500 text-sm">{t.phone1 || "—"}</TableCell>
                     <TableCell className="hidden md:table-cell text-gray-500 text-sm">
@@ -478,6 +500,13 @@ export default function Teens() {
                           onClick={() => setEditTarget(t)}>
                           <Edit2 className="w-3.5 h-3.5" />
                         </Button>
+                        {isSuperAdmin && (
+                          <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-amber-500 hover:text-amber-700 hover:bg-amber-50"
+                            title="View / Reset PIN"
+                            onClick={() => { setPinTarget(t); setRevealPin(false); setNewPin(""); }}>
+                            <KeyRound className="w-3.5 h-3.5" />
+                          </Button>
+                        )}
                         <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-green-500 hover:text-green-700 hover:bg-green-50"
                           title="Promote to Adult Members"
                           onClick={() => { setPromoteGender("male"); setPromoteTarget(t); }}>
@@ -562,6 +591,52 @@ export default function Teens() {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* PIN view / reset dialog — simple inline, no separate page */}
+      <Dialog open={!!pinTarget} onOpenChange={open => { if (!open) { setPinTarget(null); setNewPin(""); setRevealPin(false); } }}>
+        <DialogContent className="max-w-xs">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <KeyRound className="w-4 h-4 text-amber-500" />
+              PIN — {pinTarget?.firstName} {pinTarget?.lastName}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-1">
+            <div className="flex items-center justify-between bg-gray-50 border rounded-lg px-4 py-3">
+              <span className="text-sm text-gray-500">Current PIN</span>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-lg font-semibold tracking-widest">
+                  {revealPin ? (pinTarget?.pin ?? "0000") : "••••"}
+                </span>
+                <button type="button" className="text-gray-400 hover:text-gray-600"
+                  onClick={() => setRevealPin(v => !v)}>
+                  {revealPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>New PIN</Label>
+              <Input
+                type="text"
+                inputMode="numeric"
+                maxLength={4}
+                placeholder="Enter 4-digit PIN"
+                value={newPin}
+                onChange={e => setNewPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                className="text-center tracking-widest text-lg font-mono"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" className="flex-1" onClick={() => { setPinTarget(null); setNewPin(""); setRevealPin(false); }}>Cancel</Button>
+              <Button className="flex-1 bg-amber-500 hover:bg-amber-600 text-white"
+                disabled={newPin.length !== 4 || resetPin.isPending}
+                onClick={() => resetPin.mutate({ id: pinTarget.id, pin: newPin })}>
+                {resetPin.isPending ? "Saving..." : "Set PIN"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

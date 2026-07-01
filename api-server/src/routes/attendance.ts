@@ -190,6 +190,74 @@ router.delete("/services/:id/checkin/:memberId", async (req, res) => {
   res.json({ success: true });
 });
 
+// Smart checkin: looks up membershipId in members → teens → children and registers accordingly
+router.post("/services/:id/smart-checkin", async (req, res) => {
+  const serviceId = parseInt(req.params.id);
+  const { membershipId, method = "qr" } = req.body;
+  if (!membershipId) return res.status(400).json({ error: "membershipId required" });
+
+  // 1. Try member
+  const memberRows = await db.select().from(membersTable)
+    .where(and(eq(membersTable.membershipId, membershipId), eq(membersTable.isArchived, false)))
+    .limit(1);
+  if (memberRows.length) {
+    const m = memberRows[0];
+    let cellName: string | null = null;
+    if (m.cellId) {
+      const cell = await db.select().from(cellsTable).where(eq(cellsTable.id, m.cellId)).limit(1);
+      if (cell.length) cellName = cell[0].name;
+    }
+    const existing = await db.select().from(attendanceRecordsTable)
+      .where(and(eq(attendanceRecordsTable.serviceId, serviceId), eq(attendanceRecordsTable.memberId, m.id)))
+      .limit(1);
+    if (existing.length) {
+      return res.json({ success: true, type: "member", person: { ...m, cellName }, alreadyRegistered: true });
+    }
+    await db.insert(attendanceRecordsTable).values({ serviceId, memberId: m.id, cellId: m.cellId ?? null, method });
+    const actor = (req as any).user;
+    await db.insert(activityLogTable).values({
+      type: "checkin", description: `${fmt(m)} checked in`,
+      memberId: m.id, memberName: fmt(m),
+      performedByUserId: actor?.id ?? null, performedByName: actor?.username ?? null,
+    });
+    return res.json({ success: true, type: "member", person: { ...m, cellName }, alreadyRegistered: false });
+  }
+
+  // 2. Try teen
+  const teenRows = await db.select().from(teensTable)
+    .where(and(eq(teensTable.membershipId, membershipId), eq(teensTable.isArchived, false)))
+    .limit(1);
+  if (teenRows.length) {
+    const t = teenRows[0];
+    const existing = await db.select().from(serviceTeensAttendanceTable)
+      .where(and(eq(serviceTeensAttendanceTable.serviceId, serviceId), eq(serviceTeensAttendanceTable.teenId, t.id)))
+      .limit(1);
+    if (existing.length) {
+      return res.json({ success: true, type: "teen", person: t, alreadyRegistered: true });
+    }
+    await db.insert(serviceTeensAttendanceTable).values({ serviceId, teenId: t.id });
+    return res.json({ success: true, type: "teen", person: t, alreadyRegistered: false });
+  }
+
+  // 3. Try child
+  const childRows = await db.select().from(childrenTable)
+    .where(and(eq(childrenTable.membershipId, membershipId), eq(childrenTable.isArchived, false)))
+    .limit(1);
+  if (childRows.length) {
+    const c = childRows[0];
+    const existing = await db.select().from(serviceChildrenAttendanceTable)
+      .where(and(eq(serviceChildrenAttendanceTable.serviceId, serviceId), eq(serviceChildrenAttendanceTable.childId, c.id)))
+      .limit(1);
+    if (existing.length) {
+      return res.json({ success: true, type: "child", person: c, alreadyRegistered: true });
+    }
+    await db.insert(serviceChildrenAttendanceTable).values({ serviceId, childId: c.id });
+    return res.json({ success: true, type: "child", person: c, alreadyRegistered: false });
+  }
+
+  return res.status(404).json({ error: "No member, teen, or child found with that ID" });
+});
+
 router.post("/services/:id/register-child", async (req, res) => {
   const serviceId = parseInt(req.params.id);
   const { childId } = req.body;
@@ -386,6 +454,34 @@ router.get("/services/:id/attendance", async (req, res) => {
     }
   }
 
+  // Members with no fellowship (cellId IS NULL) — counted separately as "No Fellowship"
+  const noFellowshipMembers = allMembers.filter(m => m.cellId == null);
+  const noFellowshipMemberNodes = noFellowshipMembers.map(m => ({
+    memberId: m.id,
+    memberName: fmt(m),
+    profilePhoto: m.profilePhoto,
+    checkedIn: checkedInIds.has(m.id),
+    checkInTime: checkinMap.get(m.id)?.checkInTime?.toISOString() || null,
+  }));
+  for (const m of noFellowshipMembers.filter(m => checkedInIds.has(m.id))) {
+    const ci = checkinMap.get(m.id);
+    attendeeList.push({
+      type: "member",
+      memberId: m.id,
+      name: fmt(m),
+      profilePhoto: m.profilePhoto,
+      fellowship: "No Fellowship",
+      scName: null,
+      pcfName: null,
+      checkInTime: ci?.checkInTime?.toISOString() || null,
+    });
+  }
+  const noFellowshipGroup = {
+    checkedIn: noFellowshipMembers.filter(m => checkedInIds.has(m.id)).length,
+    total: noFellowshipMembers.length,
+    members: noFellowshipMemberNodes,
+  };
+
   // Add first-timers to attendeeList with invited-by fellowship
   const allCells = await db.select().from(cellsTable).where(eq(cellsTable.isArchived, false));
   const cellNameMap = new Map(allCells.map(c => [c.id, c.name]));
@@ -516,6 +612,7 @@ router.get("/services/:id/attendance", async (req, res) => {
     attendeeList,
     childrenList,
     teensList,
+    noFellowshipGroup,
   });
 });
 
@@ -919,7 +1016,7 @@ router.get("/reports/overall", async (req, res) => {
 // ─── MEMBER ATTENDANCE REPORT (P/A grid) ─────────────────────────────────────
 
 router.get("/reports/members-attendance", async (req, res) => {
-  const { month, serviceId, cellId, seniorCellId, pcfId, search, page = "1", limit = "20" } = req.query as any;
+  const { month, serviceId, cellId, seniorCellId, pcfId, noFellowship, search, page = "1", limit = "20" } = req.query as any;
   const pageNum = parseInt(page);
   const limitNum = Math.min(parseInt(limit), 50);
   const offset = (pageNum - 1) * limitNum;
@@ -940,6 +1037,7 @@ router.get("/reports/members-attendance", async (req, res) => {
   }
 
   const memberConditions: any[] = [eq(membersTable.isArchived, false), eq(membersTable.memberType, "member")];
+  if (noFellowship === "true") memberConditions.push(isNull(membersTable.cellId));
   if (cellId) memberConditions.push(eq(membersTable.cellId, parseInt(cellId)));
   if (seniorCellId) {
     const cellsInSC = await db.select({ id: cellsTable.id }).from(cellsTable)
@@ -1206,6 +1304,23 @@ router.get("/reports/fellowship-attendance", async (req, res) => {
     }
   }
 
+  // Count regular members with no cell (memberType="member", cellId IS NULL) who checked in
+  const noFellowshipMemberIds = await db.select({ id: membersTable.id })
+    .from(membersTable)
+    .where(and(eq(membersTable.isArchived, false), eq(membersTable.memberType, "member"), isNull(membersTable.cellId)));
+  const nfIds = noFellowshipMemberIds.map(m => m.id);
+  const noFellowshipMemberCounts: Record<number, number> = {};
+  for (const svc of services) {
+    if (nfIds.length) {
+      const cnt = await db.select({ count: sql<number>`count(*)` })
+        .from(attendanceRecordsTable)
+        .where(and(eq(attendanceRecordsTable.serviceId, svc.id), inArray(attendanceRecordsTable.memberId, nfIds)));
+      noFellowshipMemberCounts[svc.id] = Number(cnt[0].count);
+    } else {
+      noFellowshipMemberCounts[svc.id] = 0;
+    }
+  }
+
   // Attach ftServiceAttendance to each PCF/SC in result
   for (const pcf of result) {
     pcf.ftServiceAttendance = pcfFtAtt[pcf.id] ?? {};
@@ -1273,6 +1388,7 @@ router.get("/reports/fellowship-attendance", async (req, res) => {
       firstTimerCount: ftTotalCounts[s.id] || 0,
       ftNotInFellowshipCount: ftNotInFellowshipCounts[s.id] || 0,
       returningFtNoFellowshipCount: returningFtNoFellowshipCounts[s.id] || 0,
+      noFellowshipMemberCount: noFellowshipMemberCounts[s.id] || 0,
       teensCount: teensCounts[s.id] || 0,
       childrenCount: childrenCounts[s.id] || 0,
       childrenFtCount: childrenFtCounts[s.id] || 0,

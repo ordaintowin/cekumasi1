@@ -5,6 +5,7 @@ import {
   cellsTable, seniorCellsTable, pcfsTable,
   departmentMembersTable, departmentsTable, givingsTable, attendanceRecordsTable,
   familiesTable, familyChildrenTable, ministryYearsTable, servicesTable, givingTypesTable,
+  teensTable, childrenTable,
 } from "@workspace/db";
 import { eq, and, ilike, or, sql, ne, gte, lte, inArray } from "drizzle-orm";
 import { authenticateToken, requireRole } from "../middlewares/auth";
@@ -20,13 +21,17 @@ function fmt(m: { title?: string | null; firstName: string; lastName: string }):
 async function generateMembershipId(firstName: string, lastName: string, type: "member" | "visitor" = "member"): Promise<string> {
   const initials = ((firstName[0] ?? "X") + (lastName[0] ?? "X")).toUpperCase();
   const prefix = type === "visitor" ? `VST-${initials}` : `CEKSI-${initials}`;
-  const existing = await db
-    .select({ membershipId: membersTable.membershipId })
-    .from(membersTable)
-    .where(ilike(membersTable.membershipId, `${prefix}%`));
+  // Check across all three tables so IDs are globally unique on the platform
+  const [fromMembers, fromTeens, fromChildren] = await Promise.all([
+    db.select({ mid: membersTable.membershipId }).from(membersTable).where(ilike(membersTable.membershipId, `${prefix}%`)),
+    type === "visitor" ? Promise.resolve([]) : db.select({ mid: teensTable.membershipId }).from(teensTable).where(ilike(teensTable.membershipId, `${prefix}%`)),
+    type === "visitor" ? Promise.resolve([]) : db.select({ mid: childrenTable.membershipId }).from(childrenTable).where(ilike(childrenTable.membershipId, `${prefix}%`)),
+  ]);
   let max = 0;
-  for (const row of existing) {
-    const num = parseInt(row.membershipId.slice(prefix.length), 10);
+  for (const row of [...fromMembers, ...fromTeens, ...fromChildren]) {
+    const mid = (row as any).mid ?? (row as any).membershipId;
+    if (!mid) continue;
+    const num = parseInt(mid.slice(prefix.length), 10);
     if (!isNaN(num) && num > max) max = num;
   }
   return `${prefix}${String(max + 1).padStart(3, "0")}`;
@@ -342,7 +347,8 @@ router.get("/:id", async (req, res) => {
 
 router.patch("/:id", async (req, res) => {
   const id = parseInt(req.params.id);
-  const { firstName, lastName, phone1, ...rest } = req.body;
+  // Never allow membership ID to change — strip it from any incoming update
+  const { firstName, lastName, phone1, membershipId: _ignoredId, ...rest } = req.body;
 
   const currentMember = await db.select().from(membersTable)
     .where(and(eq(membersTable.id, id), eq(membersTable.isArchived, false))).limit(1);
@@ -449,6 +455,14 @@ router.patch("/:id", async (req, res) => {
           await db.insert(familiesTable).values({ headId: incomingSpouseId, spouseId: id });
         }
       }
+      // Getting married — remove both partners from their parents' family_children so they
+      // are no longer listed as dependents now that they have their own family
+      await db.delete(familyChildrenTable).where(
+        and(eq(familyChildrenTable.memberId, id), eq(familyChildrenTable.type, "member"))
+      );
+      await db.delete(familyChildrenTable).where(
+        and(eq(familyChildrenTable.memberId, incomingSpouseId), eq(familyChildrenTable.type, "member"))
+      );
     }
   } else if (rest.weddingDate && oldSpouseId) {
     await db.update(membersTable).set({ weddingDate: rest.weddingDate }).where(eq(membersTable.id, oldSpouseId));
@@ -591,7 +605,7 @@ router.post("/:id/reset-password", requireRole(1), async (req, res) => {
   res.json({ success: true, newPin: pin, message: `Password reset. New PIN: ${pin}` });
 });
 
-// ─── MEMBER GIVINGS (paginated) ───────────────────────────────────────────────
+// ─── MEMBER GIVINGS (paginated, includes historical teen + child stage records) ─
 
 router.get("/:id/givings", async (req, res) => {
   const memberId = parseInt(req.params.id);
@@ -599,26 +613,156 @@ router.get("/:id/givings", async (req, res) => {
   const pageNum = parseInt(page);
   const limitNum = Math.min(parseInt(limit), 50);
   const offset = (pageNum - 1) * limitNum;
+  const yearFilter = ministryYearId ? parseInt(ministryYearId) : null;
 
-  const conditions: any[] = [eq(givingsTable.memberId, memberId), eq(givingsTable.isArchived, false)];
-  if (ministryYearId) conditions.push(eq(givingsTable.ministryYearId, parseInt(ministryYearId)));
+  // Look up this member to find their historical teen/child links
+  const memberRow = await db.select({ transferredFromTeenId: membersTable.transferredFromTeenId })
+    .from(membersTable).where(eq(membersTable.id, memberId)).limit(1);
+  const transferredFromTeenId = memberRow[0]?.transferredFromTeenId ?? null;
 
-  const givings = await db.select().from(givingsTable).where(and(...conditions))
-    .orderBy(givingsTable.date).limit(limitNum).offset(offset);
-  const total = await db.select({ count: sql<number>`count(*)` }).from(givingsTable).where(and(...conditions));
+  // Optionally find the teen's former child ID
+  let transferredFromChildId: number | null = null;
+  if (transferredFromTeenId) {
+    const teenRow = await db.select({ transferredFromChildId: teensTable.transferredFromChildId })
+      .from(teensTable).where(eq(teensTable.id, transferredFromTeenId)).limit(1);
+    transferredFromChildId = teenRow[0]?.transferredFromChildId ?? null;
+  }
 
-  const enriched = await Promise.all(givings.map(async (g) => {
-    const gtype = await db.select().from(givingTypesTable).where(eq(givingTypesTable.id, g.givingTypeId)).limit(1);
-    const year = await db.select().from(ministryYearsTable).where(eq(ministryYearsTable.id, g.ministryYearId)).limit(1);
-    return {
-      ...g,
-      amount: parseFloat(String(g.amount)),
-      givingTypeName: gtype.length ? gtype[0].name : "Unknown",
-      ministryYearName: year.length ? year[0].name : "Unknown",
-    };
+  // Build conditions for each stage
+  const memberConditions: any[] = [eq(givingsTable.memberId, memberId), eq(givingsTable.isArchived, false)];
+  if (yearFilter) memberConditions.push(eq(givingsTable.ministryYearId, yearFilter));
+
+  const teenConditions: any[] = transferredFromTeenId
+    ? [eq(givingsTable.teenId, transferredFromTeenId), eq(givingsTable.isArchived, false), ...(yearFilter ? [eq(givingsTable.ministryYearId, yearFilter)] : [])]
+    : null as any;
+
+  const childConditions: any[] = transferredFromChildId
+    ? [eq(givingsTable.childId, transferredFromChildId), eq(givingsTable.isArchived, false), ...(yearFilter ? [eq(givingsTable.ministryYearId, yearFilter)] : [])]
+    : null as any;
+
+  // Fetch all stages in parallel
+  const [memberGivings, teenGivings, childGivings] = await Promise.all([
+    db.select().from(givingsTable).where(and(...memberConditions)),
+    teenConditions ? db.select().from(givingsTable).where(and(...teenConditions)) : Promise.resolve([]),
+    childConditions ? db.select().from(givingsTable).where(and(...childConditions)) : Promise.resolve([]),
+  ]);
+
+  // Merge and sort by date desc, then paginate
+  const allGivings = [
+    ...memberGivings.map(g => ({ ...g, _stage: "member" })),
+    ...teenGivings.map(g => ({ ...g, _stage: "teen" })),
+    ...childGivings.map(g => ({ ...g, _stage: "child" })),
+  ].sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""));
+
+  const total = allGivings.length;
+  const paginated = allGivings.slice(offset, offset + limitNum);
+
+  // Enrich with type/year names
+  const typeIds = [...new Set(paginated.map(g => g.givingTypeId))];
+  const yearIds = [...new Set(paginated.map(g => g.ministryYearId))];
+
+  const [gtRows, yrRows] = await Promise.all([
+    typeIds.length ? db.select().from(givingTypesTable).where(inArray(givingTypesTable.id, typeIds as number[])) : Promise.resolve([]),
+    yearIds.length ? db.select().from(ministryYearsTable).where(inArray(ministryYearsTable.id, yearIds as number[])) : Promise.resolve([]),
+  ]);
+
+  const typesMap: Record<number, string> = {};
+  gtRows.forEach((g: any) => { typesMap[g.id] = g.name; });
+  const yearsMap: Record<number, string> = {};
+  yrRows.forEach((y: any) => { yearsMap[y.id] = y.name; });
+
+  const enriched = paginated.map((g: any) => ({
+    ...g,
+    amount: parseFloat(String(g.amount)),
+    givingTypeName: typesMap[g.givingTypeId] ?? "Unknown",
+    ministryYearName: yearsMap[g.ministryYearId] ?? "Unknown",
+    stage: g._stage,
   }));
 
-  res.json({ data: enriched, total: Number(total[0].count), page: pageNum, limit: limitNum });
+  res.json({ data: enriched, total, page: pageNum, limit: limitNum });
+});
+
+// ─── DEPENDENTS GIVINGS (children + non-promoted teens linked to a parent) ───
+
+router.get("/:id/dependents-givings", async (req, res) => {
+  const memberId = parseInt(req.params.id);
+
+  // Find non-archived children where this member is the parent
+  const children = await db.select()
+    .from(childrenTable)
+    .where(and(eq(childrenTable.parentId, memberId), eq(childrenTable.isArchived, false)));
+
+  // Find non-archived teens where this member is the parent
+  // isArchived = true means promoted to member, so we skip those
+  const teens = await db.select()
+    .from(teensTable)
+    .where(and(eq(teensTable.parentId, memberId), eq(teensTable.isArchived, false)));
+
+  // Collect all giving type IDs we'll need
+  const allGivingRows: Array<{ personName: string; stage: string; givingTypeId: number | null; amount: string; date: string; notes: string | null }> = [];
+
+  for (const child of children) {
+    const rows = await db.select().from(givingsTable)
+      .where(and(eq(givingsTable.childId, child.id), eq(givingsTable.isArchived, false)))
+      .orderBy(givingsTable.date);
+    for (const r of rows) {
+      allGivingRows.push({
+        personName: `${child.firstName} ${child.lastName}`,
+        stage: "child",
+        givingTypeId: r.givingTypeId,
+        amount: r.amount,
+        date: r.date,
+        notes: r.notes ?? null,
+      });
+    }
+  }
+
+  for (const teen of teens) {
+    const rows = await db.select().from(givingsTable)
+      .where(and(eq(givingsTable.teenId, teen.id), eq(givingsTable.isArchived, false)))
+      .orderBy(givingsTable.date);
+    for (const r of rows) {
+      allGivingRows.push({
+        personName: `${teen.firstName} ${teen.lastName}`,
+        stage: "teen",
+        givingTypeId: r.givingTypeId,
+        amount: r.amount,
+        date: r.date,
+        notes: r.notes ?? null,
+      });
+    }
+  }
+
+  // Enrich with giving type names
+  const typeIds = [...new Set(allGivingRows.map(r => r.givingTypeId).filter((x): x is number => x != null))];
+  const typesMap: Record<number, string> = {};
+  if (typeIds.length) {
+    const gtRows = await db.select().from(givingTypesTable).where(inArray(givingTypesTable.id, typeIds));
+    gtRows.forEach(gt => { typesMap[gt.id] = gt.name; });
+  }
+
+  const enriched = allGivingRows.map(r => ({
+    ...r,
+    amount: parseFloat(String(r.amount)),
+    givingTypeName: r.givingTypeId ? (typesMap[r.givingTypeId] ?? "Gift") : "Gift",
+  }));
+
+  // Group by person name
+  const grouped: Record<string, { stage: string; total: number; givings: typeof enriched }> = {};
+  for (const row of enriched) {
+    if (!grouped[row.personName]) {
+      grouped[row.personName] = { stage: row.stage, total: 0, givings: [] };
+    }
+    grouped[row.personName].total += row.amount;
+    grouped[row.personName].givings.push(row);
+  }
+
+  const dependents = [
+    ...children.map(c => ({ id: c.id, name: `${c.firstName} ${c.lastName}`, stage: "child" })),
+    ...teens.map(t => ({ id: t.id, name: `${t.firstName} ${t.lastName}`, stage: "teen" })),
+  ];
+
+  res.json({ dependents, grouped });
 });
 
 // ─── MEMBER ATTENDANCE (paginated) ───────────────────────────────────────────

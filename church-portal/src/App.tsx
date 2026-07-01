@@ -46,7 +46,8 @@ const ACCESS_MAP: Record<string, string[]> = {
   "3/children":     ["/children", "/teens", "/attendance", "/reports", "/my-notifications"],
   "3/registration": ["/attendance", "/my-notifications"],
   "4":              ["/members", "/attendance", "/reports", "/profile", "/online-portal", "/departments", "/home", "/my-notifications", "/help"],
-  "5":              ["/profile", "/online-portal", "/home", "/my-notifications", "/departments", "/help"],
+  "5":              ["/profile", "/online-portal", "/home", "/my-notifications", "/departments", "/help", "/families"],
+  "5/teen":         ["/profile", "/online-portal", "/home", "/my-notifications", "/departments", "/help", "/families"],
 };
 
 function canAccess(user: any, path: string): boolean {
@@ -54,8 +55,8 @@ function canAccess(user: any, path: string): boolean {
   const level: number = user.roleLevel;
   const sub: string = user.roleSubtype || "";
   if (level === 1) return true;
-  const key = level === 3 ? `3/${sub}` : String(level);
-  const allowed = ACCESS_MAP[key] ?? [];
+  const key = sub ? `${level}/${sub}` : String(level);
+  const allowed = ACCESS_MAP[key] ?? ACCESS_MAP[String(level)] ?? [];
   return allowed.some((p) => path === p || path.startsWith(p + "/"));
 }
 

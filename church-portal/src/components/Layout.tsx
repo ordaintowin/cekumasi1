@@ -247,14 +247,12 @@ export default function Layout({ children }: { children: ReactNode }) {
     <SidebarProvider>
       <div className="flex h-screen w-full bg-gray-50">
         <Sidebar className="border-r border-purple-900/20" style={{ "--sidebar-background": "222 15% 15%" } as any}>
-          <SidebarHeader className="border-b border-white/10 px-4 py-3 bg-[#3b1a6b]">
+          <SidebarHeader className="border-b border-white/10 px-3 py-2 bg-[#3b1a6b]">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 flex items-center justify-center">
-                <img src="/logo.png" alt="CE Kumasi 1" className="w-8 h-8 object-contain" />
-              </div>
-              <div className="flex flex-col">
-                <span className="font-bold text-sm text-white leading-tight">CE Kumasi 1</span>
-                <span className="text-xs text-purple-200">Christ Embassy</span>
+              <img src="/app-logo.png" alt="Christ Embassy Kumasi 1" className="w-10 h-10 object-contain rounded-lg flex-shrink-0" />
+              <div className="flex flex-col min-w-0">
+                <span className="font-bold text-sm text-white leading-tight">Christ Embassy</span>
+                <span className="text-xs text-purple-200">Kumasi 1</span>
               </div>
             </div>
           </SidebarHeader>

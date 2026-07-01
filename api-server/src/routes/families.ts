@@ -168,7 +168,7 @@ async function isMemberInAnyFamily(
 }
 
 router.get("/", async (req, res) => {
-  const { search, memberId } = req.query as any;
+  const { search, memberId, teenId } = req.query as any;
   let families = await db
     .select()
     .from(familiesTable)
@@ -176,7 +176,6 @@ router.get("/", async (req, res) => {
 
   if (memberId) {
     const mId = parseInt(memberId);
-    // Find families where this member is a child (type=member)
     const childRows = await db
       .select({ familyId: familyChildrenTable.familyId })
       .from(familyChildrenTable)
@@ -188,6 +187,14 @@ router.get("/", async (req, res) => {
         f.spouseId === mId ||
         childFamilyIds.includes(f.id)
     );
+  } else if (teenId) {
+    const tId = parseInt(teenId);
+    const teenRows = await db
+      .select({ familyId: familyChildrenTable.familyId })
+      .from(familyChildrenTable)
+      .where(and(eq(familyChildrenTable.teenId, tId), eq(familyChildrenTable.type, "teen")));
+    const teenFamilyIds = teenRows.map(r => r.familyId);
+    families = families.filter((f) => teenFamilyIds.includes(f.id));
   } else if (search) {
     const members = await db
       .select()

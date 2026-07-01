@@ -650,6 +650,9 @@ function FellowshipSummaryTable({ attendanceData, loading, onExport, myCellName,
     return { groups: result, totalMembers, totalFT };
   }, [attendanceData, ftByCell, allFTByCell, returningByCell]);
 
+  const noFellowshipCheckedIn: number = attendanceData?.noFellowshipGroup?.checkedIn ?? 0;
+  const noFellowshipMemberList: any[] = attendanceData?.noFellowshipGroup?.members ?? [];
+
   const grandTotal = totalMembers + totalFT;
 
   const displayGroups = useMemo(() => {
@@ -692,7 +695,7 @@ function FellowshipSummaryTable({ attendanceData, loading, onExport, myCellName,
   if (loading) return (
     <div className="space-y-2">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-10 w-full rounded-lg" />)}</div>
   );
-  if (!attendanceData || (leaderScope ? displayGroups.length === 0 : groups.length === 0)) return (
+  if (!attendanceData || (leaderScope ? displayGroups.length === 0 : groups.length === 0 && noFellowshipMemberList.length === 0)) return (
     <p className="text-center text-sm text-gray-400 py-6">No fellowship data available</p>
   );
 
@@ -709,7 +712,7 @@ function FellowshipSummaryTable({ attendanceData, loading, onExport, myCellName,
             <span className="text-xs text-gray-500">
               {leaderScope
                 ? `${displayGroups.reduce((a, g: any) => a + g.members, 0)}M · ${displayGroups.reduce((a, g: any) => a + g.ft, 0)}FT · ${displayGroups.reduce((a, g: any) => a + g.total, 0)} total`
-                : `${totalMembers + unassignedReturning}M · ${totalFT}FT · ${childrenCount + teensCount} Ch/Tn · ${grandTotal + unassignedReturning + childrenCount + teensCount} total`}
+                : `${totalMembers + unassignedReturning + visitorList.length + noFellowshipCheckedIn}M · ${totalFT}FT · ${childrenCount + teensCount} Ch/Tn · ${grandTotal + unassignedReturning + visitorList.length + noFellowshipCheckedIn + childrenCount + teensCount} total`}
             </span>
             {onExport && (
               <Button size="sm" variant="outline" className="h-7 text-xs border-green-300 text-green-700 hover:bg-green-50" onClick={onExport}>
@@ -879,18 +882,21 @@ function FellowshipSummaryTable({ attendanceData, loading, onExport, myCellName,
                   <td className="px-3 py-2 text-gray-400 text-xs">—</td>
                   <td className="px-3 py-2 text-xs text-gray-500 italic">No Fellowship</td>
                   <td className="text-right px-3 py-2 text-xs bg-violet-50 text-violet-600 font-semibold">
-                    {(unassignedReturning + visitorList.length) > 0 ? (
+                    {(noFellowshipCheckedIn + unassignedReturning + visitorList.length) > 0 ? (
                       <button
                         className="hover:underline font-bold"
                         onClick={() => setSelectedFellowship({
                           name: "No Fellowship",
-                          memberList: visitorList.map((v: any) => ({ ...v, checkedIn: true, memberName: v.name })),
+                          memberList: [
+                            ...noFellowshipMemberList.filter((m: any) => m.checkedIn),
+                            ...visitorList.map((v: any) => ({ ...v, checkedIn: true, memberName: v.name })),
+                          ],
                           returningList: unassignedReturnList,
                           ftList: [],
                           ft: 0,
                         })}
                       >
-                        {unassignedReturning + visitorList.length}
+                        {noFellowshipCheckedIn + unassignedReturning + visitorList.length}
                       </button>
                     ) : <span className="text-gray-300">—</span>}
                   </td>
@@ -911,7 +917,9 @@ function FellowshipSummaryTable({ attendanceData, loading, onExport, myCellName,
                     ) : <span className="text-gray-300">—</span>}
                   </td>
                   <td className="text-right px-3 py-2 text-xs bg-green-50 text-green-700 font-semibold">
-                    {(unassignedReturning + visitorList.length + unassignedFT) > 0 ? unassignedReturning + visitorList.length + unassignedFT : <span className="text-gray-300">—</span>}
+                    {(unassignedReturning + visitorList.length + noFellowshipCheckedIn + unassignedFT) > 0
+                      ? unassignedReturning + visitorList.length + noFellowshipCheckedIn + unassignedFT
+                      : <span className="text-gray-300">—</span>}
                   </td>
                 </tr>
               )}
@@ -919,13 +927,13 @@ function FellowshipSummaryTable({ attendanceData, loading, onExport, myCellName,
                 <td className="px-3 py-2.5" />
                 <td className="px-3 py-2.5 text-gray-800 uppercase tracking-wide">Grand Total</td>
                 <td className="text-right px-3 py-2.5 bg-violet-100 text-violet-800">
-                  {isChildrenAdmin ? childrenCount + teensCount : totalMembers + unassignedReturning + visitorList.length + childrenCount + teensCount}
+                  {isChildrenAdmin ? childrenCount + teensCount : totalMembers + unassignedReturning + visitorList.length + noFellowshipCheckedIn + childrenCount + teensCount}
                 </td>
                 <td className="text-right px-3 py-2.5 bg-yellow-100 text-yellow-700">
                   {isChildrenAdmin ? childrenFT + teensFT : totalFT}
                 </td>
                 <td className="text-right px-3 py-2.5 bg-green-100 text-green-900">
-                  {isChildrenAdmin ? childrenCount + teensCount + childrenFT + teensFT : totalMembers + unassignedReturning + visitorList.length + childrenCount + teensCount + totalFT}
+                  {isChildrenAdmin ? childrenCount + teensCount + childrenFT + teensFT : totalMembers + unassignedReturning + visitorList.length + noFellowshipCheckedIn + childrenCount + teensCount + totalFT}
                 </td>
               </tr>
             </tbody>
@@ -1587,14 +1595,39 @@ function RegisterPage({
 
         {/* ── Membership ID ──────────────────────────────────── */}
         {tab === "id" && (
-          <form onSubmit={e => { e.preventDefault(); if (idInput.trim()) checkinMember({ membershipId: idInput.trim() }, "id"); }}
+          <form onSubmit={async e => {
+            e.preventDefault();
+            if (!idInput.trim()) return;
+            setSubmitting(true);
+            try {
+              const res = await apiFetch(`/api/services/${serviceId}/smart-checkin`, {
+                method: "POST",
+                body: JSON.stringify({ membershipId: idInput.trim(), method: "id" }),
+              });
+              queryClient.invalidateQueries({ queryKey: getGetActiveServiceQueryKey() });
+              queryClient.invalidateQueries({ queryKey: getGetServiceAttendanceQueryKey(serviceId) });
+              const p = res.person;
+              const name = p ? `${p.title ? p.title + " " : ""}${p.firstName} ${p.lastName}`.trim() : "Person";
+              if (res.alreadyRegistered) {
+                showResult({ type: "error", name, detail: `${name} has already been registered for this service` });
+              } else {
+                const detail = res.type === "teen" ? "Registered — Teens Church"
+                  : res.type === "child" ? "Registered — Children's Church"
+                  : p?.cellName ? `Cell: ${p.cellName}` : "Registered successfully";
+                showResult({ type: "success", name, detail });
+              }
+              setIdInput("");
+            } catch (err: any) {
+              showResult({ type: "error", name: "Not found", detail: err.message });
+            } finally { setSubmitting(false); }
+          }}
             className="space-y-4 bg-white border rounded-xl p-5 shadow-sm">
             <div className="space-y-1.5">
               <Label className="font-semibold">Enter Membership ID</Label>
-              <Input value={idInput} onChange={e => setIdInput(e.target.value)} placeholder="e.g. CEK1-AB12C3..." autoFocus className="text-base" />
+              <Input value={idInput} onChange={e => setIdInput(e.target.value)} placeholder="e.g. CEKSI-AB001, TEEN-AB001..." autoFocus className="text-base" />
             </div>
             <Button type="submit" className="w-full bg-purple-700 hover:bg-purple-800 text-white h-11" disabled={!idInput.trim() || submitting}>
-              {submitting ? "Registering..." : "Register Member"}
+              {submitting ? "Registering..." : "Register"}
             </Button>
           </form>
         )}
@@ -1614,19 +1647,22 @@ function RegisterPage({
               active={tab === "qr"}
               onScan={async (val) => {
                 try {
-                  const res = await apiFetch(`/api/services/${serviceId}/checkin`, {
+                  const res = await apiFetch(`/api/services/${serviceId}/smart-checkin`, {
                     method: "POST",
                     body: JSON.stringify({ membershipId: val, method: "qr" }),
                   });
                   queryClient.invalidateQueries({ queryKey: getGetActiveServiceQueryKey() });
                   queryClient.invalidateQueries({ queryKey: getGetServiceAttendanceQueryKey(serviceId) });
-                  const m = res.member;
-                  const name = m ? `${m.title ? m.title + " " : ""}${m.firstName} ${m.lastName}`.trim() : "Member";
-                  if (res.alreadyCheckedIn) {
+                  const p = res.person;
+                  const name = p ? `${p.title ? p.title + " " : ""}${p.firstName} ${p.lastName}`.trim() : "Person";
+                  if (res.alreadyRegistered) {
                     showResult({ type: "error", name, detail: `${name} has already been registered for this service` });
                     return "duplicate";
                   } else {
-                    showResult({ type: "success", name, detail: m?.cellName ? `Cell: ${m.cellName}` : "Registered successfully" });
+                    const detail = res.type === "teen" ? "Registered — Teens Church"
+                      : res.type === "child" ? "Registered — Children's Church"
+                      : p?.cellName ? `Cell: ${p.cellName}` : "Registered successfully";
+                    showResult({ type: "success", name, detail });
                     return "success";
                   }
                 } catch (err: any) {
@@ -2392,26 +2428,40 @@ export default function Attendance() {
           <div className="bg-white border-b px-5 py-4 flex items-center gap-6 flex-wrap justify-between">
             <div>
               <p className="text-xs text-gray-500 uppercase font-medium tracking-wide">Total attendance</p>
-              <p className="text-4xl font-extrabold text-gray-900 mt-0.5">{activeService.totalCount ?? 0}</p>
+              {(activeService.totalCount ?? 0) === 0 ? (
+                <p className="text-sm text-gray-400 italic mt-1">No registrations yet</p>
+              ) : (
+                <p className="text-4xl font-extrabold text-gray-900 mt-0.5">{activeService.totalCount}</p>
+              )}
             </div>
-            <div className="flex items-center gap-8 flex-wrap">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-purple-700">{activeService.memberCount ?? 0}</p>
-                <p className="text-xs text-gray-500 font-semibold uppercase mt-0.5">Members</p>
+            {(activeService.totalCount ?? 0) > 0 && (
+              <div className="flex items-center gap-8 flex-wrap">
+                {(activeService.memberCount ?? 0) > 0 && (
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-purple-700">{activeService.memberCount}</p>
+                    <p className="text-xs text-gray-500 font-semibold uppercase mt-0.5">Members</p>
+                  </div>
+                )}
+                {(activeService.childrenCount ?? 0) > 0 && (
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-pink-600">{activeService.childrenCount}</p>
+                    <p className="text-xs text-gray-500 font-semibold uppercase mt-0.5">Children</p>
+                  </div>
+                )}
+                {(activeService.teensCount ?? 0) > 0 && (
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-blue-600">{activeService.teensCount}</p>
+                    <p className="text-xs text-gray-500 font-semibold uppercase mt-0.5">Teens</p>
+                  </div>
+                )}
+                {(activeService.firstTimerCount ?? 0) > 0 && (
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-green-600">{activeService.firstTimerCount}</p>
+                    <p className="text-xs text-gray-500 font-semibold uppercase mt-0.5">First Timers</p>
+                  </div>
+                )}
               </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-pink-600">{activeService.childrenCount ?? 0}</p>
-                <p className="text-xs text-gray-500 font-semibold uppercase mt-0.5">Children</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-blue-600">{activeService.teensCount ?? 0}</p>
-                <p className="text-xs text-gray-500 font-semibold uppercase mt-0.5">Teens</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-green-600">{activeService.firstTimerCount ?? 0}</p>
-                <p className="text-xs text-gray-500 font-semibold uppercase mt-0.5">First Timers</p>
-              </div>
-            </div>
+            )}
             {!isViewOnly && (
               <button onClick={() => setView("register")}
                 className="w-20 h-20 rounded-full bg-green-500 hover:bg-green-600 active:scale-95 text-white font-bold shadow-xl flex flex-col items-center justify-center transition-all">

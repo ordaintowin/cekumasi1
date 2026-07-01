@@ -1,7 +1,11 @@
 import type { Request, Response, NextFunction } from "express";
 import { db } from "@workspace/db";
-import { usersTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { usersTable, teensTable } from "@workspace/db";
+import { eq, and } from "drizzle-orm";
+import jwt from "jsonwebtoken";
+
+const JWT_SECRET = process.env.SESSION_SECRET;
+if (!JWT_SECRET) throw new Error("SESSION_SECRET environment variable must be set");
 
 export async function authenticateToken(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers["authorization"];
@@ -11,7 +15,29 @@ export async function authenticateToken(req: Request, res: Response, next: NextF
   }
 
   try {
-    const payload = JSON.parse(Buffer.from(token, "base64").toString());
+    const payload = jwt.verify(token, JWT_SECRET!) as { userId: number };
+
+    // Teen user — encoded as negative userId (-teenId)
+    if (payload.userId < 0) {
+      const teenId = -payload.userId;
+      const teen = await db.select().from(teensTable)
+        .where(and(eq(teensTable.id, teenId), eq(teensTable.isArchived, false))).limit(1);
+      if (!teen.length) {
+        return res.status(401).json({ error: "Invalid or expired token" });
+      }
+      (req as any).user = {
+        id: payload.userId,
+        username: teen[0].membershipId ?? "",
+        passwordHash: "",
+        roleLevel: 5,
+        roleSubtype: "teen",
+        memberId: null,
+        teenId: teen[0].id,
+        isActive: true,
+      };
+      return next();
+    }
+
     const user = await db.select().from(usersTable).where(eq(usersTable.id, payload.userId)).limit(1);
     if (!user.length || !user[0].isActive) {
       return res.status(401).json({ error: "Invalid or expired token" });
