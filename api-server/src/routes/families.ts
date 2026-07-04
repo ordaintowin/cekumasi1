@@ -17,12 +17,20 @@ async function getMemberName(id: number | null | undefined): Promise<string | nu
   return m.length ? fmt(m[0]) : null;
 }
 
+async function getMemberLastName(id: number | null | undefined): Promise<string | null> {
+  if (!id) return null;
+  const m = await db.select({ lastName: membersTable.lastName }).from(membersTable).where(eq(membersTable.id, id)).limit(1);
+  return m.length ? m[0].lastName : null;
+}
+
 async function getFamilyDetail(fam: any) {
   const fatherName = await getMemberName(fam.headId);
   const motherName = await getMemberName(fam.spouseId);
 
-  const surname =
-    fatherName?.split(" ").pop() ?? motherName?.split(" ").pop() ?? "Unknown";
+  const fatherLastName = await getMemberLastName(fam.headId);
+  const motherLastName = await getMemberLastName(fam.spouseId);
+
+  const surname = fatherLastName ?? motherLastName ?? "Unknown";
 
   const fc = await db
     .select()

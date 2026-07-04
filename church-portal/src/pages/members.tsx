@@ -168,9 +168,10 @@ function MemberForm({ onSubmit, loading, cells, seniorCells, initialValues, isEd
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const normName = (s: string) => s.trim().replace(/\s+/g, " ");
     const payload: any = {
       title: (form.title && form.title !== "none") ? form.title : null,
-      firstName: form.firstName, lastName: form.lastName, gender: form.gender,
+      firstName: normName(form.firstName), lastName: normName(form.lastName), gender: form.gender,
       phone1: form.phone1, phone2: form.phone2 || null, email: form.email || null,
       occupation: form.occupation, residentialAddress: form.residentialAddress,
       emergencyContact: form.emergencyContact, memberType: form.memberType,

@@ -179,10 +179,10 @@ export default function Layout({ children }: { children: ReactNode }) {
   const isRegistration = isLevel3 && sub === "registration";
 
   const showHome        = isLevel4 || isLevel5;
-  const showDashboard   = isLevel1;
+  const showDashboard   = isLevel1 || isPFCC;
   const showMembers     = isLevel1 || isPFCC || isLevel4;
   const showFellowship  = isLevel1 || isPFCC;
-  const showFamilies    = isLevel1 || isPCD;
+  const showFamilies    = isLevel1 || isPCD || isPFCC;
   const showChildren    = isLevel1 || isPFCC || isChildren;
   const showTeens       = isLevel1 || isPFCC || isChildren;
   const showDepartments = isLevel1 || isPCD || isLevel4 || isLevel5;

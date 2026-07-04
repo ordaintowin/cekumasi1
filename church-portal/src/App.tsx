@@ -39,7 +39,7 @@ const queryClient = new QueryClient();
 // Pages each role level/subtype may access
 const ACCESS_MAP: Record<string, string[]> = {
   "2":              ["/finance", "/reports", "/online-portal", "/my-notifications"],
-  "3/pfcc":         ["/members", "/fellowship", "/children", "/teens", "/attendance", "/first-timers", "/reports", "/my-notifications"],
+  "3/pfcc":         ["/", "/members", "/fellowship", "/families", "/children", "/teens", "/attendance", "/first-timers", "/reports", "/my-notifications"],
   "3/first_timers": ["/first-timers", "/attendance", "/reports", "/my-notifications"],
   "3/pcd":          ["/families", "/departments", "/attendance", "/my-notifications"],
   "3/media":        ["/online-portal", "/attendance", "/notifications", "/reports", "/my-notifications"],
@@ -67,7 +67,7 @@ function getHomeRoute(user: any): string {
   if (level === 1) return "/";
   if (level === 2) return "/finance";
   if (level === 3) {
-    if (sub === "pfcc")         return "/fellowship";
+    if (sub === "pfcc")         return "/";
     if (sub === "first_timers") return "/first-timers";
     if (sub === "pcd")          return "/families";
     if (sub === "media")        return "/online-portal";

@@ -70,9 +70,10 @@ function ChildDialog({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const normName = (s: string) => s.trim().replace(/\s+/g, " ");
     onSave({
-      firstName: form.firstName,
-      lastName: form.lastName,
+      firstName: normName(form.firstName),
+      lastName: normName(form.lastName),
       class: form.class || undefined,
       gender: form.gender || undefined,
       dateOfBirth: form.dateOfBirth || undefined,

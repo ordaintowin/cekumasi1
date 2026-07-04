@@ -369,6 +369,7 @@ export default function PublicRegister() {
   const handleSubmit = async () => {
     setSubmitting(true);
     setError(null);
+    const normName = (s: string) => s.trim().replace(/\s+/g, " ");
     try {
       let body: any;
       let url: string;
@@ -377,8 +378,8 @@ export default function PublicRegister() {
         url = "/api/public/register/member";
         body = {
           title: (memberForm.title && memberForm.title !== "none") ? memberForm.title : null,
-          firstName: memberForm.firstName,
-          lastName: memberForm.lastName,
+          firstName: normName(memberForm.firstName),
+          lastName: normName(memberForm.lastName),
           gender: memberForm.gender,
           memberType: memberForm.memberType,
           phone1: memberForm.phone1,
@@ -400,8 +401,8 @@ export default function PublicRegister() {
       } else if (regType === "child") {
         url = "/api/public/register/child";
         body = {
-          firstName: childForm.firstName,
-          lastName: childForm.lastName,
+          firstName: normName(childForm.firstName),
+          lastName: normName(childForm.lastName),
           class: childForm.class || undefined,
           gender: childForm.gender || undefined,
           dateOfBirth: childForm.dateOfBirth || undefined,
@@ -411,8 +412,8 @@ export default function PublicRegister() {
       } else {
         url = "/api/public/register/teen";
         body = {
-          firstName: teenForm.firstName,
-          lastName: teenForm.lastName,
+          firstName: normName(teenForm.firstName),
+          lastName: normName(teenForm.lastName),
           gender: teenForm.gender || undefined,
           phone1: teenForm.phone1 || undefined,
           phone2: teenForm.phone2 || undefined,

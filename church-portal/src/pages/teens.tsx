@@ -180,9 +180,10 @@ function EditTeenDialog({ teen, onClose, saving, onSave }: {
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
+    const normName = (s: string) => s.trim().replace(/\s+/g, " ");
     onSave({
-      firstName: form.firstName,
-      lastName: form.lastName,
+      firstName: normName(form.firstName),
+      lastName: normName(form.lastName),
       phone1: form.phone1 || undefined,
       phone2: form.phone2 || undefined,
       residentialAddress: form.placeOfResidence || undefined,
@@ -326,9 +327,10 @@ export default function Teens() {
 
   const handleAddManual = (e: React.FormEvent) => {
     e.preventDefault();
+    const normName = (s: string) => s.trim().replace(/\s+/g, " ");
     createTeen.mutate({
       data: {
-        firstName: form.firstName, lastName: form.lastName,
+        firstName: normName(form.firstName), lastName: normName(form.lastName),
         gender: form.gender || undefined,
         phone1: form.phone1 || undefined, phone2: form.phone2 || undefined,
         residentialAddress: form.placeOfResidence || undefined,
