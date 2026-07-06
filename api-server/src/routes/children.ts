@@ -353,8 +353,9 @@ router.delete("/children/:id", async (req, res) => {
 
 // Parent summary for a child — name, dob, last 20 services attended, last 20 givings
 router.get("/children/:id/parent-summary", async (req, res) => {
+  try {
   const id = parseInt(req.params.id);
-  const child = await db.select().from(childrenTable).where(and(eq(childrenTable.id, id), eq(childrenTable.isArchived, false))).limit(1);
+  const child = await db.select().from(childrenTable).where(eq(childrenTable.id, id)).limit(1);
   if (!child.length) return res.status(404).json({ error: "Child not found" });
 
   const attendanceRows = await db
@@ -386,12 +387,9 @@ router.get("/children/:id/parent-summary", async (req, res) => {
     .orderBy(desc(givingsTable.date))
     .limit(20);
 
-  const typeIds = [...new Set(givingRows.map(g => g.givingTypeId).filter(Boolean))];
-  let typesMap: Record<number, string> = {};
-  if (typeIds.length) {
-    const gts = await db.select().from(givingTypesTable).where(sql`${givingTypesTable.id} = ANY(ARRAY[${sql.join(typeIds.map(id => sql`${id}`), sql`, `)}])`);
-    gts.forEach(gt => { typesMap[gt.id] = gt.name; });
-  }
+  const allGivingTypes = await db.select({ id: givingTypesTable.id, name: givingTypesTable.name }).from(givingTypesTable);
+  const typesMap: Record<number, string> = {};
+  allGivingTypes.forEach(gt => { typesMap[gt.id] = gt.name; });
 
   const givings = givingRows.map(g => ({
     id: g.id, date: g.date, amount: g.amount,
@@ -400,12 +398,16 @@ router.get("/children/:id/parent-summary", async (req, res) => {
   }));
 
   res.json({ ...child[0], attendance, givings });
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message ?? "Server error loading child summary" });
+  }
 });
 
 // Parent summary for a teen
 router.get("/teens/:id/parent-summary", async (req, res) => {
+  try {
   const id = parseInt(req.params.id);
-  const teen = await db.select().from(teensTable).where(and(eq(teensTable.id, id), eq(teensTable.isArchived, false))).limit(1);
+  const teen = await db.select().from(teensTable).where(eq(teensTable.id, id)).limit(1);
   if (!teen.length) return res.status(404).json({ error: "Teen not found" });
 
   const attendanceRows = await db
@@ -456,12 +458,9 @@ router.get("/teens/:id/parent-summary", async (req, res) => {
     .sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""))
     .slice(0, 50);
 
-  const typeIds = [...new Set(allGivingRows.map(g => g.givingTypeId).filter((x): x is number => x != null))];
-  let typesMap: Record<number, string> = {};
-  if (typeIds.length) {
-    const gts = await db.select().from(givingTypesTable).where(inArray(givingTypesTable.id, typeIds));
-    gts.forEach(gt => { typesMap[gt.id] = gt.name; });
-  }
+  const allGivingTypes = await db.select({ id: givingTypesTable.id, name: givingTypesTable.name }).from(givingTypesTable);
+  const typesMap: Record<number, string> = {};
+  allGivingTypes.forEach(gt => { typesMap[gt.id] = gt.name; });
 
   const givings = allGivingRows.map(g => ({
     id: g.id, date: g.date, amount: g.amount,
@@ -471,6 +470,9 @@ router.get("/teens/:id/parent-summary", async (req, res) => {
   }));
 
   res.json({ ...teen[0], attendance, givings });
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message ?? "Server error loading teen summary" });
+  }
 });
 
 // Parent can update only name and birthday of their child

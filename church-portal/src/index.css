@@ -187,3 +187,6 @@
   background: linear-gradient(90deg, transparent, #a855f7, transparent);
   animation: scan-line 2s ease-in-out infinite;
 }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

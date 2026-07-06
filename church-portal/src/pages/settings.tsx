@@ -429,8 +429,9 @@ export default function Settings() {
           {isLoading ? (
             <div className="space-y-2">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}</div>
           ) : (
+            <div className="max-h-[480px] overflow-y-auto rounded border">
             <Table>
-              <TableHeader className="bg-gray-50">
+              <TableHeader className="bg-gray-50 sticky top-0 z-10">
                 <TableRow>
                   <TableHead>Username</TableHead>
                   <TableHead>Role</TableHead>
@@ -476,6 +477,7 @@ export default function Settings() {
                 ))}
               </TableBody>
             </Table>
+            </div>
           )}
         </CardContent>
       </Card>

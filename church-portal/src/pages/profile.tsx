@@ -788,6 +788,8 @@ export default function Profile() {
     occupation: "",
     residentialAddress: "",
     isBaptized: false,
+    dateOfBirth: "",
+    emergencyContact: "",
   });
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
@@ -813,6 +815,107 @@ export default function Profile() {
       if (res.ok) setChildGivingsData(await res.json());
     } finally {
       setChildGivingsLoading(false);
+    }
+  };
+
+  const [childrenTabLoaded, setChildrenTabLoaded] = useState(false);
+  const [childrenTabLoading, setChildrenTabLoading] = useState(false);
+  const [childrenTabList, setChildrenTabList] = useState<any[]>([]);
+  const [childDetailOpen, setChildDetailOpen] = useState(false);
+  const [childDetailData, setChildDetailData] = useState<any | null>(null);
+  const [childDetailLoading, setChildDetailLoading] = useState(false);
+  const [childDetailError, setChildDetailError] = useState<string | null>(null);
+  const [childEditOpen, setChildEditOpen] = useState(false);
+  const [childEditSaving, setChildEditSaving] = useState(false);
+  const [childEditForm, setChildEditForm] = useState({ firstName: "", lastName: "", dateOfBirth: "", phone1: "", phone2: "" });
+
+  const loadChildrenTab = async () => {
+    if (!user?.memberId) return;
+    setChildrenTabLoading(true);
+    try {
+      const res = await fetch(`/api/members/${user.memberId}/dependents-givings`, {
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      if (res.ok) {
+        const d = await res.json();
+        setChildrenTabList(d.dependents ?? []);
+      }
+    } finally {
+      setChildrenTabLoading(false);
+      setChildrenTabLoaded(true);
+    }
+  };
+
+  const openChildDetail = async (dep: any) => {
+    setChildDetailOpen(true);
+    setChildDetailData(null);
+    setChildDetailError(null);
+    setChildDetailLoading(true);
+    setChildEditOpen(false);
+    try {
+      const url = dep.stage === "teen"
+        ? `/api/teens/${dep.id}/parent-summary`
+        : `/api/children/${dep.id}/parent-summary`;
+      const res = await fetch(url, { headers: { Authorization: `Bearer ${getToken()}` } });
+      const d = await res.json();
+      if (res.ok) {
+        setChildDetailData({ ...d, _stage: dep.stage });
+      } else {
+        setChildDetailError(d?.error ?? "Failed to load details");
+      }
+    } catch {
+      setChildDetailError("Could not connect. Please try again.");
+    } finally {
+      setChildDetailLoading(false);
+    }
+  };
+
+  const openChildEdit = () => {
+    if (!childDetailData) return;
+    setChildEditForm({
+      firstName: childDetailData.firstName ?? "",
+      lastName: childDetailData.lastName ?? "",
+      dateOfBirth: childDetailData.dateOfBirth ?? "",
+      phone1: childDetailData.phone1 ?? "",
+      phone2: childDetailData.phone2 ?? "",
+    });
+    setChildEditOpen(true);
+  };
+
+  const handleSaveChildEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!childDetailData) return;
+    setChildEditSaving(true);
+    try {
+      const isTeen = childDetailData._stage === "teen";
+      const url = isTeen
+        ? `/api/teens/${childDetailData.id}/basic-info`
+        : `/api/children/${childDetailData.id}/basic-info`;
+      const body: any = {
+        firstName: childEditForm.firstName.trim(),
+        lastName: childEditForm.lastName.trim(),
+        dateOfBirth: childEditForm.dateOfBirth || null,
+      };
+      if (isTeen) {
+        body.phone1 = childEditForm.phone1.trim();
+        body.phone2 = childEditForm.phone2.trim() || null;
+      }
+      const res = await fetch(url, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${getToken()}` },
+        body: JSON.stringify(body),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error);
+      toast({ title: "Updated", description: "Changes saved successfully." });
+      setChildEditOpen(false);
+      setChildDetailData((prev: any) => ({ ...prev, ...d }));
+      setChildrenTabLoaded(false);
+      loadChildrenTab();
+    } catch (err: any) {
+      toast({ title: "Error", description: err?.message || "Failed to save", variant: "destructive" });
+    } finally {
+      setChildEditSaving(false);
     }
   };
 
@@ -925,6 +1028,8 @@ export default function Profile() {
       occupation: m?.occupation ?? "",
       residentialAddress: m?.residentialAddress ?? "",
       isBaptized: m?.isBaptized ?? false,
+      dateOfBirth: m?.dateOfBirth ?? "",
+      emergencyContact: m?.emergencyContact ?? "",
     });
     setEditOpen(true);
   };
@@ -944,6 +1049,8 @@ export default function Profile() {
           occupation: editForm.occupation || "",
           residentialAddress: editForm.residentialAddress || "",
           isBaptized: editForm.isBaptized,
+          dateOfBirth: editForm.dateOfBirth || null,
+          emergencyContact: editForm.emergencyContact || null,
         }),
       });
       if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
@@ -1165,6 +1272,28 @@ export default function Profile() {
               </div>
             </div>
 
+            {/* ── Personal ── */}
+            <div className="space-y-3">
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Personal</p>
+              <div className="space-y-1.5">
+                <Label>Date of Birth</Label>
+                <Input
+                  type="date"
+                  value={editForm.dateOfBirth ? editForm.dateOfBirth.split("T")[0] : ""}
+                  onChange={e => setEditForm(f => ({ ...f, dateOfBirth: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Emergency Contact</Label>
+                <Input
+                  inputMode="numeric"
+                  value={editForm.emergencyContact}
+                  onChange={e => setEditForm(f => ({ ...f, emergencyContact: e.target.value.replace(/\D/g, "") }))}
+                  placeholder="Emergency phone number"
+                />
+              </div>
+            </div>
+
             {/* ── Work & Residence ── */}
             <div className="space-y-3">
               <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Work &amp; Residence</p>
@@ -1202,36 +1331,35 @@ export default function Profile() {
         </DialogContent>
       </Dialog>
 
-      <Button
-        variant="outline"
-        className="w-full border-green-200 text-green-700 hover:bg-green-50 gap-2 justify-start font-medium"
-        onClick={openChildGivings}
-      >
-        <Baby className="w-4 h-4" /> Children's Givings
-      </Button>
-
-      <Tabs defaultValue="info">
-        <TabsList className="bg-purple-50 w-full">
+      <Tabs defaultValue="info" onValueChange={(v) => { if (v === "children" && !childrenTabLoaded) loadChildrenTab(); }}>
+        <TabsList className="bg-purple-50 w-full flex overflow-x-auto no-scrollbar rounded-lg p-1 gap-0.5">
           <TabsTrigger
             value="info"
-            className="flex-1 gap-1.5 data-[state=active]:bg-purple-700 data-[state=active]:text-white"
+            className="flex-1 min-w-0 text-xs gap-1 px-2 py-1.5 data-[state=active]:bg-purple-700 data-[state=active]:text-white"
           >
-            <Info className="w-4 h-4" />
-            Info
+            <Info className="w-3.5 h-3.5 flex-shrink-0" />
+            <span className="truncate">Info</span>
           </TabsTrigger>
           <TabsTrigger
             value="attendance"
-            className="flex-1 gap-1.5 data-[state=active]:bg-purple-700 data-[state=active]:text-white"
+            className="flex-1 min-w-0 text-xs gap-1 px-2 py-1.5 data-[state=active]:bg-purple-700 data-[state=active]:text-white"
           >
-            <CheckCircle2 className="w-4 h-4" />
-            Attendance
+            <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" />
+            <span className="truncate">Attend.</span>
           </TabsTrigger>
           <TabsTrigger
             value="givings"
-            className="flex-1 gap-1.5 data-[state=active]:bg-purple-700 data-[state=active]:text-white"
+            className="flex-1 min-w-0 text-xs gap-1 px-2 py-1.5 data-[state=active]:bg-purple-700 data-[state=active]:text-white"
           >
-            <Banknote className="w-4 h-4" />
-            Givings
+            <Banknote className="w-3.5 h-3.5 flex-shrink-0" />
+            <span className="truncate">Givings</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="children"
+            className="flex-1 min-w-0 text-xs gap-1 px-2 py-1.5 data-[state=active]:bg-purple-700 data-[state=active]:text-white"
+          >
+            <Baby className="w-3.5 h-3.5 flex-shrink-0" />
+            <span className="truncate">Children</span>
           </TabsTrigger>
         </TabsList>
 
@@ -1291,7 +1419,174 @@ export default function Profile() {
         <TabsContent value="givings" className="pt-4">
           <GivingsTab memberId={user.memberId!} />
         </TabsContent>
+
+        <TabsContent value="children" className="pt-4">
+          {childrenTabLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}
+            </div>
+          ) : childrenTabList.length === 0 ? (
+            <div className="text-center py-14 border rounded-xl bg-gray-50 text-gray-400">
+              <Baby className="w-10 h-10 mx-auto mb-3 opacity-30" />
+              <p className="font-medium text-gray-500">No children or teens linked</p>
+              <p className="text-sm mt-1">Ask an admin to link your children to your profile</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {childrenTabList.map((dep: any) => (
+                <div
+                  key={`${dep.stage}-${dep.id}`}
+                  className="flex items-center gap-3 p-3.5 rounded-xl border border-gray-100 bg-white hover:border-purple-100 hover:bg-purple-50/20 transition-colors cursor-pointer"
+                  onClick={() => openChildDetail(dep)}
+                >
+                  <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${dep.stage === "teen" ? "bg-violet-100" : "bg-green-100"}`}>
+                    {dep.stage === "teen"
+                      ? <Smile className="w-5 h-5 text-violet-600" />
+                      : <Baby className="w-5 h-5 text-green-600" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-gray-900 text-sm">{dep.name}</p>
+                    <p className="text-xs text-gray-400 capitalize">{dep.stage === "teen" ? "Teens" : "Children's Church"}</p>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
+                </div>
+              ))}
+            </div>
+          )}
+        </TabsContent>
       </Tabs>
+
+      {/* Child detail dialog */}
+      <Dialog open={childDetailOpen} onOpenChange={(o) => { setChildDetailOpen(o); if (!o) { setChildDetailData(null); setChildEditOpen(false); } }}>
+        <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {childDetailData?._stage === "teen"
+                ? <Smile className="w-4 h-4 text-violet-600" />
+                : <Baby className="w-4 h-4 text-green-600" />}
+              {childDetailData ? `${childDetailData.firstName} ${childDetailData.lastName}` : "Loading…"}
+            </DialogTitle>
+          </DialogHeader>
+
+          {childDetailLoading ? (
+            <div className="space-y-3 pt-2">
+              {[1, 2, 3].map(i => <Skeleton key={i} className="h-14 w-full rounded-xl" />)}
+            </div>
+          ) : childDetailError ? (
+            <div className="text-center py-10 text-gray-400">
+              <Baby className="w-8 h-8 mx-auto mb-2 opacity-30" />
+              <p className="text-sm font-medium text-gray-500">Could not load details</p>
+              <p className="text-xs mt-1 text-red-400">{childDetailError}</p>
+            </div>
+          ) : childDetailData ? (
+            <div className="space-y-4 pt-1">
+              <div className="space-y-2 text-sm">
+                {childDetailData.dateOfBirth && (
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Calendar className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                    <span>{fmt(childDetailData.dateOfBirth, { day: "numeric", month: "long", year: "numeric" })}</span>
+                  </div>
+                )}
+                {childDetailData.phone1 && (
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Phone className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                    <span>{childDetailData.phone1}{childDetailData.phone2 ? ` / ${childDetailData.phone2}` : ""}</span>
+                  </div>
+                )}
+                {childDetailData.membershipId && (
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <User className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                    <span className="font-mono text-xs">{childDetailData.membershipId}</span>
+                  </div>
+                )}
+                {childDetailData.class && (
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Info className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                    <span>Class: {childDetailData.class}</span>
+                  </div>
+                )}
+              </div>
+
+              {!childEditOpen && (
+                <Button size="sm" variant="outline" className="gap-1.5 border-purple-200 text-purple-700 hover:bg-purple-50" onClick={openChildEdit}>
+                  <Edit2 className="w-3.5 h-3.5" /> Edit Info
+                </Button>
+              )}
+
+              {childEditOpen && (
+                <form onSubmit={handleSaveChildEdit} className="space-y-3 border-t pt-4">
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Edit Info</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">First Name</Label>
+                      <Input value={childEditForm.firstName} onChange={e => setChildEditForm(f => ({ ...f, firstName: e.target.value.replace(/[^a-zA-Z\s'-]/g, "") }))} required />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Last Name</Label>
+                      <Input value={childEditForm.lastName} onChange={e => setChildEditForm(f => ({ ...f, lastName: e.target.value.replace(/[^a-zA-Z\s'-]/g, "") }))} required />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Date of Birth</Label>
+                    <Input type="date" value={childEditForm.dateOfBirth ? childEditForm.dateOfBirth.split("T")[0] : ""} onChange={e => setChildEditForm(f => ({ ...f, dateOfBirth: e.target.value }))} />
+                  </div>
+                  {childDetailData._stage === "teen" && (
+                    <>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Primary Phone</Label>
+                        <Input inputMode="numeric" value={childEditForm.phone1} onChange={e => setChildEditForm(f => ({ ...f, phone1: e.target.value.replace(/\D/g, "") }))} placeholder="0XX XXX XXXX" />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">Secondary Phone</Label>
+                        <Input inputMode="numeric" value={childEditForm.phone2} onChange={e => setChildEditForm(f => ({ ...f, phone2: e.target.value.replace(/\D/g, "") }))} placeholder="Optional" />
+                      </div>
+                    </>
+                  )}
+                  <div className="flex gap-2 pt-1">
+                    <Button type="button" size="sm" variant="outline" className="flex-1" onClick={() => setChildEditOpen(false)}>Cancel</Button>
+                    <Button type="submit" size="sm" className="flex-1 bg-purple-700 hover:bg-purple-800 text-white" disabled={childEditSaving}>
+                      {childEditSaving ? "Saving…" : "Save"}
+                    </Button>
+                  </div>
+                </form>
+              )}
+
+              {/* Recent attendance */}
+              {(childDetailData.attendance ?? []).length > 0 && (
+                <div className="border-t pt-3">
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Recent Attendance</p>
+                  <div className="space-y-1.5">
+                    {(childDetailData.attendance ?? []).slice(0, 5).map((a: any, i: number) => (
+                      <div key={i} className="flex items-center gap-2 text-xs text-gray-600">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-purple-400 flex-shrink-0" />
+                        <span className="flex-1">{a.serviceName ?? "Service"}</span>
+                        <span className="text-gray-400">{a.serviceDate ? fmt(a.serviceDate) : ""}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Recent givings */}
+              {(childDetailData.givings ?? []).length > 0 && (
+                <div className="border-t pt-3">
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Recent Givings</p>
+                  <div className="space-y-1.5">
+                    {(childDetailData.givings ?? []).slice(0, 5).map((g: any, i: number) => (
+                      <div key={i} className="flex items-center gap-2 text-xs">
+                        <Banknote className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                        <span className="flex-1 text-gray-700">{g.givingType}</span>
+                        <span className="text-gray-400">{g.date ? fmt(g.date) : ""}</span>
+                        <span className="font-semibold text-emerald-700">GHS {Number(g.amount).toLocaleString("en-GH", { minimumFractionDigits: 2 })}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
 
       {/* Photo enlarged view */}
       {photoEnlarged && m?.profilePhoto && (

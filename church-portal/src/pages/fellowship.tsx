@@ -1193,24 +1193,28 @@ export default function Fellowship() {
             {totalPcfs} PCF{totalPcfs !== 1 ? "s" : ""} · {totalSCs} Senior Cells · {totalCells} Cells · {totalMembers} members
           </p>
         </div>
-        <div className="flex gap-2 flex-wrap">
-          <Button size="sm" variant="outline" className="border-green-300 text-green-700 hover:bg-green-50"
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-1.5 w-full sm:w-auto">
+          <Button size="sm" variant="outline" className="border-green-300 text-green-700 hover:bg-green-50 text-xs justify-center"
             onClick={() => exportFellowshipToExcel(data, toast)}>
-            <Download className="w-3.5 h-3.5 mr-1" /> Export Excel
+            <Download className="w-3.5 h-3.5 mr-1 shrink-0" />
+            <span className="sm:hidden">Export</span>
+            <span className="hidden sm:inline">Export Excel</span>
           </Button>
           {canManage && (
             <>
-              <Button size="sm" variant="outline" className="border-yellow-300 text-yellow-700 hover:bg-yellow-50"
+              <Button size="sm" variant="outline" className="border-yellow-300 text-yellow-700 hover:bg-yellow-50 text-xs justify-center"
                 onClick={() => { setEditTarget(undefined); setDialogMode("cell"); }}>
-                <Plus className="w-3.5 h-3.5 mr-1" /> Cell
+                <Plus className="w-3.5 h-3.5 mr-1 shrink-0" /> Cell
               </Button>
-              <Button size="sm" variant="outline" className="border-blue-300 text-blue-700 hover:bg-blue-50"
+              <Button size="sm" variant="outline" className="border-blue-300 text-blue-700 hover:bg-blue-50 text-xs justify-center"
                 onClick={() => { setEditTarget(undefined); setDialogMode("senior_cell"); }}>
-                <Plus className="w-3.5 h-3.5 mr-1" /> Senior Cell
+                <Plus className="w-3.5 h-3.5 mr-1 shrink-0" />
+                <span className="sm:hidden">Sr. Cell</span>
+                <span className="hidden sm:inline">Senior Cell</span>
               </Button>
-              <Button size="sm" className="bg-purple-700 hover:bg-purple-800 text-white"
+              <Button size="sm" className="bg-purple-700 hover:bg-purple-800 text-white text-xs justify-center"
                 onClick={() => { setEditTarget(undefined); setDialogMode("pcf"); }}>
-                <Plus className="w-3.5 h-3.5 mr-1" /> PCF
+                <Plus className="w-3.5 h-3.5 mr-1 shrink-0" /> PCF
               </Button>
             </>
           )}
