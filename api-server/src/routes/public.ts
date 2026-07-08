@@ -6,7 +6,7 @@ import {
   childrenTable, teensTable,
   familiesTable, familyChildrenTable,
 } from "@workspace/db";
-import { eq, and, ilike, or, ne, sql } from "drizzle-orm";
+import { eq, and, ilike, or, ne, sql, inArray } from "drizzle-orm";
 import crypto from "crypto";
 
 const router = Router();
@@ -156,6 +156,74 @@ router.get("/public/cells", async (_req, res) => {
     res.json(enriched);
   } catch {
     res.status(500).json({ error: "Failed to load cells" });
+  }
+});
+
+// GET /api/public/children-search?q=...
+router.get("/public/children-search", async (req, res) => {
+  const q = String(req.query.q || "").trim();
+  if (q.length < 2) return res.json([]);
+  try {
+    const results = await db.select({
+      id: childrenTable.id,
+      firstName: childrenTable.firstName,
+      lastName: childrenTable.lastName,
+      parentId: childrenTable.parentId,
+      parentExternal: childrenTable.parentExternal,
+    }).from(childrenTable)
+      .where(and(
+        eq(childrenTable.isArchived, false),
+        or(ilike(childrenTable.firstName, `%${q}%`), ilike(childrenTable.lastName, `%${q}%`))
+      ))
+      .limit(20);
+
+    const parentIds = results.map(r => r.parentId).filter(Boolean) as number[];
+    const parents = parentIds.length
+      ? await db.select({ id: membersTable.id, firstName: membersTable.firstName, lastName: membersTable.lastName })
+          .from(membersTable).where(inArray(membersTable.id, parentIds))
+      : [];
+    const parentMap = new Map(parents.map(p => [p.id, `${p.firstName} ${p.lastName}`]));
+
+    res.json(results.map(r => ({
+      ...r,
+      parentName: r.parentId ? (parentMap.get(r.parentId) ?? null) : null,
+    })));
+  } catch {
+    res.json([]);
+  }
+});
+
+// GET /api/public/teens-search?q=...
+router.get("/public/teens-search", async (req, res) => {
+  const q = String(req.query.q || "").trim();
+  if (q.length < 2) return res.json([]);
+  try {
+    const results = await db.select({
+      id: teensTable.id,
+      firstName: teensTable.firstName,
+      lastName: teensTable.lastName,
+      parentId: teensTable.parentId,
+      parentExternal: teensTable.parentExternal,
+    }).from(teensTable)
+      .where(and(
+        eq(teensTable.isArchived, false),
+        or(ilike(teensTable.firstName, `%${q}%`), ilike(teensTable.lastName, `%${q}%`))
+      ))
+      .limit(20);
+
+    const parentIds = results.map(r => r.parentId).filter(Boolean) as number[];
+    const parents = parentIds.length
+      ? await db.select({ id: membersTable.id, firstName: membersTable.firstName, lastName: membersTable.lastName })
+          .from(membersTable).where(inArray(membersTable.id, parentIds))
+      : [];
+    const parentMap = new Map(parents.map(p => [p.id, `${p.firstName} ${p.lastName}`]));
+
+    res.json(results.map(r => ({
+      ...r,
+      parentName: r.parentId ? (parentMap.get(r.parentId) ?? null) : null,
+    })));
+  } catch {
+    res.json([]);
   }
 });
 
