@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   useListTeens, getListTeensQueryKey,
   useCreateTeen,
@@ -36,12 +36,29 @@ type TeenFormData = {
 function TeenFormFields({
   form, setForm, selectedParent, setSelectedParent,
   parentSearch, setParentSearch, useExternalParent, setUseExternalParent,
-  parentExternal, setParentExternal,
+  parentExternal, setParentExternal, isEdit = false,
 }: any) {
   const { data: parentsData } = useListMembers(
     { search: parentSearch, page: 1, limit: 10 },
     { query: { queryKey: [...getListMembersQueryKey({ search: parentSearch }), "tpf"], enabled: parentSearch.length > 1 && !useExternalParent } }
   );
+
+  // Duplicate teen detection
+  const [dupeQuery, setDupeQuery] = useState("");
+  const { data: dupeData } = useListTeens(
+    { search: dupeQuery, page: 1, limit: 20 },
+    { query: { queryKey: [...getListTeensQueryKey({ search: dupeQuery }), "teen-dupecheck"], enabled: dupeQuery.length >= 2 && !isEdit } }
+  );
+  const teenDuplicates = isEdit ? [] : (dupeData?.data ?? []).filter((t: any) =>
+    form.lastName.trim().length >= 2 &&
+    t.firstName.toLowerCase().trim() === form.firstName.toLowerCase().trim() &&
+    t.lastName.toLowerCase().trim() === form.lastName.toLowerCase().trim()
+  );
+  useEffect(() => {
+    if (isEdit || !form.firstName || form.firstName.length < 2) { setDupeQuery(""); return; }
+    const t = setTimeout(() => setDupeQuery(form.firstName), 700);
+    return () => clearTimeout(t);
+  }, [form.firstName, isEdit]);
 
   return (
     <div className="space-y-3">
@@ -55,6 +72,33 @@ function TeenFormFields({
           <Input value={form.lastName} onChange={e => setForm((f: any) => ({ ...f, lastName: e.target.value.replace(/[^a-zA-Z\s'-]/g, "") }))} required />
         </div>
       </div>
+
+      {teenDuplicates.length > 0 && (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 p-3">
+          <p className="text-xs font-semibold text-amber-800 flex items-center gap-1.5 mb-2">
+            <span>⚠</span> A teen with this name is already registered
+          </p>
+          <div className="space-y-1">
+            {teenDuplicates.map((t: any) => {
+              const parentLabel = t.parentName ?? t.parentExternal ?? null;
+              return (
+                <div key={t.id} className="flex items-center gap-2 bg-white rounded-md px-2 py-1.5 border border-amber-200">
+                  <div className="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 text-[10px] font-bold flex-shrink-0">
+                    {t.firstName?.[0]}{t.lastName?.[0]}
+                  </div>
+                  <span className="text-xs font-medium text-gray-800 flex-1">
+                    {t.firstName} {t.lastName}
+                    {parentLabel
+                      ? <span className="text-gray-500 font-normal"> · Parent: {parentLabel}</span>
+                      : <span className="text-gray-400 font-normal"> · No parent linked</span>}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          <p className="text-[11px] text-amber-700 mt-2">Continue only if this is a different person.</p>
+        </div>
+      )}
       <div className="space-y-1.5">
         <Label>Gender</Label>
         <div className="flex gap-2">
@@ -207,7 +251,8 @@ function EditTeenDialog({ teen, onClose, saving, onSave }: {
             selectedParent={selectedParent} setSelectedParent={setSelectedParent}
             parentSearch={parentSearch} setParentSearch={setParentSearch}
             useExternalParent={useExternalParent} setUseExternalParent={setUseExternalParent}
-            parentExternal={parentExternal} setParentExternal={setParentExternal} />
+            parentExternal={parentExternal} setParentExternal={setParentExternal}
+            isEdit={true} />
           <div className="flex gap-2 pt-4">
             <Button type="button" variant="outline" className="flex-1" onClick={onClose}>Cancel</Button>
             <Button type="submit" className="flex-1 bg-purple-700 text-white" disabled={saving}>
