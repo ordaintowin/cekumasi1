@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   useListChildren, getListChildrenQueryKey,
   useCreateChild, useUpdateChild,
@@ -49,6 +49,7 @@ function ChildDialog({
   open: boolean; onOpenChange: (v: boolean) => void;
   initial?: any; onSave: (data: any) => void; saving: boolean; title: string;
 }) {
+  const isEdit = !!initial;
   const [form, setForm] = useState<ChildForm>({
     firstName: initial?.firstName ?? "",
     lastName: initial?.lastName ?? "",
@@ -62,6 +63,23 @@ function ChildDialog({
   );
   const [useExternalParent, setUseExternalParent] = useState(false);
   const [parentExternal, setParentExternal] = useState(initial?.parentExternal ?? "");
+
+  // Duplicate child detection
+  const [dupeQuery, setDupeQuery] = useState("");
+  const { data: dupeData } = useListChildren(
+    { search: dupeQuery, page: 1, limit: 20 },
+    { query: { queryKey: [...getListChildrenQueryKey({ search: dupeQuery }), "child-dupecheck"], enabled: dupeQuery.length >= 2 && !isEdit } }
+  );
+  const childDuplicates = isEdit ? [] : (dupeData?.data ?? []).filter((c: any) =>
+    form.lastName.trim().length >= 2 &&
+    c.firstName.toLowerCase().trim() === form.firstName.toLowerCase().trim() &&
+    c.lastName.toLowerCase().trim() === form.lastName.toLowerCase().trim()
+  );
+  useEffect(() => {
+    if (isEdit || !form.firstName || form.firstName.length < 2) { setDupeQuery(""); return; }
+    const t = setTimeout(() => setDupeQuery(form.firstName), 700);
+    return () => clearTimeout(t);
+  }, [form.firstName, isEdit]);
 
   const { data: parentsData } = useListMembers(
     { search: parentSearch, page: 1, limit: 10 },
@@ -97,6 +115,34 @@ function ChildDialog({
               <Input value={form.lastName} onChange={e => setForm(f => ({ ...f, lastName: e.target.value.replace(/[^a-zA-Z\s'-]/g, "") }))} required />
             </div>
           </div>
+
+          {childDuplicates.length > 0 && (
+            <div className="rounded-lg border border-amber-300 bg-amber-50 p-3">
+              <p className="text-xs font-semibold text-amber-800 flex items-center gap-1.5 mb-2">
+                <span>⚠</span> A child with this name is already registered
+              </p>
+              <div className="space-y-1">
+                {childDuplicates.map((c: any) => {
+                  const parentLabel = c.parentName ?? c.parentExternal ?? null;
+                  return (
+                    <div key={c.id} className="flex items-center gap-2 bg-white rounded-md px-2 py-1.5 border border-amber-200">
+                      <div className="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 text-[10px] font-bold flex-shrink-0">
+                        {c.firstName?.[0]}{c.lastName?.[0]}
+                      </div>
+                      <span className="text-xs font-medium text-gray-800 flex-1">
+                        {c.firstName} {c.lastName}
+                        {parentLabel
+                          ? <span className="text-gray-500 font-normal"> · Parent: {parentLabel}</span>
+                          : <span className="text-gray-400 font-normal"> · No parent linked</span>}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="text-[11px] text-amber-700 mt-2">Continue only if this is a different person.</p>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Class</Label>
