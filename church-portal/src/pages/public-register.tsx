@@ -296,11 +296,13 @@ export default function PublicRegister() {
   const [childSelectedParent, setChildSelectedParent] = useState<any>(null);
   const [childUseExternal, setChildUseExternal] = useState(false);
   const [childParentExternal, setChildParentExternal] = useState("");
+  const [childRawResults, setChildRawResults] = useState<any[]>([]);
 
   const [teenForm, setTeenForm] = useState({ ...EMPTY_TEEN });
   const [teenSelectedParent, setTeenSelectedParent] = useState<any>(null);
   const [teenUseExternal, setTeenUseExternal] = useState(false);
   const [teenParentExternal, setTeenParentExternal] = useState("");
+  const [teenRawResults, setTeenRawResults] = useState<any[]>([]);
 
   const [cells, setCells] = useState<any[]>([]);
   const [cellError, setCellError] = useState(false);
@@ -341,14 +343,52 @@ export default function PublicRegister() {
     return () => clearTimeout(t);
   }, [memberForm.firstName]);
 
+  useEffect(() => {
+    if (!childForm.firstName || childForm.firstName.length < 2) { setChildRawResults([]); return; }
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/public/children-search?q=${encodeURIComponent(childForm.firstName)}`);
+        const data = await res.json();
+        setChildRawResults(Array.isArray(data) ? data : []);
+      } catch { setChildRawResults([]); }
+    }, 700);
+    return () => clearTimeout(t);
+  }, [childForm.firstName]);
+
+  useEffect(() => {
+    if (!teenForm.firstName || teenForm.firstName.length < 2) { setTeenRawResults([]); return; }
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/public/teens-search?q=${encodeURIComponent(teenForm.firstName)}`);
+        const data = await res.json();
+        setTeenRawResults(Array.isArray(data) ? data : []);
+      } catch { setTeenRawResults([]); }
+    }, 700);
+    return () => clearTimeout(t);
+  }, [teenForm.firstName]);
+
+  // Exact-match duplicates (computed from raw search results)
+  const childDupes = childRawResults.filter(c =>
+    childForm.lastName.trim().length >= 2 &&
+    c.firstName.toLowerCase().trim() === childForm.firstName.toLowerCase().trim() &&
+    c.lastName.toLowerCase().trim() === childForm.lastName.toLowerCase().trim()
+  );
+  const teenDupes = teenRawResults.filter(t =>
+    teenForm.lastName.trim().length >= 2 &&
+    t.firstName.toLowerCase().trim() === teenForm.firstName.toLowerCase().trim() &&
+    t.lastName.toLowerCase().trim() === teenForm.lastName.toLowerCase().trim()
+  );
+
   const resetForms = () => {
     setMemberForm({ ...EMPTY_MEMBER });
     setMemberDupes([]);
     setSpouseId(null); setSpouseMember(null);
     setChildForm({ ...EMPTY_CHILD });
     setChildSelectedParent(null); setChildUseExternal(false); setChildParentExternal("");
+    setChildRawResults([]);
     setTeenForm({ ...EMPTY_TEEN });
     setTeenSelectedParent(null); setTeenUseExternal(false); setTeenParentExternal("");
+    setTeenRawResults([]);
     setCellError(false);
   };
 
@@ -680,6 +720,34 @@ export default function PublicRegister() {
                     <Inp label="First Name" value={childForm.firstName} onChange={v => setC("firstName", v)} required lettersOnly />
                     <Inp label="Last Name" value={childForm.lastName} onChange={v => setC("lastName", v)} required lettersOnly />
                   </div>
+
+                  {childDupes.length > 0 && (
+                    <div className="rounded-lg border border-amber-300 bg-amber-50 p-3">
+                      <p className="text-xs font-semibold text-amber-800 flex items-center gap-1.5 mb-2">
+                        <span>⚠</span> A child with this name is already registered
+                      </p>
+                      <div className="space-y-1">
+                        {childDupes.map((c: any) => {
+                          const parentLabel = c.parentName ?? c.parentExternal ?? null;
+                          return (
+                            <div key={c.id} className="flex items-center gap-2 bg-white rounded-md px-2 py-1.5 border border-amber-200">
+                              <div className="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 text-[10px] font-bold flex-shrink-0">
+                                {c.firstName?.[0]}{c.lastName?.[0]}
+                              </div>
+                              <span className="text-xs font-medium text-gray-800 flex-1">
+                                {c.firstName} {c.lastName}
+                                {parentLabel
+                                  ? <span className="text-gray-500 font-normal"> · Parent: {parentLabel}</span>
+                                  : <span className="text-gray-400 font-normal"> · No parent linked</span>}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <p className="text-[11px] text-amber-700 mt-2">Continue only if this is a different person.</p>
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-2 gap-3">
                     <Sel label="Class" value={childForm.class} onChange={v => setC("class", v)}
                       options={CHILD_CLASSES} placeholder="Select class..." />
@@ -711,6 +779,33 @@ export default function PublicRegister() {
                     <Inp label="First Name" value={teenForm.firstName} onChange={v => setT("firstName", v)} required lettersOnly />
                     <Inp label="Last Name" value={teenForm.lastName} onChange={v => setT("lastName", v)} required lettersOnly />
                   </div>
+
+                  {teenDupes.length > 0 && (
+                    <div className="rounded-lg border border-amber-300 bg-amber-50 p-3">
+                      <p className="text-xs font-semibold text-amber-800 flex items-center gap-1.5 mb-2">
+                        <span>⚠</span> A teen with this name is already registered
+                      </p>
+                      <div className="space-y-1">
+                        {teenDupes.map((t: any) => {
+                          const parentLabel = t.parentName ?? t.parentExternal ?? null;
+                          return (
+                            <div key={t.id} className="flex items-center gap-2 bg-white rounded-md px-2 py-1.5 border border-amber-200">
+                              <div className="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 text-[10px] font-bold flex-shrink-0">
+                                {t.firstName?.[0]}{t.lastName?.[0]}
+                              </div>
+                              <span className="text-xs font-medium text-gray-800 flex-1">
+                                {t.firstName} {t.lastName}
+                                {parentLabel
+                                  ? <span className="text-gray-500 font-normal"> · Parent: {parentLabel}</span>
+                                  : <span className="text-gray-400 font-normal"> · No parent linked</span>}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <p className="text-[11px] text-amber-700 mt-2">Continue only if this is a different person.</p>
+                    </div>
+                  )}
 
                   {/* Gender toggle buttons (matching admin) */}
                   <div className="space-y-1.5">
