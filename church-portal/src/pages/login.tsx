@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, MessageCircle, MessageSquare } from "lucide-react";
 
 export default function Login() {
   const { login } = useAuth();
@@ -22,6 +22,7 @@ export default function Login() {
   const [memberId, setMemberId] = useState("");
   const [pin, setPin] = useState("");
   const [forgotOpen, setForgotOpen] = useState(false);
+  const [forgotName, setForgotName] = useState("");
 
   const loginMutation = useLogin({
     mutation: {
@@ -181,22 +182,59 @@ export default function Login() {
         </p>
       </div>
 
-      <Dialog open={forgotOpen} onOpenChange={setForgotOpen}>
+      <Dialog open={forgotOpen} onOpenChange={(open) => { setForgotOpen(open); if (!open) setForgotName(""); }}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Forgot Password / PIN?</DialogTitle>
           </DialogHeader>
-          <div className="space-y-3 text-sm text-gray-600">
-            <p>To reset your password or PIN, please contact your <strong>Super Administrator</strong>.</p>
-            <div className="bg-purple-50 border border-purple-100 rounded-lg p-3 space-y-1.5">
-              <p className="text-xs text-purple-700 font-medium">For adult members:</p>
-              <p className="text-xs text-purple-600">Your admin can reset your 4-digit PIN from the Members page.</p>
-              <p className="text-xs text-purple-700 font-medium mt-1">For teens:</p>
-              <p className="text-xs text-purple-600">Your admin can view and reset your PIN from the Teens Church page.</p>
+          <div className="space-y-4 text-sm text-gray-600">
+            <p>To reset your password or PIN, please enter your full name below and tap a button to send a message.</p>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="forgot-name" className="text-xs font-medium text-gray-700">Your Full Name</Label>
+              <Input
+                id="forgot-name"
+                placeholder="e.g. Kofi Mensah"
+                value={forgotName}
+                onChange={(e) => setForgotName(e.target.value)}
+                className="text-sm"
+              />
             </div>
-            <Button className="w-full bg-purple-700 hover:bg-purple-800 text-white" onClick={() => setForgotOpen(false)}>
-              OK, Got it
-            </Button>
+
+            <div className="space-y-2 pt-1">
+              <Button
+                className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
+                disabled={!forgotName.trim()}
+                onClick={() => {
+                  const msg = encodeURIComponent(`My name is ${forgotName.trim()}, I have forgotten my login details.`);
+                  window.open(`https://wa.me/233261827900?text=${msg}`, "_blank");
+                }}
+              >
+                <MessageCircle className="w-4 h-4" />
+                Send via WhatsApp
+              </Button>
+
+              <Button
+                variant="outline"
+                className="w-full border-purple-300 text-purple-700 hover:bg-purple-50 flex items-center justify-center gap-2"
+                disabled={!forgotName.trim()}
+                onClick={() => {
+                  const msg = encodeURIComponent(`My name is ${forgotName.trim()}, I have forgotten my login details.`);
+                  window.open(`sms:+233553722482?body=${msg}`, "_blank");
+                }}
+              >
+                <MessageSquare className="w-4 h-4" />
+                Send via SMS (no WhatsApp)
+              </Button>
+            </div>
+
+            <button
+              type="button"
+              className="w-full text-xs text-gray-400 hover:text-gray-600 pt-1"
+              onClick={() => { setForgotOpen(false); setForgotName(""); }}
+            >
+              Cancel
+            </button>
           </div>
         </DialogContent>
       </Dialog>
