@@ -206,7 +206,7 @@ export default function Login() {
                 className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
                 disabled={!forgotName.trim()}
                 onClick={() => {
-                  const msg = encodeURIComponent(`Greeting Esteemed, my name is ${forgotName.trim()}, I have forgotten my login details on the church portal. Kindly assist me, thank You.`);
+                  const msg = encodeURIComponent(`Greetings Esteemed, my name is ${forgotName.trim()}, I have forgotten my login details on the church portal. Kindly assist me, thank You.`);
                   window.open(`https://wa.me/233261827900?text=${msg}`, "_blank");
                 }}
               >
@@ -219,7 +219,7 @@ export default function Login() {
                 className="w-full border-purple-300 text-purple-700 hover:bg-purple-50 flex items-center justify-center gap-2"
                 disabled={!forgotName.trim()}
                 onClick={() => {
-                  const msg = encodeURIComponent(`Greeting Esteemed, my name is ${forgotName.trim()}, I have forgotten my login details on the church portal. Kindly assist me, thank You.`);
+                  const msg = encodeURIComponent(`Greetings Esteemed, my name is ${forgotName.trim()}, I have forgotten my login details on the church portal. Kindly assist me, thank You.`);
                   window.open(`sms:+233553722482?body=${msg}`, "_blank");
                 }}
               >
