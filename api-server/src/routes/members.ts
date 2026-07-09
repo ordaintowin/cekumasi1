@@ -388,31 +388,37 @@ router.patch("/:id", async (req, res) => {
 
   if (incomingSpouseId !== undefined) {
     if (incomingSpouseId === null) {
-      // Spouse being cleared — clear other side's link and remove from family slot
+      // Only treat this as an actual "clear spouse" action if there WAS a spouse to begin with.
+      // Forms that resubmit the full profile (including spouseId: null for someone already
+      // unmarried) must not be treated as an intentional unlink and disconnect the family.
       if (oldSpouseId) {
+        // Spouse being cleared — clear other side's link and remove from family slot
         await db.update(membersTable).set({ spouseId: null }).where(eq(membersTable.id, oldSpouseId));
-      }
-      // Rule 1: Remove this member from family slot when spouse is cleared
-      const myFamily = await db.select().from(familiesTable)
-        .where(or(eq(familiesTable.headId, id), eq(familiesTable.spouseId, id))).limit(1);
-      if (myFamily.length) {
-        const fam = myFamily[0];
-        if (fam.headId === id) {
-          await db.update(familiesTable).set({ headId: null }).where(eq(familiesTable.id, fam.id));
-        } else {
-          await db.update(familiesTable).set({ spouseId: null }).where(eq(familiesTable.id, fam.id));
-        }
-        // Delete the family if both slots now empty and no children remain
-        const updatedFam = await db.select().from(familiesTable).where(eq(familiesTable.id, fam.id)).limit(1);
-        if (updatedFam.length && !updatedFam[0].headId && !updatedFam[0].spouseId) {
-          const kidCount = await db.select({ count: sql<number>`count(*)` }).from(familyChildrenTable).where(eq(familyChildrenTable.familyId, fam.id));
-          if (Number(kidCount[0].count) === 0) {
-            await db.delete(familiesTable).where(eq(familiesTable.id, fam.id));
+        // Rule 1: Remove this member from family slot when spouse is cleared
+        const myFamily = await db.select().from(familiesTable)
+          .where(or(eq(familiesTable.headId, id), eq(familiesTable.spouseId, id))).limit(1);
+        if (myFamily.length) {
+          const fam = myFamily[0];
+          if (fam.headId === id) {
+            await db.update(familiesTable).set({ headId: null }).where(eq(familiesTable.id, fam.id));
+          } else {
+            await db.update(familiesTable).set({ spouseId: null }).where(eq(familiesTable.id, fam.id));
+          }
+          // Delete the family if both slots now empty and no children remain
+          const updatedFam = await db.select().from(familiesTable).where(eq(familiesTable.id, fam.id)).limit(1);
+          if (updatedFam.length && !updatedFam[0].headId && !updatedFam[0].spouseId) {
+            const kidCount = await db.select({ count: sql<number>`count(*)` }).from(familyChildrenTable).where(eq(familyChildrenTable.familyId, fam.id));
+            if (Number(kidCount[0].count) === 0) {
+              await db.delete(familiesTable).where(eq(familiesTable.id, fam.id));
+            }
           }
         }
       }
-    } else {
-      if (oldSpouseId && oldSpouseId !== incomingSpouseId) {
+    } else if (incomingSpouseId !== oldSpouseId) {
+      // Only run "getting married" side effects when spouseId is actually changing.
+      // A full-profile resubmit that re-sends the same spouseId must not re-trigger
+      // family merges or dependent-record cleanup.
+      if (oldSpouseId) {
         await db.update(membersTable).set({ spouseId: null }).where(eq(membersTable.id, oldSpouseId));
       }
       const spouseUpdates: Record<string, any> = { spouseId: id, maritalStatus: "married" };
@@ -468,11 +474,16 @@ router.patch("/:id", async (req, res) => {
     await db.update(membersTable).set({ weddingDate: rest.weddingDate }).where(eq(membersTable.id, oldSpouseId));
   }
 
-  // Rule 1: If marital status is being changed to non-married without an explicit spouse change,
-  // remove this member from their family slot and delete the family if both slots are now empty
+  // Rule 1: If marital status is actually being changed to non-married (i.e. it differs from
+  // the member's current value) without an explicit spouse change, remove this member from
+  // their family slot and delete the family if both slots are now empty.
+  // Note: we compare against the member's PREVIOUS value, not just check whether the field was
+  // present in the request body — forms that resubmit the full profile (including an unchanged
+  // maritalStatus) must not be treated as a marital-status change and disconnect the family.
   const maritalStatusChangingToNonMarried =
     Object.prototype.hasOwnProperty.call(rest, "maritalStatus") &&
-    rest.maritalStatus !== "married";
+    rest.maritalStatus !== "married" &&
+    rest.maritalStatus !== currentMember[0].maritalStatus;
   if (maritalStatusChangingToNonMarried && incomingSpouseId === undefined) {
     const myFamily = await db.select().from(familiesTable)
       .where(or(eq(familiesTable.headId, id), eq(familiesTable.spouseId, id))).limit(1);
