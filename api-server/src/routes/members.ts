@@ -698,16 +698,37 @@ router.get("/:id/givings", async (req, res) => {
 router.get("/:id/dependents-givings", async (req, res) => {
   const memberId = parseInt(req.params.id);
 
-  // Find non-archived children where this member is the parent
-  const children = await db.select()
-    .from(childrenTable)
-    .where(and(eq(childrenTable.parentId, memberId), eq(childrenTable.isArchived, false)));
+  // Find this member's spouse so both partners can see all their children's givings
+  const memberRow = await db.select({ spouseId: membersTable.spouseId })
+    .from(membersTable).where(eq(membersTable.id, memberId)).limit(1);
+  const spouseId = memberRow.length ? memberRow[0].spouseId : null;
 
-  // Find non-archived teens where this member is the parent
+  // Build list of parentIds to include (this member + their spouse if linked)
+  const parentIds = [memberId, ...(spouseId ? [spouseId] : [])];
+
+  // Find non-archived children where either parent is the recorded parent
+  const allChildrenRows = await db.select()
+    .from(childrenTable)
+    .where(and(inArray(childrenTable.parentId, parentIds), eq(childrenTable.isArchived, false)));
+  // Deduplicate by id (safety: child cannot be double-listed)
+  const seenChildIds = new Set<number>();
+  const children = allChildrenRows.filter(c => {
+    if (seenChildIds.has(c.id)) return false;
+    seenChildIds.add(c.id);
+    return true;
+  });
+
+  // Find non-archived teens where either parent is the recorded parent
   // isArchived = true means promoted to member, so we skip those
-  const teens = await db.select()
+  const allTeensRows = await db.select()
     .from(teensTable)
-    .where(and(eq(teensTable.parentId, memberId), eq(teensTable.isArchived, false)));
+    .where(and(inArray(teensTable.parentId, parentIds), eq(teensTable.isArchived, false)));
+  const seenTeenIds = new Set<number>();
+  const teens = allTeensRows.filter(t => {
+    if (seenTeenIds.has(t.id)) return false;
+    seenTeenIds.add(t.id);
+    return true;
+  });
 
   // Collect all giving type IDs we'll need
   const allGivingRows: Array<{ personName: string; stage: string; givingTypeId: number | null; amount: string; date: string; notes: string | null }> = [];
