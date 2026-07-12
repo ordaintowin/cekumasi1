@@ -204,7 +204,21 @@ router.get("/children", async (req, res) => {
           .from(membersTable)
           .where(eq(membersTable.id, c.parentId))
           .limit(1);
-        if (p.length) parentName = `${p[0].firstName} ${p[0].lastName}`;
+        if (p.length) {
+          if (p[0].spouseId) {
+            // Couple linked — use the father's surname
+            let fatherLastName = p[0].lastName;
+            if (p[0].gender === "female") {
+              // Recorded parent is the mother — fetch the father (spouse)
+              const father = await db.select({ lastName: membersTable.lastName })
+                .from(membersTable).where(eq(membersTable.id, p[0].spouseId)).limit(1);
+              if (father.length) fatherLastName = father[0].lastName;
+            }
+            parentName = `${fatherLastName} Family`;
+          } else {
+            parentName = `${p[0].firstName} ${p[0].lastName}`;
+          }
+        }
       }
       return { ...c, parentName };
     })
@@ -542,7 +556,21 @@ router.get("/teens", async (req, res) => {
           .from(membersTable)
           .where(eq(membersTable.id, t.parentId))
           .limit(1);
-        if (p.length) parentName = `${p[0].firstName} ${p[0].lastName}`;
+        if (p.length) {
+          if (p[0].spouseId) {
+            // Couple linked — use the father's surname
+            let fatherLastName = p[0].lastName;
+            if (p[0].gender === "female") {
+              // Recorded parent is the mother — fetch the father (spouse)
+              const father = await db.select({ lastName: membersTable.lastName })
+                .from(membersTable).where(eq(membersTable.id, p[0].spouseId)).limit(1);
+              if (father.length) fatherLastName = father[0].lastName;
+            }
+            parentName = `${fatherLastName} Family`;
+          } else {
+            parentName = `${p[0].firstName} ${p[0].lastName}`;
+          }
+        }
       }
       return { ...t, parentName };
     })
