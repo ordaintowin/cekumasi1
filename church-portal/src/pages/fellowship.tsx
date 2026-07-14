@@ -345,7 +345,7 @@ function CellCard({ cell, canManage, onEdit, onDelete, index, fellowshipNum, onV
             <span className="text-[10px] text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider">Cell</span>
           </div>
           {canManage && (
-            <div className="opacity-0 group-hover:opacity-100 flex gap-0.5 transition-opacity">
+            <div className="flex gap-0.5">
               <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-gray-400 hover:text-purple-600"
                 onClick={() => onEdit({ type: "cell", id: cell.id, name: cell.name, leaderId: cell.leaderId, leaderName: cell.leaderName })}>
                 <Edit2 className="w-3.5 h-3.5" />
@@ -387,7 +387,7 @@ function CellCard({ cell, canManage, onEdit, onDelete, index, fellowshipNum, onV
           <Users className="w-3 h-3" />{cell.memberCount ?? 0}
         </button>
         {canManage && (
-          <div className="hidden group-hover:flex items-center gap-0.5">
+          <div className="flex items-center gap-0.5">
             <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-gray-400 hover:text-purple-600"
               onClick={() => onEdit({ type: "cell", id: cell.id, name: cell.name, leaderId: cell.leaderId, leaderName: cell.leaderName })}>
               <Edit2 className="w-3 h-3" />
@@ -419,7 +419,7 @@ function SeniorCellCard({ sc, canManage, onEdit, onDelete, index, fellowshipNum,
             <span className="text-[10px] text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider">Senior Cell</span>
           </div>
           {canManage && (
-            <div className="opacity-0 group-hover:opacity-100 flex gap-0.5 transition-opacity">
+            <div className="flex gap-0.5">
               <Button size="sm" variant="outline" className="h-6 px-2 text-xs border-blue-300 text-blue-600 hover:bg-blue-50"
                 onClick={() => onEdit({ type: "senior_cell", id: sc.id, name: sc.name, leaderId: sc.leaderId, leaderName: sc.leaderName })}>
                 <Plus className="w-3 h-3 mr-0.5" /> Add Cells
@@ -453,11 +453,11 @@ function SeniorCellCard({ sc, canManage, onEdit, onDelete, index, fellowshipNum,
           {canManage && !isTopLevel && (
             <>
               <Button size="sm" variant="outline"
-                className={`h-6 px-2 text-xs border-blue-300 text-blue-600 hover:bg-blue-50 ${hasCells ? "hidden group-hover:flex" : "flex"}`}
+                className="h-6 px-2 text-xs border-blue-300 text-blue-600 hover:bg-blue-50 flex"
                 onClick={() => onEdit({ type: "senior_cell", id: sc.id, name: sc.name, leaderId: sc.leaderId, leaderName: sc.leaderName })}>
                 <Plus className="w-3 h-3 mr-0.5" /> Add Cells
               </Button>
-              <div className="hidden group-hover:flex items-center gap-0.5">
+              <div className="flex items-center gap-0.5">
                 <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-gray-400 hover:text-purple-600"
                   onClick={() => onEdit({ type: "senior_cell", id: sc.id, name: sc.name, leaderId: sc.leaderId, leaderName: sc.leaderName })}>
                   <Edit2 className="w-3 h-3" />
@@ -504,7 +504,7 @@ function PcfCard({ pcf, canManage, onEdit, onDelete, fellowshipNum, onViewMember
           <span className="text-[10px] text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider">PCF</span>
         </div>
         {canManage && (
-          <div className="opacity-0 group-hover:opacity-100 flex gap-0.5 transition-opacity">
+          <div className="flex gap-0.5">
             <Button size="sm" variant="outline" className="h-6 px-2 text-xs border-purple-300 text-purple-600 hover:bg-purple-50"
               onClick={() => onEdit({ type: "pcf", id: pcf.id, name: pcf.name, leaderId: pcf.leaderId, leaderName: pcf.leaderName })}>
               <Plus className="w-3 h-3 mr-0.5" /> Add Senior Cells
