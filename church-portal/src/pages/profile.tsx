@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import QRCode from "react-qr-code";
 import { useAuth } from "@/context/AuthContext";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   useGetMember, getGetMemberQueryKey,
   useGetMemberAttendanceHistory, getGetMemberAttendanceHistoryQueryKey,
@@ -294,6 +294,190 @@ function GivingsTab({ memberId }: { memberId: number }) {
   );
 }
 
+function TeenAttendanceTab({ teenId }: { teenId: number }) {
+  const [page, setPage] = useState(1);
+  const { data: yearsData } = useListMinistryYears();
+  const years = (yearsData as any[]) ?? [];
+  const today = new Date().toISOString().split("T")[0];
+  const activeYear = years.find((y: any) => !y.isClosed && today >= y.startDate && today <= y.endDate);
+
+  const token = typeof localStorage !== "undefined" ? localStorage.getItem("token") : null;
+  const { data, isLoading } = useQuery<any>({
+    queryKey: ["teen-attendance-history", teenId, activeYear?.id, page],
+    queryFn: () =>
+      fetch(`/api/teens/${teenId}/attendance-history?ministryYearId=${activeYear?.id}&page=${page}&limit=10`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }).then(r => r.json()),
+    enabled: !!activeYear && !!teenId,
+  });
+
+  const records = data?.data ?? [];
+  const total: number = data?.total ?? 0;
+  const totalPages = Math.ceil(total / 10);
+
+  if (!activeYear && !isLoading) {
+    return (
+      <div className="text-center py-14 text-gray-400">
+        <Church className="w-10 h-10 mx-auto mb-3 opacity-30" />
+        <p className="text-sm">No active ministry year found.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {activeYear && (
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Ministry Year</p>
+            <p className="font-semibold text-gray-800">{activeYear.name}</p>
+          </div>
+          {total > 0 && (
+            <div className="text-right">
+              <p className="text-2xl font-bold text-purple-700">{total}</p>
+              <p className="text-xs text-gray-500">services attended</p>
+            </div>
+          )}
+        </div>
+      )}
+      {isLoading ? (
+        <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}</div>
+      ) : records.length === 0 ? (
+        <div className="text-center py-14 border rounded-xl bg-gray-50 text-gray-400">
+          <Church className="w-10 h-10 mx-auto mb-3 opacity-30" />
+          <p className="font-medium text-gray-500">No attendance recorded yet</p>
+          <p className="text-sm mt-1">for {activeYear?.name}</p>
+        </div>
+      ) : (
+        <>
+          <div className="space-y-2">
+            {records.map((rec: any) => (
+              <div key={rec.serviceId} className="flex items-center gap-4 p-3.5 rounded-xl border border-gray-100 bg-white hover:border-purple-100 hover:bg-purple-50/30 transition-colors">
+                <div className="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+                  <CheckCircle2 className="w-5 h-5 text-purple-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-gray-900 text-sm truncate">{rec.serviceName}</p>
+                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                    {rec.serviceDate && (
+                      <span className="flex items-center gap-1 text-xs text-gray-500">
+                        <Calendar className="w-3 h-3" />{fmt(rec.serviceDate)}
+                      </span>
+                    )}
+                    {rec.serviceType && <ServiceTypeBadge type={rec.serviceType} />}
+                  </div>
+                </div>
+                {rec.checkInTime && (
+                  <div className="text-right flex-shrink-0 text-xs text-gray-400 flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {new Date(rec.checkInTime).toLocaleTimeString("en-GH", { hour: "2-digit", minute: "2-digit" })}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          <Pagination page={page} totalPages={totalPages} onPrev={() => setPage(p => p - 1)} onNext={() => setPage(p => p + 1)} />
+        </>
+      )}
+    </div>
+  );
+}
+
+function TeenGivingsTab({ teenId }: { teenId: number }) {
+  const [page, setPage] = useState(1);
+  const { data: yearsData } = useListMinistryYears();
+  const years = (yearsData as any[]) ?? [];
+  const today = new Date().toISOString().split("T")[0];
+  const activeYear = years.find((y: any) => !y.isClosed && today >= y.startDate && today <= y.endDate);
+
+  const token = typeof localStorage !== "undefined" ? localStorage.getItem("token") : null;
+  const { data, isLoading } = useQuery<any>({
+    queryKey: ["teen-givings-history", teenId, activeYear?.id, page],
+    queryFn: () =>
+      fetch(`/api/teens/${teenId}/givings-history?ministryYearId=${activeYear?.id}&page=${page}&limit=10`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }).then(r => r.json()),
+    enabled: !!activeYear && !!teenId,
+  });
+
+  const records = data?.data ?? [];
+  const total: number = data?.total ?? 0;
+  const totalPages = Math.ceil(total / 10);
+  const grandTotal = records.reduce((s: number, g: any) => s + Number(g.amount), 0);
+  const byType: Record<string, number> = {};
+  for (const g of records) { byType[g.givingTypeName] = (byType[g.givingTypeName] ?? 0) + Number(g.amount); }
+
+  if (!activeYear && !isLoading) {
+    return (
+      <div className="text-center py-14 text-gray-400">
+        <Banknote className="w-10 h-10 mx-auto mb-3 opacity-30" />
+        <p className="text-sm">No active ministry year found.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {activeYear && (
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Ministry Year</p>
+            <p className="font-semibold text-gray-800">{activeYear.name}</p>
+          </div>
+          {total > 0 && (
+            <div className="text-right">
+              <p className="text-2xl font-bold text-emerald-700">GHS {grandTotal.toLocaleString("en-GH", { minimumFractionDigits: 2 })}</p>
+              <p className="text-xs text-gray-500">{total} giving{total !== 1 ? "s" : ""}</p>
+            </div>
+          )}
+        </div>
+      )}
+      {!isLoading && Object.keys(byType).length > 1 && (
+        <div className="flex flex-wrap gap-2">
+          {Object.entries(byType).map(([type, amount]) => (
+            <div key={type} className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 rounded-lg px-3 py-1.5">
+              <GivingTypePill name={type} />
+              <span className="text-xs font-semibold text-gray-700">GHS {amount.toLocaleString("en-GH", { minimumFractionDigits: 2 })}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {isLoading ? (
+        <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}</div>
+      ) : records.length === 0 ? (
+        <div className="text-center py-14 border rounded-xl bg-gray-50 text-gray-400">
+          <Banknote className="w-10 h-10 mx-auto mb-3 opacity-30" />
+          <p className="font-medium text-gray-500">No giving records yet</p>
+          <p className="text-sm mt-1">for {activeYear?.name}</p>
+        </div>
+      ) : (
+        <>
+          <div className="space-y-2">
+            {records.map((g: any) => (
+              <div key={g.id} className="flex items-center gap-4 p-3.5 rounded-xl border border-gray-100 bg-white hover:border-emerald-100 hover:bg-emerald-50/20 transition-colors">
+                <div className="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                  <Banknote className="w-5 h-5 text-emerald-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <GivingTypePill name={g.givingTypeName} />
+                  <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
+                    <Calendar className="w-3 h-3" />{fmt(g.date)}
+                    {g.notes && <span className="ml-2 text-gray-400 italic truncate max-w-[140px]">· {g.notes}</span>}
+                  </div>
+                </div>
+                <p className="font-bold text-emerald-700 text-sm flex-shrink-0">
+                  GHS {Number(g.amount).toLocaleString("en-GH", { minimumFractionDigits: 2 })}
+                </p>
+              </div>
+            ))}
+          </div>
+          <Pagination page={page} totalPages={totalPages} onPrev={() => setPage(p => p - 1)} onNext={() => setPage(p => p + 1)} />
+        </>
+      )}
+    </div>
+  );
+}
+
 // ─── Teen Portal ────────────────────────────────────────────────────────────
 
 function TeenProfile({ user }: { user: any }) {
@@ -519,113 +703,15 @@ function TeenProfile({ user }: { user: any }) {
             <Banknote className="w-4 h-4" /> Givings
           </TabsTrigger>
         </TabsList>
-
-        {/* Attendance tab */}
         <TabsContent value="attendance" className="pt-4">
-          {attendance.length === 0 ? (
-            <div className="text-center py-14 border rounded-xl bg-gray-50 text-gray-400">
-              <Church className="w-10 h-10 mx-auto mb-3 opacity-30" />
-              <p className="font-medium text-gray-500">No attendance recorded yet</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Recent Services</p>
-                <p className="text-2xl font-bold text-purple-700">{attendance.length}</p>
-              </div>
-              <div className="space-y-2">
-                {attendance.map((rec: any, idx: number) => (
-                  <div key={idx} className="flex items-center gap-4 p-3.5 rounded-xl border border-gray-100 bg-white hover:border-purple-100 hover:bg-purple-50/30 transition-colors">
-                    <div className="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
-                      <CheckCircle2 className="w-5 h-5 text-purple-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 text-sm truncate">{rec.serviceName ?? "Service"}</p>
-                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                        {rec.serviceDate && (
-                          <span className="flex items-center gap-1 text-xs text-gray-500">
-                            <Calendar className="w-3 h-3" />
-                            {fmt(rec.serviceDate)}
-                          </span>
-                        )}
-                        {rec.serviceType && <ServiceTypeBadge type={rec.serviceType} />}
-                      </div>
-                    </div>
-                    {rec.registeredAt && (
-                      <div className="text-right flex-shrink-0 text-xs text-gray-400 flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {new Date(rec.registeredAt).toLocaleTimeString("en-GH", { hour: "2-digit", minute: "2-digit" })}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          <TeenAttendanceTab teenId={user.teenId} />
         </TabsContent>
-
-        {/* Givings tab */}
         <TabsContent value="givings" className="pt-4">
-          {givings.length === 0 ? (
-            <div className="text-center py-14 border rounded-xl bg-gray-50 text-gray-400">
-              <Banknote className="w-10 h-10 mx-auto mb-3 opacity-30" />
-              <p className="font-medium text-gray-500">No giving records yet</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Recent Givings</p>
-                <p className="text-2xl font-bold text-emerald-700">
-                  GHS {totalGiving.toLocaleString("en-GH", { minimumFractionDigits: 2 })}
-                </p>
-              </div>
-
-              {Object.keys(byType).length > 1 && (
-                <div className="flex flex-wrap gap-2">
-                  {Object.entries(byType).map(([type, amount]) => (
-                    <div key={type} className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 rounded-lg px-3 py-1.5">
-                      <GivingTypePill name={type} />
-                      <span className="text-xs font-semibold text-gray-700">
-                        GHS {amount.toLocaleString("en-GH", { minimumFractionDigits: 2 })}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div className="space-y-2">
-                {givings.map((g: any) => (
-                  <div key={`${g.stage ?? "t"}-${g.id}`} className="flex items-center gap-4 p-3.5 rounded-xl border border-gray-100 bg-white hover:border-emerald-100 hover:bg-emerald-50/20 transition-colors">
-                    <div className="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                      <Banknote className="w-5 h-5 text-emerald-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <GivingTypePill name={g.givingType} />
-                        {g.stage === "child" && (
-                          <span className="text-[10px] bg-blue-100 text-blue-700 rounded px-1.5 py-0.5 font-medium">Child era</span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
-                        <Calendar className="w-3 h-3" />
-                        {fmt(g.date)}
-                        {g.notes && (
-                          <span className="ml-2 text-gray-400 italic truncate max-w-[140px]">· {g.notes}</span>
-                        )}
-                      </div>
-                    </div>
-                    <p className="font-bold text-emerald-700 text-sm flex-shrink-0">
-                      GHS {Number(g.amount).toLocaleString("en-GH", { minimumFractionDigits: 2 })}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          <TeenGivingsTab teenId={user.teenId} />
         </TabsContent>
       </Tabs>
 
-      {/* Edit profile dialog */}
+            {/* Edit profile dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader><DialogTitle>Edit My Profile</DialogTitle></DialogHeader>

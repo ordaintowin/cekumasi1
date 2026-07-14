@@ -489,6 +489,104 @@ router.get("/teens/:id/parent-summary", async (req, res) => {
   }
 });
 
+// ─── TEEN ATTENDANCE HISTORY (ministry-year-filtered, paginated) ──────────────
+router.get("/teens/:id/attendance-history", async (req, res) => {
+  try {
+    const teenId = parseInt(req.params.id);
+    const ministryYearId = req.query.ministryYearId ? parseInt(req.query.ministryYearId as string) : undefined;
+    const page = Math.max(1, parseInt((req.query.page as string) || "1"));
+    const limit = Math.min(50, Math.max(1, parseInt((req.query.limit as string) || "10")));
+    const offset = (page - 1) * limit;
+
+    const [teenRowA] = await db.select({ id: teensTable.id }).from(teensTable).where(eq(teensTable.id, teenId)).limit(1);
+    if (!teenRowA) return res.status(404).json({ error: "Teen not found" });
+
+    let serviceIdFilter: any = sql`true`;
+    if (ministryYearId) {
+      const [year] = await db.select().from(ministryYearsTable).where(eq(ministryYearsTable.id, ministryYearId)).limit(1);
+      if (year) {
+        const svcs = await db.select({ id: servicesTable.id }).from(servicesTable)
+          .where(and(sql`${servicesTable.date} >= ${year.startDate}`, sql`${servicesTable.date} <= ${year.endDate}`));
+        const ids = svcs.map((s: any) => s.id);
+        serviceIdFilter = ids.length
+          ? sql`${serviceTeensAttendanceTable.serviceId} = ANY(ARRAY[${sql.join(ids.map((id: number) => sql`${id}`), sql`, `)}])`
+          : sql`false`;
+      }
+    }
+
+    const baseWhereA = and(eq(serviceTeensAttendanceTable.teenId, teenId), serviceIdFilter);
+    const [cntA] = await db.select({ cnt: sql`count(*)` }).from(serviceTeensAttendanceTable).where(baseWhereA);
+    const totalA = Number((cntA as any)?.cnt ?? 0);
+
+    const rowsA = await db.select({ serviceId: serviceTeensAttendanceTable.serviceId, registeredAt: serviceTeensAttendanceTable.registeredAt })
+      .from(serviceTeensAttendanceTable)
+      .where(baseWhereA)
+      .orderBy(desc(serviceTeensAttendanceTable.registeredAt))
+      .limit(limit)
+      .offset(offset);
+
+    const uniqueSvcIds = [...new Set(rowsA.map((r: any) => r.serviceId))];
+    const svcsMap: Record<number, any> = {};
+    if (uniqueSvcIds.length) {
+      const svcs = await db.select().from(servicesTable)
+        .where(sql`${servicesTable.id} = ANY(ARRAY[${sql.join(uniqueSvcIds.map((id: any) => sql`${id}`), sql`, `)}])`);
+      (svcs as any[]).forEach((s: any) => { svcsMap[s.id] = s; });
+    }
+
+    const dataA = rowsA.map((r: any) => ({
+      serviceId: r.serviceId,
+      checkInTime: r.registeredAt,
+      serviceDate: svcsMap[r.serviceId]?.date ?? null,
+      serviceName: svcsMap[r.serviceId]?.name ?? "Service",
+      serviceType: svcsMap[r.serviceId]?.type ?? null,
+      method: "manual",
+    }));
+
+    res.json({ data: dataA, total: totalA, page, limit });
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message ?? "Server error" });
+  }
+});
+
+// ─── TEEN GIVINGS HISTORY (ministry-year-filtered, paginated) ─────────────────
+router.get("/teens/:id/givings-history", async (req, res) => {
+  try {
+    const teenId = parseInt(req.params.id);
+    const ministryYearId = req.query.ministryYearId ? parseInt(req.query.ministryYearId as string) : undefined;
+    const page = Math.max(1, parseInt((req.query.page as string) || "1"));
+    const limit = Math.min(50, Math.max(1, parseInt((req.query.limit as string) || "10")));
+    const offset = (page - 1) * limit;
+
+    const [teenRowG] = await db.select({ id: teensTable.id }).from(teensTable).where(eq(teensTable.id, teenId)).limit(1);
+    if (!teenRowG) return res.status(404).json({ error: "Teen not found" });
+
+    const yearFilter = ministryYearId ? eq(givingsTable.ministryYearId, ministryYearId) : undefined;
+    const baseWhereG = and(eq(givingsTable.teenId, teenId), eq(givingsTable.isArchived, false), ...(yearFilter ? [yearFilter] : []));
+
+    const [cntG] = await db.select({ cnt: sql`count(*)` }).from(givingsTable).where(baseWhereG);
+    const totalG = Number((cntG as any)?.cnt ?? 0);
+
+    const rowsG = await db.select().from(givingsTable).where(baseWhereG)
+      .orderBy(desc(givingsTable.date))
+      .limit(limit)
+      .offset(offset);
+
+    const allTypes = await db.select({ id: givingTypesTable.id, name: givingTypesTable.name }).from(givingTypesTable);
+    const typesMap: Record<number, string> = {};
+    (allTypes as any[]).forEach((gt: any) => { typesMap[gt.id] = gt.name; });
+
+    const dataG = (rowsG as any[]).map((g: any) => ({
+      id: g.id, date: g.date, amount: g.amount,
+      givingTypeName: typesMap[g.givingTypeId] ?? "Gift",
+      notes: g.notes,
+    }));
+
+    res.json({ data: dataG, total: totalG, page, limit });
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message ?? "Server error" });
+  }
+});
+
 // Parent can update only name and birthday of their child
 router.patch("/children/:id/basic-info", async (req, res) => {
   const id = parseInt(req.params.id);
