@@ -117,13 +117,14 @@ export default function Home() {
   const firstName = (user as any)?.memberName?.split(" ")[0] ?? user?.username ?? "Friend";
   const userDob = (user as any)?.dateOfBirth as string | null | undefined;
   const userMemberId = (user as any)?.memberId as number | null | undefined;
+  const userTeenId = (user as any)?.teenId as number | null | undefined;
 
   const { data: activeServiceData } = useQuery<any>({
     queryKey: ["/api/services/active"],
     queryFn: () =>
       fetch("/api/services/active", { headers: { Authorization: `Bearer ${getToken()}` } }).then(r => r.json()),
     refetchInterval: 30_000,
-    enabled: !!userMemberId,
+    enabled: !!(userMemberId || userTeenId),
   });
   const activeService = activeServiceData?.service ?? null;
 
@@ -261,7 +262,7 @@ export default function Home() {
       )}
 
       {/* ── QR Self-Registration (member only, when service is active) ── */}
-      {activeService && userMemberId && (
+      {activeService && (userMemberId || userTeenId) && (
         <section>
           <button
             onClick={() => setShowQrScan(true)}
@@ -327,7 +328,7 @@ export default function Home() {
       )}
 
       {/* ── Today's Birthdays ──────────────────────────────────── */}
-      {/* FIX: logged-in user is excluded from this list if the big hero card already shows their birthday */}
+      {/* logged-in user is excluded from this list if the big hero card already celebrates them */}
       {todayBirthdays.length > 0 && (
         <section className="space-y-3">
           <div className="flex items-center gap-2">
@@ -336,17 +337,27 @@ export default function Home() {
             <Badge className="bg-yellow-100 text-yellow-700 border-0 ml-auto">{todayBirthdays.length}</Badge>
           </div>
           <div className="space-y-2.5">
-            {todayBirthdays.map((m: any) => (
-              <div key={m.id} className="relative overflow-hidden flex items-center gap-4 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-2xl px-4 py-3.5 shadow-sm">
-                <Avatar name={`${m.firstName} ${m.lastName}`} photo={m.profilePhoto} size="lg" color="bg-yellow-200 text-yellow-800" />
-                <div className="flex-1 min-w-0">
-                  <p className="font-bold text-gray-900 text-base">{m.firstName} {m.lastName}</p>
-                  <p className="text-sm text-yellow-600 font-medium">🎂 {fmtDate(m.dateOfBirth)}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">🎉 Happy Birthday!</p>
+            {todayBirthdays.map((m: any) => {
+              const typeBadge = m.personType === "teen"
+                ? <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-teal-100 text-teal-700">Teen</span>
+                : m.personType === "child"
+                ? <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700">Child</span>
+                : null;
+              return (
+                <div key={`${m.personType}-${m.id}`} className="relative overflow-hidden flex items-center gap-4 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-2xl px-4 py-3.5 shadow-sm">
+                  <Avatar name={`${m.firstName} ${m.lastName}`} photo={m.profilePhoto} size="lg" color="bg-yellow-200 text-yellow-800" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <p className="font-bold text-gray-900 text-base">{m.firstName} {m.lastName}</p>
+                      {typeBadge}
+                    </div>
+                    <p className="text-sm text-yellow-600 font-medium">🎂 {fmtDate(m.dateOfBirth)}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">🎉 Happy Birthday!</p>
+                  </div>
+                  <div className="text-4xl select-none opacity-50 flex-shrink-0">🎂</div>
                 </div>
-                <div className="text-4xl select-none opacity-50 flex-shrink-0">🎂</div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
       )}
@@ -419,7 +430,6 @@ export default function Home() {
                 const isBday = m._type === "birthday";
                 const dateStr = isBday ? m.dateOfBirth : m.weddingDate;
                 const days = daysUntil(dateStr);
-                // FIX: for anniversaries show couple name, for birthdays show individual
                 const label = isBday
                   ? `${m.firstName} ${m.lastName}`
                   : coupleDisplayName(m);
@@ -428,14 +438,22 @@ export default function Home() {
                   : m._spouse
                     ? `${m._husband?.firstName?.[0] ?? m.firstName[0]}${m._wife?.firstName?.[0] ?? ""}`.toUpperCase()
                     : m.firstName[0].toUpperCase();
+                const personTypeBadge = isBday && m.personType === "teen"
+                  ? <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-teal-100 text-teal-700 flex-shrink-0">Teen</span>
+                  : isBday && m.personType === "child"
+                  ? <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 flex-shrink-0">Child</span>
+                  : null;
                 return (
-                  <div key={`${m._type}-${m.id}`} className="flex items-center gap-3 bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-sm hover:shadow-md transition-shadow">
+                  <div key={`${m._type}-${m.personType ?? "member"}-${m.id}`} className="flex items-center gap-3 bg-white border border-gray-100 rounded-xl px-4 py-3 shadow-sm hover:shadow-md transition-shadow">
                     <span className="text-xl flex-shrink-0">{isBday ? "🎂" : "💍"}</span>
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0 ${isBday ? "bg-yellow-100 text-yellow-700" : "bg-pink-100 text-pink-700"}`}>
                       {avatarInitial}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-800 text-sm truncate">{label}</p>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <p className="font-semibold text-gray-800 text-sm truncate">{label}</p>
+                        {personTypeBadge}
+                      </div>
                       <p className="text-xs text-gray-400">{isBday ? "Birthday" : "Anniversary"} · {fmtDate(dateStr)}</p>
                     </div>
                     <div className="flex-shrink-0 text-right">

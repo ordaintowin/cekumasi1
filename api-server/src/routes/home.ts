@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, announcementsTable } from "@workspace/db";
-import { membersTable, videosTable, onlineMeetingsTable } from "@workspace/db";
+import { membersTable, videosTable, onlineMeetingsTable, teensTable, childrenTable } from "@workspace/db";
 import { desc, and, eq, sql, or, isNull, gte } from "drizzle-orm";
 import { authenticateToken } from "../middlewares/auth";
 
@@ -26,7 +26,22 @@ router.get("/home/feed", authenticateToken, async (req, res) => {
       try { return await fn(); } catch { return fallback; }
     };
 
-    const [todayBirthdays, todayAnniversaries, upcomingBirthdays, upcomingAnniversaries, latestVideoRows, announcements, liveMeetings] = await Promise.all([
+    const mdArray = sql`ARRAY[${sql.join(upcomingMDs.map(d => sql`${d}`), sql`, `)}]`;
+
+    const [
+      memberTodayBdays,
+      teenTodayBdays,
+      childTodayBdays,
+      todayAnniversaries,
+      memberUpcomingBdays,
+      teenUpcomingBdays,
+      childUpcomingBdays,
+      upcomingAnniversaries,
+      latestVideoRows,
+      announcements,
+      liveMeetings,
+    ] = await Promise.all([
+      // Members birthday today
       safeQuery(() => db.select({
         id: membersTable.id,
         firstName: membersTable.firstName,
@@ -40,6 +55,33 @@ router.get("/home/feed", authenticateToken, async (req, res) => {
         )
       ), []),
 
+      // Teens birthday today
+      safeQuery(() => db.select({
+        id: teensTable.id,
+        firstName: teensTable.firstName,
+        lastName: teensTable.lastName,
+        dateOfBirth: teensTable.dateOfBirth,
+      }).from(teensTable).where(
+        and(
+          eq(teensTable.isArchived, false),
+          sql`${teensTable.dateOfBirth} IS NOT NULL AND TO_CHAR(${teensTable.dateOfBirth}::date, 'MM-DD') = ${todayMD}`
+        )
+      ), []),
+
+      // Children birthday today
+      safeQuery(() => db.select({
+        id: childrenTable.id,
+        firstName: childrenTable.firstName,
+        lastName: childrenTable.lastName,
+        dateOfBirth: childrenTable.dateOfBirth,
+      }).from(childrenTable).where(
+        and(
+          eq(childrenTable.isArchived, false),
+          sql`${childrenTable.dateOfBirth} IS NOT NULL AND TO_CHAR(${childrenTable.dateOfBirth}::date, 'MM-DD') = ${todayMD}`
+        )
+      ), []),
+
+      // Anniversaries today
       safeQuery(() => db.select({
         id: membersTable.id,
         firstName: membersTable.firstName,
@@ -55,6 +97,7 @@ router.get("/home/feed", authenticateToken, async (req, res) => {
         )
       ), []),
 
+      // Members birthday upcoming
       safeQuery(() => db.select({
         id: membersTable.id,
         firstName: membersTable.firstName,
@@ -63,10 +106,37 @@ router.get("/home/feed", authenticateToken, async (req, res) => {
       }).from(membersTable).where(
         and(
           eq(membersTable.isArchived, false),
-          sql`${membersTable.dateOfBirth} IS NOT NULL AND TO_CHAR(${membersTable.dateOfBirth}::date, 'MM-DD') = ANY(ARRAY[${sql.join(upcomingMDs.map(d => sql`${d}`), sql`, `)}])`
+          sql`${membersTable.dateOfBirth} IS NOT NULL AND TO_CHAR(${membersTable.dateOfBirth}::date, 'MM-DD') = ANY(${mdArray})`
         )
       ), []),
 
+      // Teens birthday upcoming
+      safeQuery(() => db.select({
+        id: teensTable.id,
+        firstName: teensTable.firstName,
+        lastName: teensTable.lastName,
+        dateOfBirth: teensTable.dateOfBirth,
+      }).from(teensTable).where(
+        and(
+          eq(teensTable.isArchived, false),
+          sql`${teensTable.dateOfBirth} IS NOT NULL AND TO_CHAR(${teensTable.dateOfBirth}::date, 'MM-DD') = ANY(${mdArray})`
+        )
+      ), []),
+
+      // Children birthday upcoming
+      safeQuery(() => db.select({
+        id: childrenTable.id,
+        firstName: childrenTable.firstName,
+        lastName: childrenTable.lastName,
+        dateOfBirth: childrenTable.dateOfBirth,
+      }).from(childrenTable).where(
+        and(
+          eq(childrenTable.isArchived, false),
+          sql`${childrenTable.dateOfBirth} IS NOT NULL AND TO_CHAR(${childrenTable.dateOfBirth}::date, 'MM-DD') = ANY(${mdArray})`
+        )
+      ), []),
+
+      // Anniversaries upcoming
       safeQuery(() => db.select({
         id: membersTable.id,
         firstName: membersTable.firstName,
@@ -77,12 +147,14 @@ router.get("/home/feed", authenticateToken, async (req, res) => {
       }).from(membersTable).where(
         and(
           eq(membersTable.isArchived, false),
-          sql`${membersTable.weddingDate} IS NOT NULL AND TO_CHAR(${membersTable.weddingDate}::date, 'MM-DD') = ANY(ARRAY[${sql.join(upcomingMDs.map(d => sql`${d}`), sql`, `)}])`
+          sql`${membersTable.weddingDate} IS NOT NULL AND TO_CHAR(${membersTable.weddingDate}::date, 'MM-DD') = ANY(${mdArray})`
         )
       ), []),
 
+      // Latest video
       safeQuery(() => db.select().from(videosTable).orderBy(desc(videosTable.createdAt)).limit(1), []),
 
+      // Announcements
       safeQuery(() => db.select().from(announcementsTable).where(
         and(
           eq(announcementsTable.isActive, true),
@@ -99,6 +171,7 @@ router.get("/home/feed", authenticateToken, async (req, res) => {
         )
       ).orderBy(desc(announcementsTable.createdAt)).limit(10), []),
 
+      // Live meetings
       safeQuery(() => db.select({
         id: onlineMeetingsTable.id,
         title: onlineMeetingsTable.title,
@@ -113,12 +186,25 @@ router.get("/home/feed", authenticateToken, async (req, res) => {
       ).limit(5), []),
     ]);
 
+    // Merge birthdays with personType tag
+    const todayBirthdays = [
+      ...(memberTodayBdays as any[]).map(m => ({ ...m, personType: "member" })),
+      ...(teenTodayBdays as any[]).map(t => ({ ...t, personType: "teen" })),
+      ...(childTodayBdays as any[]).map(c => ({ ...c, personType: "child" })),
+    ];
+
+    const upcomingBirthdays = [
+      ...(memberUpcomingBdays as any[]).map(m => ({ ...m, personType: "member" })),
+      ...(teenUpcomingBdays as any[]).map(t => ({ ...t, personType: "teen" })),
+      ...(childUpcomingBdays as any[]).map(c => ({ ...c, personType: "child" })),
+    ];
+
     res.json({
       todayBirthdays,
       todayAnniversaries,
       upcomingBirthdays,
       upcomingAnniversaries,
-      latestVideo: latestVideoRows[0] ?? null,
+      latestVideo: (latestVideoRows as any[])[0] ?? null,
       announcements,
       liveMeetings,
     });

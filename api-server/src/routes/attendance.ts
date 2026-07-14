@@ -1860,13 +1860,15 @@ router.get("/reports/ct-attendance", async (req, res) => {
   return res.json({ services, members });
 });
 
-// ─── MEMBER SELF CHECK-IN VIA QR ─────────────────────────────────────────────
-// Members scan the service QR and hit this endpoint to register themselves.
+// ─── MEMBER / TEEN SELF CHECK-IN VIA QR ──────────────────────────────────────
+// Members and teens scan the service QR and hit this endpoint to register themselves.
 // The QR value format is: CEKSI-SVC-{serviceId}
 router.post("/services/self-checkin", async (req, res) => {
   const user = (req as any).user;
   const memberId: number | undefined = user?.memberId;
-  if (!memberId) return res.status(403).json({ error: "Member account required to self check-in" });
+  const teenId: number | undefined = user?.teenId;
+
+  if (!memberId && !teenId) return res.status(403).json({ error: "Member or teen account required to self check-in" });
 
   const { qrData } = req.body;
   if (!qrData || typeof qrData !== "string") return res.status(400).json({ error: "qrData required" });
@@ -1881,19 +1883,36 @@ router.post("/services/self-checkin", async (req, res) => {
     return res.status(400).json({ error: "Service is not active. Registration is closed." });
   }
 
+  // Teen self-checkin path
+  if (teenId && !memberId) {
+    const [teen] = await db.select().from(teensTable)
+      .where(and(eq(teensTable.id, teenId), eq(teensTable.isArchived, false))).limit(1);
+    if (!teen) return res.status(404).json({ error: "Teen record not found" });
+
+    const [existing] = await db.select().from(serviceTeensAttendanceTable)
+      .where(and(eq(serviceTeensAttendanceTable.serviceId, serviceId), eq(serviceTeensAttendanceTable.teenId, teenId)))
+      .limit(1);
+
+    if (existing) return res.json({ success: true, alreadyCheckedIn: true });
+
+    await db.insert(serviceTeensAttendanceTable).values({ serviceId, teenId });
+    return res.json({ success: true, alreadyCheckedIn: false });
+  }
+
+  // Member self-checkin path
   const [member] = await db.select().from(membersTable)
-    .where(and(eq(membersTable.id, memberId), eq(membersTable.isArchived, false))).limit(1);
+    .where(and(eq(membersTable.id, memberId!), eq(membersTable.isArchived, false))).limit(1);
   if (!member) return res.status(404).json({ error: "Member record not found" });
 
   const [existing] = await db.select().from(attendanceRecordsTable)
-    .where(and(eq(attendanceRecordsTable.serviceId, serviceId), eq(attendanceRecordsTable.memberId, memberId)))
+    .where(and(eq(attendanceRecordsTable.serviceId, serviceId), eq(attendanceRecordsTable.memberId, memberId!)))
     .limit(1);
 
   if (existing) return res.json({ success: true, alreadyCheckedIn: true });
 
   await db.insert(attendanceRecordsTable).values({
     serviceId,
-    memberId,
+    memberId: memberId!,
     cellId: member.cellId ?? null,
     method: "qr",
   });
