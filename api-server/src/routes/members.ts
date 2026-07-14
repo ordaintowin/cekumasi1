@@ -386,6 +386,29 @@ router.patch("/:id", async (req, res) => {
     .set({ firstName, lastName, phone1, ...rest }).where(eq(membersTable.id, id)).returning();
   if (!updated.length) return res.status(404).json({ error: "Member not found" });
 
+  // Rule: a leader must be a member of their cell.
+  // If the member's cellId has changed, strip any leadership they held in the old cell.
+  const oldCellId = currentMember[0].cellId;
+  const newCellId = Object.prototype.hasOwnProperty.call(rest, "cellId")
+    ? (rest.cellId ? parseInt(rest.cellId) : null)
+    : undefined;
+  if (newCellId !== undefined && newCellId !== oldCellId && oldCellId) {
+    const ledCell = await db.select({ id: cellsTable.id }).from(cellsTable)
+      .where(and(eq(cellsTable.leaderId, id), eq(cellsTable.id, oldCellId))).limit(1);
+    if (ledCell.length) {
+      await db.update(cellsTable).set({ leaderId: null }).where(eq(cellsTable.id, oldCellId));
+      await db.update(seniorCellsTable).set({ leaderId: null })
+        .where(and(eq(seniorCellsTable.leaderId, id), eq(seniorCellsTable.isArchived, false)));
+      await db.update(pcfsTable).set({ leaderId: null })
+        .where(and(eq(pcfsTable.leaderId, id), eq(pcfsTable.isArchived, false)));
+      const leaderUser = await db.select({ id: usersTable.id }).from(usersTable)
+        .where(and(eq(usersTable.memberId, id), eq(usersTable.roleLevel, 4))).limit(1);
+      if (leaderUser.length) {
+        await db.update(usersTable).set({ roleLevel: 5 }).where(eq(usersTable.memberId, id));
+      }
+    }
+  }
+
   if (incomingSpouseId !== undefined) {
     if (incomingSpouseId === null) {
       // Only treat this as an actual "clear spouse" action if there WAS a spouse to begin with.
@@ -626,10 +649,20 @@ router.get("/:id/givings", async (req, res) => {
   const offset = (pageNum - 1) * limitNum;
   const yearFilter = ministryYearId ? parseInt(ministryYearId) : null;
 
-  // Look up this member to find their historical teen/child links
-  const memberRow = await db.select({ transferredFromTeenId: membersTable.transferredFromTeenId })
-    .from(membersTable).where(eq(membersTable.id, memberId)).limit(1);
+  // Look up this member to find their historical teen/child links AND spouse
+  const memberRow = await db.select({
+    transferredFromTeenId: membersTable.transferredFromTeenId,
+    spouseId: membersTable.spouseId,
+    firstName: membersTable.firstName,
+    lastName: membersTable.lastName,
+    title: membersTable.title,
+  }).from(membersTable).where(eq(membersTable.id, memberId)).limit(1);
   const transferredFromTeenId = memberRow[0]?.transferredFromTeenId ?? null;
+  const spouseId = memberRow[0]?.spouseId ?? null;
+  const memberInfo = memberRow[0];
+  const memberFmt = memberInfo
+    ? (memberInfo.title ? `${memberInfo.title} ${memberInfo.firstName} ${memberInfo.lastName}` : `${memberInfo.firstName} ${memberInfo.lastName}`)
+    : null;
 
   // Optionally find the teen's former child ID
   let transferredFromChildId: number | null = null;
@@ -651,21 +684,37 @@ router.get("/:id/givings", async (req, res) => {
     ? [eq(givingsTable.childId, transferredFromChildId), eq(givingsTable.isArchived, false), ...(yearFilter ? [eq(givingsTable.ministryYearId, yearFilter)] : [])]
     : null as any;
 
-  // Fetch all stages in parallel
-  const [memberGivings, teenGivings, childGivings] = await Promise.all([
+  const spouseConditions: any[] | null = spouseId
+    ? [eq(givingsTable.memberId, spouseId), eq(givingsTable.isArchived, false), ...(yearFilter ? [eq(givingsTable.ministryYearId, yearFilter)] : [])]
+    : null;
+
+  // Fetch all stages in parallel (including spouse givings if married)
+  const [memberGivings, teenGivings, childGivings, spouseGivings, spouseInfoRows] = await Promise.all([
     db.select().from(givingsTable).where(and(...memberConditions)),
     teenConditions ? db.select().from(givingsTable).where(and(...teenConditions)) : Promise.resolve([]),
     childConditions ? db.select().from(givingsTable).where(and(...childConditions)) : Promise.resolve([]),
+    spouseConditions ? db.select().from(givingsTable).where(and(...spouseConditions)) : Promise.resolve([]),
+    spouseId
+      ? db.select({ firstName: membersTable.firstName, lastName: membersTable.lastName, title: membersTable.title })
+          .from(membersTable).where(eq(membersTable.id, spouseId)).limit(1)
+      : Promise.resolve([]),
   ]);
+
+  const spouseInfo = (spouseInfoRows as any[])[0];
+  const spouseFmt = spouseInfo
+    ? (spouseInfo.title ? `${spouseInfo.title} ${spouseInfo.firstName} ${spouseInfo.lastName}` : `${spouseInfo.firstName} ${spouseInfo.lastName}`)
+    : null;
 
   // Merge and sort by date desc, then paginate
   const allGivings = [
-    ...memberGivings.map(g => ({ ...g, _stage: "member" })),
-    ...teenGivings.map(g => ({ ...g, _stage: "teen" })),
-    ...childGivings.map(g => ({ ...g, _stage: "child" })),
+    ...memberGivings.map(g => ({ ...g, _stage: "member", paidByName: memberFmt })),
+    ...(spouseGivings as any[]).map(g => ({ ...g, _stage: "spouse", paidByName: spouseFmt })),
+    ...teenGivings.map(g => ({ ...g, _stage: "teen", paidByName: null as string | null })),
+    ...childGivings.map(g => ({ ...g, _stage: "child", paidByName: null as string | null })),
   ].sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""));
 
   const total = allGivings.length;
+  const yearTotal = allGivings.reduce((s, g) => s + parseFloat(String(g.amount)), 0);
   const paginated = allGivings.slice(offset, offset + limitNum);
 
   // Enrich with type/year names
@@ -688,9 +737,10 @@ router.get("/:id/givings", async (req, res) => {
     givingTypeName: typesMap[g.givingTypeId] ?? "Unknown",
     ministryYearName: yearsMap[g.ministryYearId] ?? "Unknown",
     stage: g._stage,
+    paidByName: g.paidByName ?? null,
   }));
 
-  res.json({ data: enriched, total, page: pageNum, limit: limitNum });
+  res.json({ data: enriched, total, page: pageNum, limit: limitNum, yearTotal });
 });
 
 // ─── DEPENDENTS GIVINGS (children + non-promoted teens linked to a parent) ───
