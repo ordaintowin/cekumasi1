@@ -66,12 +66,18 @@ async function apicall(path: string, method: string, body?: any) {
 
 // ── sub-components ───────────────────────────────────────────────────────────
 
+// Real honorific (as set on the member's profile in the database) takes priority;
+// falls back to a gender-based prefix only when no title is on file — mirrors dn() in members.tsx
+function watcherPrefix(w: any): string {
+  if (w.title) return w.title;
+  return w.gender === "female" ? "Sis." : "Bro.";
+}
+
 function WatcherPill({ w }: { w: any }) {
-  const prefix = w.gender === "female" ? "Sis." : "Bro.";
   return (
     <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-600 to-purple-500 text-white rounded-full text-xs font-medium shadow-sm">
       <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse flex-shrink-0" />
-      {prefix} {w.firstName} {w.lastName} is watching
+      {watcherPrefix(w)} {w.firstName} {w.lastName} is watching
     </span>
   );
 }
@@ -1284,8 +1290,6 @@ export default function OnlinePortal() {
   const [chatOpen, setChatOpen] = useState(false);
   const [watchersOpen, setWatchersOpen] = useState(false);
   const [pipMode, setPipMode] = useState(false);
-  const pipRef = useRef<HTMLDivElement>(null);
-  const pipDragRef = useRef<{ startX: number; startY: number; initLeft: number; initTop: number } | null>(null);
 
   // Global pending access requests panel (admin)
   const [globalPendingRequests, setGlobalPendingRequests] = useState<any[]>([]);
@@ -1967,33 +1971,11 @@ export default function OnlinePortal() {
                 <div className={`flex ${selectedVideo.isLive ? "flex-col lg:flex-row" : "flex-col"} gap-3`}>
                   {/* ── Video player ── */}
                   <div className={selectedVideo.isLive ? "lg:flex-1 min-w-0" : "w-full"}>
-                    <div className="relative rounded-2xl overflow-hidden border-2 border-pink-400 bg-black shadow-xl" style={{ aspectRatio: "16/9" }}>
-                      <iframe
-                        src={pipMode ? undefined : getEmbedSrc(selectedVideo)}
-                        title={selectedVideo.title}
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
-                        allowFullScreen
-                        className="w-full h-full border-0"
-                      />
-                      {/* LIVE badge */}
-                      {selectedVideo.isLive && (
-                        <div className="absolute top-3 left-3 pointer-events-none">
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-white bg-red-500/80 rounded-full px-1.5 py-0.5 leading-none">
-                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse inline-block" />LIVE
-                          </span>
-                        </div>
-                      )}
-                      {/* PiP / mini-player button */}
-                      <button
-                        onClick={() => setPipMode(p => !p)}
-                        title="Picture in picture"
-                        className="absolute top-3 right-3 z-10 w-8 h-8 rounded-lg bg-black/50 hover:bg-black/80 text-white flex items-center justify-center transition-colors"
-                      >
-                        <Minimize2 className="w-4 h-4" />
-                      </button>
-                      {/* PiP active overlay */}
+                    {/* Dock — reserves the player's spot in the normal layout. The actual player (below)
+                        docks into this exact spot when not in PiP, so it never has to remount/restart. */}
+                    <div className="relative rounded-2xl shadow-xl" style={{ aspectRatio: "16/9" }}>
                       {pipMode && (
-                        <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center gap-3">
+                        <div className="absolute inset-0 rounded-2xl border-2 border-dashed border-pink-200 bg-gradient-to-br from-gray-900 to-black flex flex-col items-center justify-center gap-3">
                           <Tv className="w-10 h-10 text-pink-400" />
                           <p className="text-white text-sm font-medium">Playing in mini player</p>
                           <button
@@ -2004,6 +1986,66 @@ export default function OnlinePortal() {
                           </button>
                         </div>
                       )}
+
+                      {/* The one true player — same iframe element whether docked here or floating as PiP below.
+                          Only its wrapper's position/size changes, so YouTube playback is never interrupted. */}
+                      <div
+                        className={
+                          pipMode
+                            ? "fixed bottom-4 right-4 z-50 rounded-2xl overflow-hidden shadow-2xl border-2 border-pink-400 bg-black transition-all duration-200"
+                            : "absolute inset-0 rounded-2xl overflow-hidden border-2 border-pink-400 bg-black"
+                        }
+                        style={pipMode ? { width: "min(320px, calc(100vw - 32px))", aspectRatio: "16/9" } : undefined}
+                      >
+                        <iframe
+                          src={getEmbedSrc(selectedVideo)}
+                          title={selectedVideo.title}
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
+                          allowFullScreen
+                          className="w-full h-full border-0"
+                        />
+                        {/* LIVE badge */}
+                        {selectedVideo.isLive && (
+                          <div className="absolute top-3 left-3 pointer-events-none">
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-white bg-red-500/80 rounded-full px-1.5 py-0.5 leading-none">
+                              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse inline-block" />LIVE
+                            </span>
+                          </div>
+                        )}
+                        {/* Title bar — shown only while floating, so it's clear what's playing */}
+                        {pipMode && (
+                          <div className="absolute top-0 left-0 right-0 flex items-center gap-1.5 px-2 py-1.5 bg-gradient-to-b from-black/70 to-transparent pointer-events-none">
+                            <span className="text-white text-[10px] font-medium flex-1 truncate">{selectedVideo.title}</span>
+                          </div>
+                        )}
+                        {/* Controls */}
+                        {pipMode ? (
+                          <div className="absolute bottom-1.5 right-1.5 flex gap-1 z-10">
+                            <button
+                              onClick={() => setPipMode(false)}
+                              title="Expand player"
+                              className="w-6 h-6 rounded-full bg-white/20 hover:bg-white/40 text-white flex items-center justify-center transition-colors"
+                            >
+                              <Maximize2 className="w-3 h-3" />
+                            </button>
+                            <button
+                              onClick={closePlayer}
+                              title="Close"
+                              className="w-6 h-6 rounded-full bg-white/20 hover:bg-red-500/70 text-white flex items-center justify-center transition-colors"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setPipMode(true)}
+                            title="Picture in picture"
+                            className="absolute top-3 right-3 z-10 w-8 h-8 rounded-lg bg-black/50 hover:bg-black/80 text-white flex items-center justify-center transition-colors"
+                          >
+                            <Minimize2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -2182,7 +2224,6 @@ export default function OnlinePortal() {
                   {/* Scrollable numbered list — toggle-controlled */}
                   <div className={`${watchersOpen ? "block" : "hidden"} overflow-y-auto`} style={{ maxHeight: "260px" }}>
                     {watchers.map((w: any, index: number) => {
-                      const prefix = w.gender === "female" ? "Sis." : "Bro.";
                       return (
                         <div key={w.memberId} className={`flex items-center gap-3 px-4 py-2 ${index % 2 === 0 ? "bg-white/40" : "bg-white/70"} border-b border-green-50 last:border-0`}>
                           <span className="text-[11px] font-bold text-gray-400 w-5 text-right flex-shrink-0">{index + 1}</span>
@@ -2190,7 +2231,7 @@ export default function OnlinePortal() {
                             {(w.firstName?.[0] ?? "") + (w.lastName?.[0] ?? "")}
                           </div>
                           <span className="text-xs font-medium text-gray-800 flex-1 truncate">
-                            {prefix} {w.firstName} {w.lastName}
+                            {watcherPrefix(w)} {w.firstName} {w.lastName}
                           </span>
                           {w.cellName && (
                             <span className="text-[10px] text-gray-400 truncate max-w-[90px] hidden sm:block">{w.cellName}</span>
@@ -2309,55 +2350,6 @@ export default function OnlinePortal() {
             </div>
           )}
         </div>
-
-
-
-
-      {/* ── Floating Mini-Player (PiP) ───────────────────────────────────── */}
-      {pipMode && selectedVideo && (
-        <div
-          ref={pipRef}
-          className="fixed bottom-4 right-4 z-50 rounded-2xl overflow-hidden shadow-2xl border-2 border-pink-400 bg-black"
-          style={{ width: "min(320px, calc(100vw - 32px))", aspectRatio: "16/9" }}
-        >
-          <iframe
-            src={getEmbedSrc(selectedVideo)}
-            title={selectedVideo.title}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
-            allowFullScreen
-            className="w-full h-full border-0"
-          />
-          {/* Mini-player controls overlay */}
-          <div className="absolute inset-0 flex flex-col pointer-events-none">
-            {/* Top bar */}
-            <div className="flex items-center gap-1.5 px-2 py-1.5 bg-gradient-to-b from-black/70 to-transparent pointer-events-auto">
-              {selectedVideo.isLive && (
-                <span className="inline-flex items-center gap-1 text-[9px] font-bold text-white bg-red-500/80 rounded-full px-1.5 py-0.5 leading-none">
-                  <span className="w-1 h-1 rounded-full bg-white animate-pulse inline-block" />LIVE
-                </span>
-              )}
-              <span className="text-white text-[10px] font-medium flex-1 truncate">{selectedVideo.title}</span>
-            </div>
-            {/* Bottom bar */}
-            <div className="mt-auto flex justify-end gap-1 p-1.5 bg-gradient-to-t from-black/60 to-transparent pointer-events-auto">
-              <button
-                onClick={() => setPipMode(false)}
-                title="Expand player"
-                className="w-6 h-6 rounded-full bg-white/20 hover:bg-white/40 text-white flex items-center justify-center transition-colors"
-              >
-                <Maximize2 className="w-3 h-3" />
-              </button>
-              <button
-                onClick={() => { setPipMode(false); setSelectedVideo(null); }}
-                title="Close"
-                className="w-6 h-6 rounded-full bg-white/20 hover:bg-red-500/70 text-white flex items-center justify-center transition-colors"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ── Edit Video Dialog ────────────────────────────────────────────── */}
       <Dialog open={editVideoOpen} onOpenChange={setEditVideoOpen}>
