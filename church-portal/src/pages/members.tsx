@@ -358,6 +358,20 @@ function MemberForm({ onSubmit, loading, cells, seniorCells, initialValues, isEd
                   )}
                 </SelectContent>
               </Select>
+              {isEdit && (() => {
+                const origCellId = initialValues?.cellId ? String(initialValues.cellId) : "";
+                const lp = initialValues?.leadershipPositions;
+                const isLeader = lp && (lp.cellLeader || lp.seniorCellLeader || lp.pcfLeader);
+                const cellChanged = form.cellId !== origCellId && form.cellId !== "";
+                if (!isLeader || !cellChanged) return null;
+                const role = lp.pcfLeader ? "PCF Leader" : lp.seniorCellLeader ? "Senior Cell Leader" : "Cell Leader";
+                return (
+                  <div className="flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                    <span className="mt-0.5 text-amber-500">⚠</span>
+                    <span>This member is a <strong>{role}</strong>. Moving them to a different cell will remove their leadership role and all leader privileges until re-appointed.</span>
+                  </div>
+                );
+              })()}
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -498,6 +512,7 @@ function GivingsYearTab({ memberId, m }: { memberId: number; m: any }) {
   const [page, setPage] = useState(1);
   const LIMIT = 15;
   const activeYearId = m.activeMinistryYear?.id;
+  const hasSpouse = !!m.spouseId;
 
   const givingsParams = { ministryYearId: activeYearId, page, limit: LIMIT };
   const { data, isLoading } = useGetMemberGivings(memberId, givingsParams, {
@@ -508,6 +523,7 @@ function GivingsYearTab({ memberId, m }: { memberId: number; m: any }) {
   const total: number = data?.total ?? 0;
   const totalPages = Math.ceil(total / LIMIT);
   const pageTotal = records.reduce((s, g) => s + Number(g.amount), 0);
+  const yearTotal: number | undefined = (data as any)?.yearTotal;
 
   if (!m.activeMinistryYear) {
     return (
@@ -525,7 +541,7 @@ function GivingsYearTab({ memberId, m }: { memberId: number; m: any }) {
         </span>
         <span className="text-xs text-gray-500">
           Total: <span className="font-bold text-green-700 text-sm">
-            GHS {Number(m.givingTotalThisYear ?? pageTotal).toLocaleString("en-GH", { minimumFractionDigits: 2 })}
+            GHS {Number(yearTotal ?? m.givingTotalThisYear ?? pageTotal).toLocaleString("en-GH", { minimumFractionDigits: 2 })}
           </span>
         </span>
       </div>
@@ -541,6 +557,7 @@ function GivingsYearTab({ memberId, m }: { memberId: number; m: any }) {
                 <TableHead className="text-xs py-2">Type</TableHead>
                 <TableHead className="text-xs py-2">Amount</TableHead>
                 <TableHead className="text-xs py-2">Date</TableHead>
+                {hasSpouse && <TableHead className="text-xs py-2">Paid by</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -561,6 +578,11 @@ function GivingsYearTab({ memberId, m }: { memberId: number; m: any }) {
                     <TableCell className="text-xs py-2 text-gray-500">
                       {g.date ? new Date(g.date).toLocaleDateString("en-GH", { day: "numeric", month: "short", year: "numeric" }) : "—"}
                     </TableCell>
+                    {hasSpouse && (
+                      <TableCell className="text-xs py-2 text-gray-400 max-w-[100px] truncate" title={g.paidByName ?? ""}>
+                        {g.paidByName ?? "—"}
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))
               )}
@@ -1301,11 +1323,6 @@ export default function Members() {
 
   return (
     <div className="space-y-5">
-      {isLeader && leaderScopeName && (
-        <div className="flex items-center gap-2 px-3 py-2 bg-purple-50 border border-purple-200 rounded-lg text-sm text-purple-800 font-medium">
-          <span className="text-purple-500">⛪</span> Showing members of: <span className="font-bold">{leaderScopeName}</span>
-        </div>
-      )}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Members</h1>
@@ -1345,6 +1362,29 @@ export default function Members() {
           )}
         </div>
       </div>
+
+      {isLeader && leaderScopeName && (
+        <div className="rounded-xl border border-purple-200 bg-gradient-to-br from-purple-50 to-white p-5">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Users className="w-4 h-4 text-purple-500" />
+              <span className="text-xs font-bold uppercase tracking-wide text-purple-500">My Fellowship</span>
+            </div>
+            <Badge className={`border-0 text-xs ${leaderPcfId ? "bg-amber-100 text-amber-700" : leaderSeniorCellId ? "bg-orange-100 text-orange-700" : "bg-green-100 text-green-700"}`}>
+              {leaderPcfId ? "PCF" : leaderSeniorCellId ? "Senior Cell" : "Cell"}
+            </Badge>
+          </div>
+          <p className="text-base font-bold text-gray-800 mb-4">{leaderScopeName}</p>
+          <div className="flex items-center gap-6">
+            <div>
+              <p className="text-3xl font-extrabold text-purple-700">
+                {isLoading ? <span className="text-gray-400 text-xl animate-pulse">—</span> : total}
+              </p>
+              <p className="text-xs text-gray-500 mt-0.5 uppercase font-semibold tracking-wide">Total Members</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1 max-w-sm">

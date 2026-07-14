@@ -1248,8 +1248,6 @@ export default function Profile() {
         </Dialog>
       )}
 
-      {(user as any)?.roleLevel === 4 && <LeaderFellowshipWidget user={user} />}
-
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Edit My Profile</DialogTitle></DialogHeader>
