@@ -1210,7 +1210,7 @@ function MemberDetail({ memberId, onBack, canDelete, canManage, cells, seniorCel
 async function exportMembersToExcel(filters: any, toast: any) {
   try {
     const token = localStorage.getItem("token");
-    const params = new URLSearchParams({ page: "1", limit: "1000", ...filters });
+    const params = new URLSearchParams({ page: "1", limit: "10000", ...filters });
     const res = await fetch(`/api/members?${params}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
