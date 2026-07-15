@@ -177,7 +177,7 @@ async function getMemberWithRoles(id: number) {
 router.get("/", async (req, res) => {
   const { search, type, cellId, seniorCellId, pcfId, page = "1", limit = "25" } = req.query as any;
   const pageNum = parseInt(page);
-  const limitNum = Math.min(parseInt(limit), 100);
+  const limitNum = Math.min(parseInt(limit) || 25, 10000);
   const offset = (pageNum - 1) * limitNum;
 
   const conditions: any[] = [eq(membersTable.isArchived, false)];
