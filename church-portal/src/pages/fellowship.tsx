@@ -651,6 +651,80 @@ function MemberViewDialog({ target, onClose }: { target: MemberViewTarget; onClo
   );
 }
 
+async function exportCellsToExcel(allCells: any[], scMap: Map<number, any>, toast: any) {
+  try {
+    const rows = allCells.map((c: any) => {
+      const sc = c.seniorCellId ? scMap.get(c.seniorCellId) : null;
+      return {
+        "Cell Name": c.name,
+        "Senior Cell": c.seniorCellName ?? "",
+        PCF: sc?.pcfName ?? "",
+        Leader: c.leaderName ?? "",
+        Members: c.memberCount ?? 0,
+      };
+    });
+    if (rows.length === 0) { toast({ title: "Nothing to export yet" }); return; }
+    await downloadJsonAsExcel(rows, "Cells", `Cells_${new Date().toISOString().split("T")[0]}.xlsx`);
+    toast({ title: `Exported ${rows.length} cells to Excel` });
+  } catch {
+    toast({ title: "Export failed", variant: "destructive" });
+  }
+}
+
+async function exportSeniorCellsToExcel(allSCs: any[], toast: any) {
+  try {
+    const rows = allSCs.map((sc: any) => ({
+      "Senior Cell Name": sc.name,
+      PCF: sc.pcfName ?? "",
+      Leader: sc.leaderName ?? "",
+      Cells: sc.cellCount ?? 0,
+      Members: sc.memberCount ?? 0,
+    }));
+    if (rows.length === 0) { toast({ title: "Nothing to export yet" }); return; }
+    await downloadJsonAsExcel(rows, "SeniorCells", `SeniorCells_${new Date().toISOString().split("T")[0]}.xlsx`);
+    toast({ title: `Exported ${rows.length} senior cells to Excel` });
+  } catch {
+    toast({ title: "Export failed", variant: "destructive" });
+  }
+}
+
+async function exportPcfsToExcel(pcfs: any[], toast: any) {
+  try {
+    const rows = pcfs.map((pcf: any) => ({
+      "PCF Name": pcf.name,
+      Leader: pcf.leaderName ?? "",
+      "Senior Cells": pcf.seniorCellCount ?? 0,
+      Members: pcf.memberCount ?? 0,
+    }));
+    if (rows.length === 0) { toast({ title: "Nothing to export yet" }); return; }
+    await downloadJsonAsExcel(rows, "PCFs", `PCFs_${new Date().toISOString().split("T")[0]}.xlsx`);
+    toast({ title: `Exported ${rows.length} PCFs to Excel` });
+  } catch {
+    toast({ title: "Export failed", variant: "destructive" });
+  }
+}
+
+async function exportLeadersToExcel(filter: "all" | "cell" | "sc" | "pcf", allLeadersRows: any[], flatCells: any[], flatSCs: any[], flatPCFs: any[], toast: any) {
+  try {
+    let rows: any[] = [];
+    if (filter === "all") {
+      rows = allLeadersRows;
+    } else if (filter === "cell") {
+      rows = flatCells.map((r) => ({ "Leader Full Name": r.leaderName, "Phone Number": r.leaderPhone ?? "", Cell: r.cellName, "Senior Cell": r.scName ?? "", PCF: r.pcfName ?? "" }));
+    } else if (filter === "sc") {
+      rows = flatSCs.map((r) => ({ "Leader Full Name": r.leaderName, "Phone Number": r.leaderPhone ?? "", "Senior Cell": r.scName, PCF: r.pcfName ?? "" }));
+    } else if (filter === "pcf") {
+      rows = flatPCFs.map((r: any) => ({ "Leader Full Name": r.leaderName, PCF: r.pcfName }));
+    }
+    if (rows.length === 0) { toast({ title: "Nothing to export yet" }); return; }
+    const label = filter === "all" ? "AllLeaders" : filter === "cell" ? "CellLeaders" : filter === "sc" ? "SeniorCellLeaders" : "PcfLeaders";
+    await downloadJsonAsExcel(rows, "Leaders", `${label}_${new Date().toISOString().split("T")[0]}.xlsx`);
+    toast({ title: `Exported ${rows.length} leaders to Excel` });
+  } catch {
+    toast({ title: "Export failed", variant: "destructive" });
+  }
+}
+
 async function exportFellowshipToExcel(hierarchyData: any, toast: any) {
   try {
     const rows: any[] = [];
@@ -683,6 +757,7 @@ async function exportFellowshipToExcel(hierarchyData: any, toast: any) {
 
 /* ─── leaders report ─── */
 function LeadersReport() {
+  const { toast } = useToast();
   const { data, isLoading } = useGetFellowshipHierarchy({
     query: { queryKey: getGetFellowshipHierarchyQueryKey(), staleTime: 5 * 60 * 1000 },
   });
@@ -766,6 +841,29 @@ function LeadersReport() {
     }));
   }, [data]);
 
+  const allLeadersRows = useMemo(() => {
+    const rows: any[] = [];
+    pcfs.forEach((pcf: any) => {
+      if (pcf.leaderName) rows.push({ "Leader Name": pcf.leaderName, Fellowship: pcf.name, Role: "PCF Leader", Members: pcf.memberCount ?? 0 });
+      (pcf.seniorCells ?? []).forEach((sc: any) => {
+        if (sc.leaderName) rows.push({ "Leader Name": sc.leaderName, Fellowship: sc.name, Role: "Senior Cell Leader", Members: sc.memberCount ?? 0 });
+        (sc.cells ?? []).forEach((cell: any) => {
+          if (cell.leaderName) rows.push({ "Leader Name": cell.leaderName, Fellowship: cell.name, Role: "Cell Leader", Members: cell.memberCount ?? 0 });
+        });
+      });
+    });
+    standaloneSCs.forEach((sc: any) => {
+      if (sc.leaderName) rows.push({ "Leader Name": sc.leaderName, Fellowship: sc.name, Role: "Senior Cell Leader", Members: sc.memberCount ?? 0 });
+      (sc.cells ?? []).forEach((cell: any) => {
+        if (cell.leaderName) rows.push({ "Leader Name": cell.leaderName, Fellowship: cell.name, Role: "Cell Leader", Members: cell.memberCount ?? 0 });
+      });
+    });
+    standaloneCells.forEach((cell: any) => {
+      if (cell.leaderName) rows.push({ "Leader Name": cell.leaderName, Fellowship: cell.name, Role: "Cell Leader", Members: cell.memberCount ?? 0 });
+    });
+    return rows;
+  }, [data]);
+
   const skeletonCols = filter === "pcf" ? 3 : 4;
 
   return (
@@ -781,8 +879,12 @@ function LeadersReport() {
           </button>
         ))}
         {!isLoading && (
-          <span className="ml-auto text-xs text-gray-400 self-center">{totalLeaders} leaders total</span>
+          <span className="text-xs text-gray-400 self-center">{totalLeaders} leaders total</span>
         )}
+        <Button size="sm" variant="outline" className="ml-auto border-green-300 text-green-700 hover:bg-green-50 text-xs"
+          onClick={() => exportLeadersToExcel(filter, allLeadersRows, flatCells, flatSCs, flatPCFs, toast)}>
+          <Download className="w-3.5 h-3.5 mr-1 shrink-0" /> Export Excel
+        </Button>
       </div>
 
       {/* ── ALL LEADERS — hierarchy table (unchanged) ── */}
@@ -1097,6 +1199,7 @@ export default function Fellowship() {
   const [deleteTarget, setDeleteTarget] = useState<any>(null);
   const [deleteReason, setDeleteReason] = useState("");
   const [memberViewTarget, setMemberViewTarget] = useState<MemberViewTarget | null>(null);
+  const [activeTab, setActiveTab] = useState("hierarchy");
 
   const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: getGetFellowshipHierarchyQueryKey() });
@@ -1194,12 +1297,19 @@ export default function Fellowship() {
           </p>
         </div>
         <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-1.5 w-full sm:w-auto">
-          <Button size="sm" variant="outline" className="border-green-300 text-green-700 hover:bg-green-50 text-xs justify-center"
-            onClick={() => exportFellowshipToExcel(data, toast)}>
-            <Download className="w-3.5 h-3.5 mr-1 shrink-0" />
-            <span className="sm:hidden">Export</span>
-            <span className="hidden sm:inline">Export Excel</span>
-          </Button>
+          {activeTab !== "leaders" && (
+            <Button size="sm" variant="outline" className="border-green-300 text-green-700 hover:bg-green-50 text-xs justify-center"
+              onClick={() => {
+                if (activeTab === "hierarchy") exportFellowshipToExcel(data, toast);
+                else if (activeTab === "cells") exportCellsToExcel(allCells, scMap, toast);
+                else if (activeTab === "senior-cells") exportSeniorCellsToExcel(allSCs, toast);
+                else if (activeTab === "pcfs") exportPcfsToExcel(pcfs, toast);
+              }}>
+              <Download className="w-3.5 h-3.5 mr-1 shrink-0" />
+              <span className="sm:hidden">Export</span>
+              <span className="hidden sm:inline">Export Excel</span>
+            </Button>
+          )}
           {canManage && (
             <>
               <Button size="sm" variant="outline" className="border-yellow-300 text-yellow-700 hover:bg-yellow-50 text-xs justify-center"
@@ -1221,7 +1331,7 @@ export default function Fellowship() {
         </div>
       </div>
 
-      <Tabs defaultValue="hierarchy">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <div className="overflow-x-auto w-full pb-px">
           <TabsList className="bg-gray-100 h-9 w-max">
             <TabsTrigger value="hierarchy" className="text-xs data-[state=active]:bg-purple-700 data-[state=active]:text-white">
