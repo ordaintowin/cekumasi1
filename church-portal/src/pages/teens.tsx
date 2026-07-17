@@ -19,12 +19,91 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Trash2, Search, Smile, ChevronLeft, ChevronRight, X, ArrowUpRight, Edit2, UserCheck, KeyRound, Eye, EyeOff } from "lucide-react";
+import { Plus, Trash2, Search, Smile, ChevronLeft, ChevronRight, X, ArrowUpRight, Edit2, UserCheck, KeyRound, Eye, EyeOff, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 function getAge(dob: string | null | undefined) {
   if (!dob) return null;
   return Math.floor((Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000));
+}
+
+async function downloadTeensExcel() {
+  const token = localStorage.getItem("token");
+  const res = await fetch("/api/teens?page=1&limit=9999", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const result = await res.json();
+  const teens: any[] = result.data ?? [];
+
+  const ExcelJS = (await import("exceljs")).default;
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = "Christ Embassy Kumasi 1";
+  workbook.created = new Date();
+  const sheet = workbook.addWorksheet("Teens Church");
+
+  sheet.columns = [
+    { header: "No.", key: "no", width: 6 },
+    { header: "First Name", key: "firstName", width: 18 },
+    { header: "Last Name", key: "lastName", width: 18 },
+    { header: "Member ID", key: "membershipId", width: 16 },
+    { header: "Gender", key: "gender", width: 10 },
+    { header: "Date of Birth", key: "dateOfBirth", width: 14 },
+    { header: "Age", key: "age", width: 8 },
+    { header: "Phone 1", key: "phone1", width: 16 },
+    { header: "Phone 2", key: "phone2", width: 16 },
+    { header: "Residence", key: "residence", width: 24 },
+    { header: "Parent/Guardian", key: "parent", width: 24 },
+    { header: "Foundation School", key: "foundationSchool", width: 18 },
+    { header: "Foundation School Date", key: "foundationSchoolDate", width: 22 },
+    { header: "Date Joined", key: "dateJoined", width: 14 },
+  ] as any;
+
+  teens.forEach((t, i) => {
+    const dob = t.dateOfBirth ?? t.dob;
+    const age = dob ? Math.floor((Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : "";
+    sheet.addRow({
+      no: i + 1,
+      firstName: t.firstName ?? "",
+      lastName: t.lastName ?? "",
+      membershipId: t.membershipId ?? "",
+      gender: t.gender ? (t.gender.charAt(0).toUpperCase() + t.gender.slice(1)) : "",
+      dateOfBirth: dob ?? "",
+      age,
+      phone1: t.phone1 ?? "",
+      phone2: t.phone2 ?? "",
+      residence: t.residentialAddress ?? t.placeOfResidence ?? "",
+      parent: t.parentName ?? t.parentExternal ?? "",
+      foundationSchool: t.foundationSchoolCompleted ? "Yes" : "No",
+      foundationSchoolDate: t.foundationSchoolDate ?? "",
+      dateJoined: t.dateJoined ?? "",
+    });
+  });
+
+  const headerRow = sheet.getRow(1);
+  headerRow.eachCell((cell: any) => {
+    cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF6D28D9" } };
+    cell.alignment = { vertical: "middle", horizontal: "center" };
+  });
+  sheet.eachRow((row: any, rowNum: number) => {
+    if (rowNum > 1) {
+      row.eachCell((cell: any) => {
+        cell.alignment = { vertical: "middle" };
+        cell.border = { bottom: { style: "thin", color: { argb: "FFE5E7EB" } } };
+      });
+    }
+  });
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `teens-church-${new Date().toISOString().split("T")[0]}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 type TeenFormData = {
@@ -414,9 +493,14 @@ export default function Teens() {
           <p className="text-sm text-gray-500 mt-1">{total} teens registered</p>
         </div>
         <Dialog open={addOpen} onOpenChange={(v) => { if (!v) resetForm(); setAddOpen(v); }}>
-          <Button className="bg-purple-700 hover:bg-purple-800 text-white" onClick={() => setAddOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" /> Add Teen
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" className="border-green-600 text-green-700 hover:bg-green-50" onClick={downloadTeensExcel}>
+              <Download className="w-4 h-4 mr-2" /> Download Excel
+            </Button>
+            <Button className="bg-purple-700 hover:bg-purple-800 text-white" onClick={() => setAddOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" /> Add Teen
+            </Button>
+          </div>
           <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle>Add Teen</DialogTitle></DialogHeader>
             <Tabs value={addMethod} onValueChange={(v: any) => setAddMethod(v)} className="pt-1">

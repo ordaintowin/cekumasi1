@@ -14,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Trash2, Search, Baby, ChevronLeft, ChevronRight, X, Edit2, ArrowRight } from "lucide-react";
+import { Plus, Trash2, Search, Baby, ChevronLeft, ChevronRight, X, Edit2, ArrowRight, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const CLASSES = [
@@ -35,6 +35,81 @@ function getAge(dob: string | null | undefined) {
   if (!dob) return null;
   const diff = Date.now() - new Date(dob).getTime();
   return Math.floor(diff / (365.25 * 24 * 60 * 60 * 1000));
+}
+
+async function downloadChildrenExcel(classFilter: string) {
+  const token = localStorage.getItem("token");
+  const params = new URLSearchParams({ page: "1", limit: "9999" });
+  if (classFilter && classFilter !== "all") params.set("class", classFilter);
+  const res = await fetch(`/api/children?${params}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const result = await res.json();
+  const children: any[] = result.data ?? [];
+
+  const ExcelJS = (await import("exceljs")).default;
+  const workbook = new ExcelJS.Workbook();
+  workbook.creator = "Christ Embassy Kumasi 1";
+  workbook.created = new Date();
+  const sheetName = classFilter !== "all"
+    ? (CLASSES.find(c => c.value === classFilter)?.label ?? "Children")
+    : "All Children";
+  const sheet = workbook.addWorksheet(sheetName);
+
+  sheet.columns = [
+    { header: "No.", key: "no", width: 6 },
+    { header: "First Name", key: "firstName", width: 18 },
+    { header: "Last Name", key: "lastName", width: 18 },
+    { header: "Member ID", key: "membershipId", width: 16 },
+    { header: "Class", key: "class", width: 20 },
+    { header: "Gender", key: "gender", width: 10 },
+    { header: "Date of Birth", key: "dateOfBirth", width: 14 },
+    { header: "Age", key: "age", width: 8 },
+    { header: "Parent/Guardian", key: "parent", width: 26 },
+  ] as any;
+
+  children.forEach((c, i) => {
+    const dob = c.dateOfBirth ?? c.dob;
+    const age = dob ? Math.floor((Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : "";
+    const cls = CLASSES.find(x => x.value === c.class);
+    sheet.addRow({
+      no: i + 1,
+      firstName: c.firstName ?? "",
+      lastName: c.lastName ?? "",
+      membershipId: c.membershipId ?? "",
+      class: cls?.label ?? c.class ?? "",
+      gender: c.gender ? (c.gender.charAt(0).toUpperCase() + c.gender.slice(1)) : "",
+      dateOfBirth: dob ?? "",
+      age,
+      parent: c.parentName ?? c.parentExternal ?? "",
+    });
+  });
+
+  const headerRow = sheet.getRow(1);
+  headerRow.eachCell((cell: any) => {
+    cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF6D28D9" } };
+    cell.alignment = { vertical: "middle", horizontal: "center" };
+  });
+  sheet.eachRow((row: any, rowNum: number) => {
+    if (rowNum > 1) {
+      row.eachCell((cell: any) => {
+        cell.alignment = { vertical: "middle" };
+        cell.border = { bottom: { style: "thin", color: { argb: "FFE5E7EB" } } };
+      });
+    }
+  });
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `childrens-church-${new Date().toISOString().split("T")[0]}.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 type ChildForm = {
@@ -324,9 +399,14 @@ export default function Children() {
           <h1 className="text-2xl font-bold text-gray-900">Children's Church</h1>
           <p className="text-sm text-gray-500 mt-1">{total} children registered</p>
         </div>
-        <Button className="bg-purple-700 hover:bg-purple-800 text-white" onClick={() => setAddOpen(true)}>
-          <Plus className="w-4 h-4 mr-2" /> Register Child
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" className="border-green-600 text-green-700 hover:bg-green-50" onClick={() => downloadChildrenExcel(classFilter)}>
+            <Download className="w-4 h-4 mr-2" /> Download Excel
+          </Button>
+          <Button className="bg-purple-700 hover:bg-purple-800 text-white" onClick={() => setAddOpen(true)}>
+            <Plus className="w-4 h-4 mr-2" /> Register Child
+          </Button>
+        </div>
       </div>
 
       <div className="flex gap-3 flex-wrap">

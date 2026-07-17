@@ -331,7 +331,7 @@ export default function Dashboard() {
                     <ActivityDot type={item.type} />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-gray-700 leading-snug">{item.description}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">{item.timeAgo ?? new Date(item.createdAt).toLocaleString()}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{item.timeAgo ?? (() => { if (!item.createdAt) return "—"; const d = new Date(item.createdAt); return isNaN(d.getTime()) ? "—" : d.toLocaleString("en-GH", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }); })()}</p>
                     </div>
                   </div>
                 ))}
