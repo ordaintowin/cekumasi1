@@ -13,13 +13,16 @@ import {
   Clock, Pencil, Send,
   Shield, MessageCircle, Users,
   ChevronDown, ChevronUp, Minimize2, Maximize2,
-  CheckCircle2, AlertTriangle,
+  CheckCircle2, AlertTriangle, Layers, Expand, Shrink,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useListVideos, getListVideosQueryKey, useDeleteVideo } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMeetingContext } from "@/context/MeetingContext";
+import OverlayStudio from "@/components/OverlayStudio";
+import LiveOverlayCanvas from "@/components/LiveOverlayCanvas";
+import type { OverlayState } from "@/components/LiveOverlayCanvas";
 
 const VIDEOS_PER_PAGE = 8;
 
@@ -37,7 +40,12 @@ function getThumbnail(v: any): string {
 }
 
 function getEmbedSrc(v: any): string {
-  return v.embedUrl || `https://www.youtube.com/embed/${v.youtubeId}?rel=0`;
+  // fs=0 hides YouTube's own fullscreen button so our custom one is the only option
+  if (v.embedUrl) {
+    const sep = v.embedUrl.includes("?") ? "&" : "?";
+    return v.embedUrl.includes("youtube") ? v.embedUrl + sep + "fs=0" : v.embedUrl;
+  }
+  return `https://www.youtube.com/embed/${v.youtubeId}?rel=0&fs=0`;
 }
 
 class ApiError extends Error {
@@ -1282,6 +1290,7 @@ export default function OnlinePortal() {
   const [chatSending, setChatSending] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const chatScrollRef = useRef<HTMLDivElement>(null);
   const chatPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastChatIdRef = useRef<number>(0);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
@@ -1290,6 +1299,13 @@ export default function OnlinePortal() {
   const [chatOpen, setChatOpen] = useState(false);
   const [watchersOpen, setWatchersOpen] = useState(false);
   const [pipMode, setPipMode] = useState(false);
+
+  // Live overlay (admin studio + viewer canvas)
+  const [overlayOpen, setOverlayOpen] = useState(false);
+  const [overlayState, setOverlayState] = useState<OverlayState | null>(null);
+  const overlayPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const playerContainerRef = useRef<HTMLDivElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Global pending access requests panel (admin)
   const [globalPendingRequests, setGlobalPendingRequests] = useState<any[]>([]);
@@ -1382,6 +1398,43 @@ export default function OnlinePortal() {
     };
   }, [selectedVideo?.id, selectedVideo?.isLive, hasAccess, user, fetchWatchers]);
 
+  // ── poll overlay state while watching a live video ─────────────────────────
+  useEffect(() => {
+    if (!selectedVideo?.isLive || !hasAccess || !user) {
+      setOverlayState(null);
+      clearInterval(overlayPollRef.current!);
+      return;
+    }
+    const videoId = selectedVideo.id;
+    const fetchOverlay = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`/api/videos/${videoId}/overlay`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) setOverlayState(await res.json());
+      } catch { /* ignore */ }
+    };
+    fetchOverlay();
+    overlayPollRef.current = setInterval(fetchOverlay, 3_000);
+    return () => { clearInterval(overlayPollRef.current!); setOverlayState(null); };
+  }, [selectedVideo?.id, selectedVideo?.isLive, hasAccess, user]);
+
+  // ── track browser fullscreen state ───────────────────────────────────────
+  useEffect(() => {
+    const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onFsChange);
+    return () => document.removeEventListener("fullscreenchange", onFsChange);
+  }, []);
+
+  const toggleFullscreen = useCallback(() => {
+    if (!document.fullscreenElement) {
+      playerContainerRef.current?.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  }, []);
+
   // ── poll for access requests while admin has a restricted video open ────────
   useEffect(() => {
     if (!selectedVideo?.isRestricted || !canManageRequests) return;
@@ -1449,7 +1502,7 @@ export default function OnlinePortal() {
           return [...prev, ...newMsgs];
         });
         lastChatIdRef.current = Math.max(...data.map((m: any) => m.id), lastChatIdRef.current);
-        setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
+        if (chatScrollRef.current) { chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight; }
       }
     } catch { /* ignore */ }
   }, []);
@@ -1485,7 +1538,7 @@ export default function OnlinePortal() {
         return [...prev, data];
       });
       lastChatIdRef.current = Math.max(data.id, lastChatIdRef.current);
-      setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
+      if (chatScrollRef.current) { chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight; }
     } catch {
       toast({ title: "Could not send message", variant: "destructive" });
       setChatInput(msg);
@@ -1848,12 +1901,21 @@ export default function OnlinePortal() {
                     <span className="w-2 h-2 rounded-full bg-white animate-pulse flex-shrink-0" />
                     <span className="text-xs font-bold text-white tracking-wide uppercase flex-1">Live Now</span>
                     {canManage && (
-                      <button
-                        onClick={() => setEndLiveConfirm(true)}
-                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600 bg-white hover:bg-red-50 rounded-md px-2.5 py-1 transition-colors whitespace-nowrap flex-shrink-0"
-                      >
-                        End Live
-                      </button>
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <button
+                          onClick={() => setOverlayOpen(true)}
+                          title="Live Overlay Studio"
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-purple-700 bg-white hover:bg-purple-50 rounded-md px-2.5 py-1 transition-colors whitespace-nowrap"
+                        >
+                          <Layers className="w-3 h-3" /> Overlay
+                        </button>
+                        <button
+                          onClick={() => setEndLiveConfirm(true)}
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600 bg-white hover:bg-red-50 rounded-md px-2.5 py-1 transition-colors whitespace-nowrap"
+                        >
+                          End Live
+                        </button>
+                      </div>
                     )}
                   </div>
                 )}
@@ -1973,7 +2035,7 @@ export default function OnlinePortal() {
                   <div className={selectedVideo.isLive ? "lg:flex-1 min-w-0" : "w-full"}>
                     {/* Dock — reserves the player's spot in the normal layout. The actual player (below)
                         docks into this exact spot when not in PiP, so it never has to remount/restart. */}
-                    <div className="relative rounded-2xl shadow-xl" style={{ aspectRatio: "16/9" }}>
+                    <div ref={playerContainerRef} className="relative rounded-2xl shadow-xl bg-black" style={{ aspectRatio: "16/9" }}>
                       {pipMode && (
                         <div className="absolute inset-0 rounded-2xl border-2 border-dashed border-pink-200 bg-gradient-to-br from-gray-900 to-black flex flex-col items-center justify-center gap-3">
                           <Tv className="w-10 h-10 text-pink-400" />
@@ -2004,6 +2066,10 @@ export default function OnlinePortal() {
                           allowFullScreen
                           className="w-full h-full border-0"
                         />
+                        {/* Live overlay — visible to all viewers in normal and PiP modes */}
+                        {selectedVideo.isLive && (
+                          <LiveOverlayCanvas state={overlayState} />
+                        )}
                         {/* LIVE badge */}
                         {selectedVideo.isLive && (
                           <div className="absolute top-3 left-3 pointer-events-none">
@@ -2037,16 +2103,28 @@ export default function OnlinePortal() {
                             </button>
                           </div>
                         ) : (
-                          <button
-                            onClick={() => setPipMode(true)}
-                            title="Picture in picture"
-                            className="absolute top-3 right-3 z-10 w-8 h-8 rounded-lg bg-black/50 hover:bg-black/80 text-white flex items-center justify-center transition-colors"
-                          >
-                            <Minimize2 className="w-4 h-4" />
-                          </button>
+                          /* Fullscreen + PiP — bottom-left, beside YouTube's own bottom bar.
+                             Bottom-left keeps them away from YouTube's settings/quality (bottom-right). */
+                          <div className="absolute bottom-3 left-3 z-10 flex gap-1.5">
+                            <button
+                              onClick={toggleFullscreen}
+                              title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
+                              className="w-8 h-8 rounded-lg bg-black/50 hover:bg-black/80 text-white flex items-center justify-center transition-colors backdrop-blur-sm"
+                            >
+                              {isFullscreen ? <Shrink className="w-4 h-4" /> : <Expand className="w-4 h-4" />}
+                            </button>
+                            <button
+                              onClick={() => setPipMode(true)}
+                              title="Mini player"
+                              className="w-8 h-8 rounded-lg bg-black/50 hover:bg-black/80 text-white flex items-center justify-center transition-colors backdrop-blur-sm"
+                            >
+                              <Minimize2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>
+
                   </div>
 
                   {/* ── Live chat panel ── */}
@@ -2074,7 +2152,7 @@ export default function OnlinePortal() {
 
                       {/* Chat body — always visible on lg, toggle-controlled on mobile */}
                       <div className={`${chatOpen ? "flex" : "hidden"} lg:flex flex-col`} style={{ minHeight: "220px", maxHeight: "380px" }}>
-                        <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-gray-50">
+                        <div ref={chatScrollRef} className="flex-1 overflow-y-auto p-3 space-y-2 bg-gray-50">
                           {chatMessages.length === 0 ? (
                             <div className="flex flex-col items-center justify-center h-full py-8 text-center">
                               <MessageCircle className="w-8 h-8 text-gray-300 mb-2" />
@@ -2084,7 +2162,7 @@ export default function OnlinePortal() {
                             chatMessages.map((m: any) => {
                               const isMe = m.userId === (user as any)?.id;
                               const memberName = m.member
-                                ? `${m.member.firstName ?? ""} ${m.member.lastName ?? ""}`.trim()
+                                ? [m.member.title, m.member.firstName, m.member.lastName].filter(Boolean).join(" ").trim()
                                 : null;
                               const name = memberName || m.senderLabel || "User";
                               return (
@@ -2450,6 +2528,16 @@ export default function OnlinePortal() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* ── Overlay Studio (admin only, live videos) ──────────────────────── */}
+      {canManage && selectedVideo?.isLive && (
+        <OverlayStudio
+          open={overlayOpen}
+          onOpenChange={setOverlayOpen}
+          videoId={selectedVideo.id}
+          onPushed={() => { /* next poll will pick it up */ }}
+        />
+      )}
 
       </>}
     </div>

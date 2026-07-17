@@ -101,6 +101,7 @@ router.post("/videos/:id/end-live", authenticateToken, requireRole(3), async (re
     .set({ isLive: false, liveEnded: true })
     .where(eq(videosTable.id, id))
     .returning();
+  overlayStore.delete(id); // clear overlay when stream ends
   res.json(updated);
 });
 
@@ -848,6 +849,59 @@ router.get("/reports/online-services", authenticateToken, requireRole(1), async 
     console.error("online-services report error:", err);
     res.status(500).json({ error: "Failed to load online services report" });
   }
+});
+
+
+// ── VIDEO OVERLAY ─────────────────────────────────────────────────────────────
+// Admin pushes up to 3 images (base64) with position/size/opacity.
+// All viewers poll GET /overlay every 3 s to receive updates in near-real-time.
+
+interface OverlayImage {
+  id: string;
+  src: string;
+  name: string;
+  x: number;
+  y: number;
+  size: number;
+  opacity: number;
+  visible: boolean;
+}
+interface OverlayState {
+  images: OverlayImage[];
+  active: boolean;
+  updatedAt: number;
+}
+
+// In-memory store (keyed by videoId). Cleared when live ends.
+const overlayStore = new Map<number, OverlayState>();
+
+// GET — current overlay (called by all viewers ~every 3 s, no auth so EventSource works too)
+router.get("/videos/:id/overlay", async (req, res) => {
+  const videoId = parseInt(req.params.id);
+  const state = overlayStore.get(videoId) ?? { images: [], active: false, updatedAt: 0 };
+  res.json(state);
+});
+
+// POST — admin sets overlay state
+router.post("/videos/:id/overlay", authenticateToken, requireRole(3), async (req, res) => {
+  const videoId = parseInt(req.params.id);
+  const { images, active } = req.body as { images: OverlayImage[]; active: boolean };
+
+  if (!Array.isArray(images) || images.length > 3) {
+    return res.status(400).json({ error: "Maximum 3 images allowed" });
+  }
+  for (const img of images) {
+    if (typeof img.src === "string") {
+      const approxBytes = img.src.length * 0.75;
+      if (approxBytes > 2.8 * 1024 * 1024) {
+        return res.status(400).json({ error: "Each image must be under 2 MB" });
+      }
+    }
+  }
+
+  const state: OverlayState = { images, active: active ?? true, updatedAt: Date.now() };
+  overlayStore.set(videoId, state);
+  res.json({ ok: true, updatedAt: state.updatedAt });
 });
 
 export default router;
