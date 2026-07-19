@@ -637,9 +637,11 @@ function MemberViewDialog({ target, onClose }: { target: MemberViewTarget; onClo
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-800 truncate">{m.firstName} {m.lastName}</p>
-                      <p className="text-xs text-gray-400 font-mono">{m.membershipId}</p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-xs text-gray-400 font-mono">{m.membershipId}</p>
+                        {m.phone1 && <p className="text-xs text-gray-500">{m.phone1}</p>}
+                      </div>
                     </div>
-                    {m.phone1 && <p className="text-xs text-gray-500 flex-shrink-0">{m.phone1}</p>}
                   </div>
                 ))}
               </div>
