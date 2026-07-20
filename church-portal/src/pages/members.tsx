@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { downloadJsonAsExcel } from "@/utils/excel";
 import QRCode from "react-qr-code";
 import {
@@ -1275,6 +1275,22 @@ export default function Members() {
   const { data, isLoading } = useListMembers(params, {
     query: { queryKey: getListMembersQueryKey(params) },
   });
+  // Sort: by cell name, leaders first within each cell, then alphabetically
+  const sortedMembers = useMemo(() => {
+    const rows = data?.data ?? [];
+    return [...rows].sort((a, b) => {
+      const aCell = (a as any).cellName ?? "";
+      const bCell = (b as any).cellName ?? "";
+      if (aCell !== bCell) return aCell.localeCompare(bCell);
+      const aLp = (a as any).leadershipPositions ?? {};
+      const bLp = (b as any).leadershipPositions ?? {};
+      const aIsLeader = !!(aLp.pcfLeader || aLp.seniorCellLeader || aLp.cellLeader);
+      const bIsLeader = !!(bLp.pcfLeader || bLp.seniorCellLeader || bLp.cellLeader);
+      if (aIsLeader !== bIsLeader) return aIsLeader ? -1 : 1;
+      return (a.firstName ?? "").localeCompare(b.firstName ?? "");
+    });
+  }, [data]);
+
   const { data: cells } = useListCells({}, {
     query: { queryKey: getListCellsQueryKey() },
   });
@@ -1411,7 +1427,7 @@ export default function Members() {
               <TableHead className="w-10 text-center">#</TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Type</TableHead>
-              <TableHead className="hidden sm:table-cell">Cell</TableHead>
+              <TableHead>Cell</TableHead>
               <TableHead className="hidden md:table-cell">Phone</TableHead>
               <TableHead className="hidden lg:table-cell">Joined</TableHead>
               <TableHead className="w-8" />
@@ -1430,7 +1446,7 @@ export default function Members() {
                 </TableCell>
               </TableRow>
             ) : (
-              (data?.data ?? []).map((m, idx) => (
+              sortedMembers.map((m, idx) => (
                 <TableRow key={m.id} className="cursor-pointer hover:bg-purple-50/40" onClick={() => setSelectedId(m.id)}>
                   <TableCell className="text-center text-xs text-gray-400 font-mono">{(page - 1) * limit + idx + 1}</TableCell>
                   <TableCell>
@@ -1458,7 +1474,7 @@ export default function Members() {
                       return <Badge className={`border-0 text-xs capitalize ${m.memberType === "visitor" ? "bg-orange-100 text-orange-700" : "bg-purple-100 text-purple-700"}`}>{m.memberType}</Badge>;
                     })()}
                   </TableCell>
-                  <TableCell className="hidden sm:table-cell">
+                  <TableCell>
                     {(m as any).cellName
                       ? <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">{(m as any).cellName}</Badge>
                       : <span className="text-gray-300 text-xs">—</span>}
