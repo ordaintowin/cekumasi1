@@ -217,29 +217,59 @@ router.get("/", async (req, res) => {
   const total = await db.select({ count: sql<number>`count(*)` })
     .from(membersTable).where(and(...conditions));
 
-  const enriched = await Promise.all(members.map(async (m) => {
-    const roles = await db.select().from(leadershipRolesTable).where(eq(leadershipRolesTable.memberId, m.id));
+  const memberIds = members.map((m) => m.id);
+
+  // Batch-load all enrichment data in parallel (no N+1)
+  const [allRoles, allCells, allSeniorCells, allPcfs, leaderCells, leaderSeniorCells, leaderPcfs] = await Promise.all([
+    memberIds.length > 0 ? db.select().from(leadershipRolesTable).where(inArray(leadershipRolesTable.memberId, memberIds)) : Promise.resolve([]),
+    db.select({ id: cellsTable.id, name: cellsTable.name, seniorCellId: cellsTable.seniorCellId }).from(cellsTable).where(eq(cellsTable.isArchived, false)),
+    db.select({ id: seniorCellsTable.id, name: seniorCellsTable.name, pcfId: seniorCellsTable.pcfId }).from(seniorCellsTable).where(eq(seniorCellsTable.isArchived, false)),
+    db.select({ id: pcfsTable.id, name: pcfsTable.name }).from(pcfsTable).where(eq(pcfsTable.isArchived, false)),
+    memberIds.length > 0 ? db.select({ id: cellsTable.id, name: cellsTable.name, leaderId: cellsTable.leaderId }).from(cellsTable).where(and(inArray(cellsTable.leaderId, memberIds), eq(cellsTable.isArchived, false))) : Promise.resolve([]),
+    memberIds.length > 0 ? db.select({ id: seniorCellsTable.id, name: seniorCellsTable.name, leaderId: seniorCellsTable.leaderId }).from(seniorCellsTable).where(and(inArray(seniorCellsTable.leaderId, memberIds), eq(seniorCellsTable.isArchived, false))) : Promise.resolve([]),
+    memberIds.length > 0 ? db.select({ id: pcfsTable.id, name: pcfsTable.name, leaderId: pcfsTable.leaderId }).from(pcfsTable).where(and(inArray(pcfsTable.leaderId, memberIds), eq(pcfsTable.isArchived, false))) : Promise.resolve([]),
+  ]);
+
+  const cellMap = new Map(allCells.map((c) => [c.id, c]));
+  const seniorCellMap = new Map(allSeniorCells.map((sc) => [sc.id, sc]));
+  const pcfMap = new Map(allPcfs.map((p) => [p.id, p]));
+  const cellLeaderMap = new Map(leaderCells.map((c) => [c.leaderId, { id: c.id, name: c.name }]));
+  const seniorCellLeaderMap = new Map(leaderSeniorCells.map((sc) => [sc.leaderId, { id: sc.id, name: sc.name }]));
+  const pcfLeaderMap = new Map(leaderPcfs.map((p) => [p.leaderId, { id: p.id, name: p.name }]));
+
+  const rolesByMember = new Map();
+  for (const r of allRoles) {
+    if (!rolesByMember.has(r.memberId)) rolesByMember.set(r.memberId, []);
+    rolesByMember.get(r.memberId).push(r.role);
+  }
+
+  const enriched = members.map((m) => {
     let cellName: string | null = null;
     let seniorCellName: string | null = null;
     let pcfName: string | null = null;
     if (m.cellId) {
-      const cell = await db.select({ name: cellsTable.name, seniorCellId: cellsTable.seniorCellId }).from(cellsTable).where(eq(cellsTable.id, m.cellId)).limit(1);
-      if (cell.length) {
-        cellName = cell[0].name;
-        if (cell[0].seniorCellId) {
-          const sc = await db.select({ name: seniorCellsTable.name, pcfId: seniorCellsTable.pcfId }).from(seniorCellsTable).where(eq(seniorCellsTable.id, cell[0].seniorCellId)).limit(1);
-          if (sc.length) {
-            seniorCellName = sc[0].name;
-            if (sc[0].pcfId) {
-              const pcf = await db.select({ name: pcfsTable.name }).from(pcfsTable).where(eq(pcfsTable.id, sc[0].pcfId)).limit(1);
-              if (pcf.length) pcfName = pcf[0].name;
+      const cell = cellMap.get(m.cellId);
+      if (cell) {
+        cellName = cell.name;
+        if (cell.seniorCellId) {
+          const sc = seniorCellMap.get(cell.seniorCellId);
+          if (sc) {
+            seniorCellName = sc.name;
+            if (sc.pcfId) {
+              const pcf = pcfMap.get(sc.pcfId);
+              if (pcf) pcfName = pcf.name;
             }
           }
         }
       }
     }
-    return { ...m, leadershipRoles: roles.map(r => r.role), cellName, seniorCellName, pcfName };
-  }));
+    const leadershipPositions = {
+      cellLeader: cellLeaderMap.get(m.id) ?? null,
+      seniorCellLeader: seniorCellLeaderMap.get(m.id) ?? null,
+      pcfLeader: pcfLeaderMap.get(m.id) ?? null,
+    };
+    return { ...m, leadershipRoles: rolesByMember.get(m.id) ?? [], cellName, seniorCellName, pcfName, leadershipPositions };
+  });
 
   res.json({ data: enriched, total: Number(total[0].count), page: pageNum, limit: limitNum });
 });
