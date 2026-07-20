@@ -1447,9 +1447,16 @@ export default function Members() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className={`text-xs border-0 capitalize ${m.memberType === "visitor" ? "bg-orange-100 text-orange-700" : "bg-purple-100 text-purple-700"}`}>
-                      {m.memberType}
-                    </Badge>
+                    {(() => {
+                      const lp = (m as any).leadershipPositions ?? {};
+                      if (lp.pcfLeader)
+                        return <Badge className="border-0 text-xs bg-amber-100 text-amber-700">PCF Leader</Badge>;
+                      if (lp.seniorCellLeader)
+                        return <Badge className="border-0 text-xs bg-blue-100 text-blue-700">Senior Cell Leader</Badge>;
+                      if (lp.cellLeader)
+                        return <Badge className="border-0 text-xs bg-green-100 text-green-700">Cell Leader</Badge>;
+                      return <Badge className={`border-0 text-xs capitalize ${m.memberType === "visitor" ? "bg-orange-100 text-orange-700" : "bg-purple-100 text-purple-700"}`}>{m.memberType}</Badge>;
+                    })()}
                   </TableCell>
                   <TableCell className="hidden sm:table-cell">
                     {(m as any).cellName
