@@ -1,11 +1,20 @@
-const CACHE_NAME = "ce-kumasi1-v2";
+// Cache version — bump this string on every deploy to force an update on all clients
+const CACHE_NAME = "ce-kumasi1-v3";
 const STATIC_ASSETS = ["/", "/manifest.json", "/icon-192.png", "/icon-512.png"];
 
 self.addEventListener("install", (event) => {
-  self.skipWaiting();
+  // Do NOT call skipWaiting() here — wait for the client to send SKIP_WAITING
+  // so the reload is coordinated (prevents half-loaded states).
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS).catch(() => {}))
   );
+});
+
+// Client sends this message when it detects a new SW is waiting
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener("activate", (event) => {
