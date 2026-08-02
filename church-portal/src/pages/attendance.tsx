@@ -2366,7 +2366,7 @@ export default function Attendance() {
           <h1 className="text-2xl font-bold text-gray-900">Attendance & Services</h1>
           <p className="text-sm text-gray-500 mt-0.5">Manage services and member registration</p>
         </div>
-        {!isRegisterOnly && !isViewOnly && (
+        {!isRegisterOnly && !isViewOnly && !isChildrenAdmin && (
           <Button className="bg-purple-700 hover:bg-purple-800 text-white" onClick={() => setCreateOpen(true)}>
             <Plus className="w-4 h-4 mr-2" /> {activeService ? "New Service" : "Open Service"}
           </Button>
@@ -2405,17 +2405,17 @@ export default function Attendance() {
               >
                 <QrCode className="w-5 h-5" />
               </button>
-              {isAdmin && !isRegisterOnly && (
+              {isAdmin && !isRegisterOnly && !isChildrenAdmin && (
                 <button onClick={openEditDialog} className="p-1.5 hover:bg-white/20 rounded-lg text-white/80 hover:text-white" title="Edit service">
                   <Edit2 className="w-4 h-4" />
                 </button>
               )}
-              {!isRegisterOnly && !isViewOnly && canClose ? (
+              {!isRegisterOnly && !isViewOnly && !isChildrenAdmin && canClose ? (
                 <button onClick={() => setCloseConfirm(true)}
                   className="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1.5 rounded-lg font-semibold transition-colors">
                   Close Service
                 </button>
-              ) : !isRegisterOnly && !isViewOnly ? (
+              ) : !isRegisterOnly && !isViewOnly && !isChildrenAdmin ? (
                 <div className="flex items-center gap-1 text-purple-300 text-xs">
                   <Clock className="w-3.5 h-3.5" />
                   <span>Close available 4 hrs after start</span>
