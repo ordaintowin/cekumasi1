@@ -927,13 +927,25 @@ function FellowshipSummaryTable({ attendanceData, loading, onExport, myCellName,
                 <td className="px-3 py-2.5" />
                 <td className="px-3 py-2.5 text-gray-800 uppercase tracking-wide">Grand Total</td>
                 <td className="text-right px-3 py-2.5 bg-violet-100 text-violet-800">
-                  {isChildrenAdmin ? childrenCount + teensCount : totalMembers + unassignedReturning + visitorList.length + noFellowshipCheckedIn + childrenCount + teensCount}
+                  {isChildrenAdmin
+                    ? childrenCount + teensCount
+                    : leaderScope
+                      ? displayGroups.reduce((a: number, g: any) => a + g.members, 0)
+                      : totalMembers + unassignedReturning + visitorList.length + noFellowshipCheckedIn + childrenCount + teensCount}
                 </td>
                 <td className="text-right px-3 py-2.5 bg-yellow-100 text-yellow-700">
-                  {isChildrenAdmin ? childrenFT + teensFT : totalFT}
+                  {isChildrenAdmin
+                    ? childrenFT + teensFT
+                    : leaderScope
+                      ? displayGroups.reduce((a: number, g: any) => a + g.ft, 0)
+                      : totalFT}
                 </td>
                 <td className="text-right px-3 py-2.5 bg-green-100 text-green-900">
-                  {isChildrenAdmin ? childrenCount + teensCount + childrenFT + teensFT : totalMembers + unassignedReturning + visitorList.length + noFellowshipCheckedIn + childrenCount + teensCount + totalFT}
+                  {isChildrenAdmin
+                    ? childrenCount + teensCount + childrenFT + teensFT
+                    : leaderScope
+                      ? displayGroups.reduce((a: number, g: any) => a + g.total, 0)
+                      : totalMembers + unassignedReturning + visitorList.length + noFellowshipCheckedIn + childrenCount + teensCount + totalFT}
                 </td>
               </tr>
             </tbody>
