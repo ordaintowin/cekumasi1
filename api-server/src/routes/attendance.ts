@@ -53,6 +53,10 @@ router.get("/services", async (req, res) => {
 });
 
 router.post("/services", async (req, res) => {
+  const user = (req as any).user;
+  if (user.roleLevel === 3 && user.roleSubtype === "children") {
+    return res.status(403).json({ error: "Not authorized" });
+  }
   const { name, date, time, force } = req.body;
   if (!name || !date) return res.status(400).json({ error: "Name and date are required" });
 
@@ -79,6 +83,7 @@ router.patch("/services/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   const user = (req as any).user;
   if (user.roleLevel > 3) return res.status(403).json({ error: "Not authorized" });
+  if (user.roleLevel === 3 && user.roleSubtype === "children") return res.status(403).json({ error: "Not authorized" });
 
   const { name, date, time } = req.body;
   const updates: Record<string, any> = {};
@@ -134,6 +139,10 @@ router.get("/services/:id", async (req, res) => {
 });
 
 router.post("/services/:id/close", async (req, res) => {
+  const user = (req as any).user;
+  if (user.roleLevel === 3 && user.roleSubtype === "children") {
+    return res.status(403).json({ error: "Not authorized" });
+  }
   const id = parseInt(req.params.id);
   await db.update(servicesTable).set({ status: "closed", closedAt: new Date() }).where(eq(servicesTable.id, id));
   res.json({ success: true });
