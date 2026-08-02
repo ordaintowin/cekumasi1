@@ -2366,9 +2366,9 @@ export default function Attendance() {
           <h1 className="text-2xl font-bold text-gray-900">Attendance & Services</h1>
           <p className="text-sm text-gray-500 mt-0.5">Manage services and member registration</p>
         </div>
-        {!isRegisterOnly && !isViewOnly && !isChildrenAdmin && (
+        {!isRegisterOnly && !isViewOnly && !isChildrenAdmin && !activeService && (
           <Button className="bg-purple-700 hover:bg-purple-800 text-white" onClick={() => setCreateOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" /> {activeService ? "New Service" : "Open Service"}
+            <Plus className="w-4 h-4 mr-2" /> Open Service
           </Button>
         )}
       </div>
