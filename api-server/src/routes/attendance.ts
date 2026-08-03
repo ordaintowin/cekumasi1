@@ -1879,13 +1879,28 @@ router.post("/services/self-checkin", async (req, res) => {
 
   if (!memberId && !teenId) return res.status(403).json({ error: "Member or teen account required to self check-in" });
 
-  const { qrData } = req.body;
-  if (!qrData || typeof qrData !== "string") return res.status(400).json({ error: "qrData required" });
+  // Accept: { serviceId: number } OR { qrData: "CEKSI-SVC-{id}" } OR { qrData: "https://…/checkin?svc={id}" }
+  const { qrData, serviceId: directId } = req.body;
 
-  const match = qrData.trim().match(/^CEKSI-SVC-(\d+)$/);
-  if (!match) return res.status(400).json({ error: "Invalid QR code — please scan the correct service QR." });
+  let serviceId: number | null = null;
 
-  const serviceId = parseInt(match[1]);
+  if (directId !== undefined && directId !== null) {
+    serviceId = parseInt(String(directId));
+  } else if (qrData && typeof qrData === "string") {
+    // Legacy format: CEKSI-SVC-123
+    const legacyMatch = qrData.trim().match(/^CEKSI-SVC-(\d+)$/);
+    if (legacyMatch) {
+      serviceId = parseInt(legacyMatch[1]);
+    } else {
+      // URL format: …/checkin?svc=123
+      const urlMatch = qrData.match(/[?&]svc=(\d+)/);
+      if (urlMatch) serviceId = parseInt(urlMatch[1]);
+    }
+  }
+
+  if (!serviceId || isNaN(serviceId)) {
+    return res.status(400).json({ error: "Invalid QR code — please scan the correct service QR." });
+  }
 
   const [service] = await db.select().from(servicesTable).where(eq(servicesTable.id, serviceId)).limit(1);
   if (!service || service.status !== "open") {
@@ -1902,10 +1917,10 @@ router.post("/services/self-checkin", async (req, res) => {
       .where(and(eq(serviceTeensAttendanceTable.serviceId, serviceId), eq(serviceTeensAttendanceTable.teenId, teenId)))
       .limit(1);
 
-    if (existing) return res.json({ success: true, alreadyCheckedIn: true });
+    if (existing) return res.json({ success: true, alreadyCheckedIn: true, serviceName: service.name });
 
     await db.insert(serviceTeensAttendanceTable).values({ serviceId, teenId });
-    return res.json({ success: true, alreadyCheckedIn: false });
+    return res.json({ success: true, alreadyCheckedIn: false, serviceName: service.name });
   }
 
   // Member self-checkin path
@@ -1917,7 +1932,7 @@ router.post("/services/self-checkin", async (req, res) => {
     .where(and(eq(attendanceRecordsTable.serviceId, serviceId), eq(attendanceRecordsTable.memberId, memberId!)))
     .limit(1);
 
-  if (existing) return res.json({ success: true, alreadyCheckedIn: true });
+  if (existing) return res.json({ success: true, alreadyCheckedIn: true, serviceName: service.name });
 
   await db.insert(attendanceRecordsTable).values({
     serviceId,
@@ -1926,7 +1941,7 @@ router.post("/services/self-checkin", async (req, res) => {
     method: "qr",
   });
 
-  res.json({ success: true, alreadyCheckedIn: false });
+  res.json({ success: true, alreadyCheckedIn: false, serviceName: service.name });
 });
 
 export default router;
