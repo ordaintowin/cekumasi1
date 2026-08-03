@@ -2605,7 +2605,7 @@ export default function Attendance() {
               </div>
               <div className="flex justify-center p-4 bg-white border-2 border-purple-100 rounded-2xl">
                 <QRCodeSVG
-                  value={`CEKSI-SVC-${activeService.id}`}
+                  value={`${window.location.origin}/checkin?svc=${activeService.id}`}
                   size={220}
                   level="H"
                   includeMargin
@@ -2614,14 +2614,14 @@ export default function Attendance() {
               {/* Hidden canvas for PNG download */}
               <QRCodeCanvas
                 id="service-qr-dl-canvas"
-                value={`CEKSI-SVC-${activeService.id}`}
+                value={`${window.location.origin}/checkin?svc=${activeService.id}`}
                 size={512}
                 level="H"
                 includeMargin
                 style={{ display: "none" }}
               />
               <p className="text-xs text-center text-gray-500">
-                Members can scan this with their church portal app to register themselves
+                Scan with any phone camera to open the check-in page, or scan from within the app
               </p>
               <Button
                 className="w-full bg-purple-700 hover:bg-purple-800 text-white"
