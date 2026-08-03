@@ -16,6 +16,8 @@ export default function Login() {
   const { login } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  // Support ?next= redirect (e.g. from /checkin?svc=xxx)
+  const nextPath = new URLSearchParams(window.location.search).get("next") ?? "";
 
   const [adminUsername, setAdminUsername] = useState("");
   const [adminPassword, setAdminPassword] = useState("");
@@ -28,6 +30,11 @@ export default function Login() {
     mutation: {
       onSuccess: (data: any) => {
         login(data.token);
+        // Honour ?next= redirect (e.g. from /checkin?svc=xxx) for member/teen accounts
+        if (nextPath && nextPath.startsWith("/")) {
+          setLocation(nextPath);
+          return;
+        }
         const roleLevel = data.user?.roleLevel ?? 5;
         const roleSubtype = data.user?.roleSubtype ?? null;
         if (roleLevel === 1) setLocation("/");
