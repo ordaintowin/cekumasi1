@@ -130,10 +130,18 @@ export default function Home() {
 
   async function handleQrScan(qrData: string): Promise<"success" | "duplicate" | "error"> {
     try {
+      // Support URL format (native camera scan redirected to app) and legacy CEKSI-SVC-{id}
+      let body: Record<string, any>;
+      const urlMatch = qrData.match(/[?&]svc=(\d+)/);
+      if (urlMatch) {
+        body = { serviceId: parseInt(urlMatch[1]) };
+      } else {
+        body = { qrData };
+      }
       const res = await fetch("/api/services/self-checkin", {
         method: "POST",
         headers: { Authorization: `Bearer ${getToken()}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ qrData }),
+        body: JSON.stringify(body),
       });
       const json = await res.json();
       if (!res.ok) return "error";
