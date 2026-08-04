@@ -174,6 +174,111 @@ async function getMemberWithRoles(id: number) {
   };
 }
 
+// ── Unified search: members + children + teens in one call ───────────────────
+router.get("/unified-search", async (req, res) => {
+  const { q } = req.query as any;
+  if (!q || String(q).trim().length < 2) return res.json({ data: [] });
+  const search = String(q).trim();
+
+  const [members, children, teens] = await Promise.all([
+    db.select({
+      id: membersTable.id,
+      firstName: membersTable.firstName,
+      lastName: membersTable.lastName,
+      membershipId: membersTable.membershipId,
+      title: membersTable.title,
+      profilePhoto: membersTable.profilePhoto,
+      cellId: membersTable.cellId,
+    }).from(membersTable)
+      .where(and(
+        eq(membersTable.isArchived, false),
+        or(
+          ilike(membersTable.firstName, `%${search}%`),
+          ilike(membersTable.lastName, `%${search}%`),
+          ilike(membersTable.membershipId, `%${search}%`)
+        )
+      ))
+      .orderBy(membersTable.firstName).limit(6),
+
+    db.select({
+      id: childrenTable.id,
+      firstName: childrenTable.firstName,
+      lastName: childrenTable.lastName,
+      membershipId: childrenTable.membershipId,
+      class: childrenTable.class,
+    }).from(childrenTable)
+      .where(and(
+        eq(childrenTable.isArchived, false),
+        or(
+          ilike(childrenTable.firstName, `%${search}%`),
+          ilike(childrenTable.lastName, `%${search}%`)
+        )
+      ))
+      .orderBy(childrenTable.firstName).limit(4),
+
+    db.select({
+      id: teensTable.id,
+      firstName: teensTable.firstName,
+      lastName: teensTable.lastName,
+      membershipId: teensTable.membershipId,
+    }).from(teensTable)
+      .where(and(
+        eq(teensTable.isArchived, false),
+        or(
+          ilike(teensTable.firstName, `%${search}%`),
+          ilike(teensTable.lastName, `%${search}%`)
+        )
+      ))
+      .orderBy(teensTable.firstName).limit(4),
+  ]);
+
+  const cellIds = members.map(m => m.cellId).filter(Boolean) as number[];
+  const cellMap = new Map<number, string>();
+  if (cellIds.length > 0) {
+    const cells = await db.select({ id: cellsTable.id, name: cellsTable.name })
+      .from(cellsTable).where(inArray(cellsTable.id, cellIds));
+    for (const c of cells) cellMap.set(c.id, c.name);
+  }
+
+  const results = [
+    ...members.map(m => ({
+      type: 'member' as const,
+      id: m.id,
+      firstName: m.firstName,
+      lastName: m.lastName,
+      membershipId: m.membershipId,
+      title: m.title ?? null,
+      profilePhoto: m.profilePhoto ?? null,
+      cellName: m.cellId ? (cellMap.get(m.cellId) ?? null) : null,
+      class: null as string | null,
+    })),
+    ...children.map(c => ({
+      type: 'child' as const,
+      id: c.id,
+      firstName: c.firstName,
+      lastName: c.lastName,
+      membershipId: c.membershipId ?? null,
+      title: null as string | null,
+      profilePhoto: null as string | null,
+      cellName: null as string | null,
+      class: c.class ?? null,
+    })),
+    ...teens.map(t => ({
+      type: 'teen' as const,
+      id: t.id,
+      firstName: t.firstName,
+      lastName: t.lastName,
+      membershipId: t.membershipId ?? null,
+      title: null as string | null,
+      profilePhoto: null as string | null,
+      cellName: null as string | null,
+      class: null as string | null,
+    })),
+  ];
+
+  res.json({ data: results });
+});
+
 router.get("/", async (req, res) => {
   const { search, type, cellId, seniorCellId, pcfId, page = "1", limit = "25" } = req.query as any;
   const pageNum = parseInt(page);
