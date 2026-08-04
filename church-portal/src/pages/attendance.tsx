@@ -87,29 +87,41 @@ async function exportToExcel(service: any, attendanceData: any) {
 // ─── types ────────────────────────────────────────────────────────────────────
 
 type View = "services" | "register";
-type RegTab = "search" | "id" | "qr" | "firsttimer" | "returning";
+type RegTab = "search" | "id" | "qr" | "firsttimer";
 type RegResult = { type: "success" | "error"; name: string; detail: string } | null;
 
 // ─── InvitedBySearch ──────────────────────────────────────────────────────────
 
 function InvitedBySearch({
-  value, label, onChange,
-}: { value: { id: number; name: string; fellowship?: string } | null; label: string; onChange: (v: any) => void }) {
+  value, label, onChange, onSelectFirstTimer,
+}: {
+  value: { id: number; name: string; fellowship?: string } | null;
+  label: string;
+  onChange: (v: any) => void;
+  onSelectFirstTimer?: (ft: { id: number; name: string; invitedById?: number | null; invitedByChildId?: number | null; invitedByTeenId?: number | null }) => void;
+}) {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<any[]>([]);
+  const [memberResults, setMemberResults] = useState<any[]>([]);
+  const [ftResults, setFtResults] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    if (query.length < 2) { setResults([]); return; }
+    if (query.length < 2) { setMemberResults([]); setFtResults([]); return; }
     const t = setTimeout(async () => {
       try {
-        const d = await apiFetch(`/api/members?search=${encodeURIComponent(query)}&limit=6`);
-        setResults(d.data ?? []);
+        const [membersRes, ftRes] = await Promise.all([
+          apiFetch(`/api/members?search=${encodeURIComponent(query)}&limit=5`),
+          apiFetch(`/api/first-timers?search=${encodeURIComponent(query)}&limit=4`),
+        ]);
+        setMemberResults(membersRes.data ?? []);
+        setFtResults((ftRes.data ?? []).filter((ft: any) => !ft.isReturning));
         setOpen(true);
-      } catch { setResults([]); }
+      } catch { setMemberResults([]); setFtResults([]); }
     }, 300);
     return () => clearTimeout(t);
   }, [query]);
+
+  const allResults = [...memberResults, ...ftResults];
 
   if (value) {
     return (
@@ -133,10 +145,10 @@ function InvitedBySearch({
         onChange={e => { setQuery(e.target.value); setOpen(true); }}
         onBlur={() => setTimeout(() => setOpen(false), 200)}
       />
-      {open && results.length > 0 && (
-        <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border rounded-lg shadow-lg max-h-40 overflow-y-auto">
-          {results.map(m => (
-            <button key={m.id} type="button"
+      {open && allResults.length > 0 && (
+        <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border rounded-lg shadow-lg max-h-52 overflow-y-auto">
+          {memberResults.map(m => (
+            <button key={`m-${m.id}`} type="button"
               className="w-full flex items-center gap-2 px-3 py-2 hover:bg-purple-50 text-left text-sm border-b last:border-0"
               onMouseDown={() => {
                 onChange({ id: m.id, name: `${m.title ? m.title + " " : ""}${m.firstName} ${m.lastName}`, fellowship: m.cellName || undefined });
@@ -144,6 +156,25 @@ function InvitedBySearch({
               }}>
               <span className="flex-1 font-medium text-gray-800">{m.title ? m.title + " " : ""}{m.firstName} {m.lastName}</span>
               {m.cellName && <span className="text-xs text-gray-400">{m.cellName}</span>}
+            </button>
+          ))}
+          {ftResults.map(ft => (
+            <button key={`ft-${ft.id}`} type="button"
+              className="w-full flex items-center gap-2 px-3 py-2 hover:bg-yellow-50 text-left text-sm border-b last:border-0"
+              onMouseDown={() => {
+                if (onSelectFirstTimer) {
+                  onSelectFirstTimer({
+                    id: ft.id,
+                    name: `${ft.firstName} ${ft.lastName}`,
+                    invitedById: ft.invitedById ?? null,
+                    invitedByChildId: ft.invitedByChildId ?? null,
+                    invitedByTeenId: ft.invitedByTeenId ?? null,
+                  });
+                }
+                setQuery(""); setOpen(false);
+              }}>
+              <span className="flex-1 font-medium text-yellow-800">{ft.firstName} {ft.lastName}</span>
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-yellow-100 text-yellow-700 flex-shrink-0">FT</span>
             </button>
           ))}
         </div>
@@ -1213,21 +1244,14 @@ function RegisterPage({
   // First Timer form
   const [inviterType, setInviterType] = useState<"member" | "child" | "teen" | "first_timer">("member");
   const [invitedBy, setInvitedBy] = useState<{ id: number; name: string; fellowship?: string; type?: "member" | "child" | "teen" | "first_timer"; effectiveInvitedById?: number | null; effectiveInvitedByChildId?: number | null; effectiveInvitedByTeenId?: number | null } | null>(null);
-  const [inviterChildSearch, setInviterChildSearch] = useState("");
-  const [inviterChildResults, setInviterChildResults] = useState<any[]>([]);
-  const [inviterTeenSearch, setInviterTeenSearch] = useState("");
-  const [inviterTeenResults, setInviterTeenResults] = useState<any[]>([]);
-  const [inviterFtSearch, setInviterFtSearch] = useState("");
-  const [inviterFtResults, setInviterFtResults] = useState<any[]>([]);
+  const [inviterUnifiedQuery, setInviterUnifiedQuery] = useState("");
+  const [inviterUnifiedResults, setInviterUnifiedResults] = useState<any[]>([]);
+  const [inviterUnifiedSearching, setInviterUnifiedSearching] = useState(false);
   const [ftForm, setFtForm] = useState({ firstName: "", lastName: "", gender: "", contact: "" });
   // Duplicate warning when registering a first timer
   const [ftDuplicateWarning, setFtDuplicateWarning] = useState<{ matches: any[]; pendingBody: any; prefilledInviterType?: "child" | "teen"; prefilledInviterId?: number; prefilledInviterName?: string } | null>(null);
   // Child/Teen FT invite prompt
   const [ftInviteFor, setFtInviteFor] = useState<{ name: string; id: number; type: "child" | "teen" } | null>(null);
-
-  // Returning First Timer
-  const [returningSearch, setReturningSearch] = useState("");
-  const [returningResults, setReturningResults] = useState<any[]>([]);
 
   // Children/Teens modal (header badges)
   const [ctModal, setCtModal] = useState<{ type: "children" | "teens"; list: any[] } | null>(null);
@@ -1255,55 +1279,27 @@ function RegisterPage({
     return () => clearTimeout(t);
   }, [searchQuery]);
 
-  // Inviter child search (for FT form)
+  // Unified inviter search (members + children + teens + first-timers)
   useEffect(() => {
-    if (inviterChildSearch.length < 2) { setInviterChildResults([]); return; }
+    if (inviterUnifiedQuery.length < 2) { setInviterUnifiedResults([]); return; }
     const t = setTimeout(async () => {
+      setInviterUnifiedSearching(true);
       try {
-        const d = await apiFetch(`/api/children?search=${encodeURIComponent(inviterChildSearch)}&limit=8`);
-        setInviterChildResults(d.data ?? []);
-      } catch { setInviterChildResults([]); }
+        const [membersRes, childrenRes, teensRes, ftRes] = await Promise.all([
+          apiFetch(`/api/members?search=${encodeURIComponent(inviterUnifiedQuery)}&limit=4`),
+          apiFetch(`/api/children?search=${encodeURIComponent(inviterUnifiedQuery)}&limit=3`),
+          apiFetch(`/api/teens?search=${encodeURIComponent(inviterUnifiedQuery)}&limit=3`),
+          apiFetch(`/api/first-timers?search=${encodeURIComponent(inviterUnifiedQuery)}&limit=4`),
+        ]);
+        const members  = (membersRes.data  ?? []).map((m: any) => ({ ...m, _type: "member" }));
+        const children = (childrenRes.data ?? []).map((c: any) => ({ ...c, _type: "child" }));
+        const teens    = (teensRes.data    ?? []).map((t: any) => ({ ...t, _type: "teen" }));
+        const fts      = (ftRes.data       ?? []).filter((ft: any) => !ft.isReturning).map((ft: any) => ({ ...ft, _type: "first_timer" }));
+        setInviterUnifiedResults([...members, ...children, ...teens, ...fts]);
+      } catch { setInviterUnifiedResults([]); } finally { setInviterUnifiedSearching(false); }
     }, 300);
     return () => clearTimeout(t);
-  }, [inviterChildSearch]);
-
-  // Inviter teen search (for FT form)
-  useEffect(() => {
-    if (inviterTeenSearch.length < 2) { setInviterTeenResults([]); return; }
-    const t = setTimeout(async () => {
-      try {
-        const d = await apiFetch(`/api/teens?search=${encodeURIComponent(inviterTeenSearch)}&limit=8`);
-        setInviterTeenResults(d.data ?? []);
-      } catch { setInviterTeenResults([]); }
-    }, 300);
-    return () => clearTimeout(t);
-  }, [inviterTeenSearch]);
-
-  // Inviter first-timer search (for FT form)
-  useEffect(() => {
-    if (inviterFtSearch.length < 2) { setInviterFtResults([]); return; }
-    const t = setTimeout(async () => {
-      try {
-        const d = await apiFetch(`/api/first-timers?search=${encodeURIComponent(inviterFtSearch)}&limit=8`);
-        setInviterFtResults(d.data ?? []);
-      } catch { setInviterFtResults([]); }
-    }, 300);
-    return () => clearTimeout(t);
-  }, [inviterFtSearch]);
-
-
-
-  // Returning FT search
-  useEffect(() => {
-    const t = setTimeout(async () => {
-      try {
-        const q = returningSearch.length >= 2 ? `&search=${encodeURIComponent(returningSearch)}` : "";
-        const d = await apiFetch(`/api/first-timers?limit=20${q}`);
-        setReturningResults(d.data ?? []);
-      } catch { setReturningResults([]); }
-    }, 300);
-    return () => clearTimeout(t);
-  }, [returningSearch, tab]);
+  }, [inviterUnifiedQuery]);
 
   async function checkinMember(params: { memberId?: number; membershipId?: string }, method = "manual") {
     setSubmitting(true);
@@ -1466,7 +1462,6 @@ function RegisterPage({
     { key: "id", label: "🪪 ID" },
     { key: "qr", label: "📷 QR" },
     { key: "firsttimer", label: "👋 First Timer" },
-    { key: "returning", label: "🔄 Returning" },
   ];
   const tabs = allTabs;
 
@@ -1595,21 +1590,26 @@ function RegisterPage({
                 {unifiedResults.length > 0 && (
                   <div className="border rounded-xl overflow-hidden bg-white shadow-sm">
                     {unifiedResults.map((r: any) => {
-                      const isMember = r.type === "member";
-                      const isChild  = r.type === "child";
-                      const avatarCls = isMember ? "bg-purple-100 text-purple-700" : isChild ? "bg-blue-100 text-blue-700" : "bg-teal-100 text-teal-700";
-                      const hoverCls  = isMember ? "hover:bg-purple-50" : isChild ? "hover:bg-blue-50" : "hover:bg-teal-50";
-                      const badgeCls  = isMember ? "bg-purple-100 text-purple-700" : isChild ? "bg-blue-100 text-blue-700" : "bg-teal-100 text-teal-700";
-                      const label     = isMember ? "Member" : isChild ? "Child" : "Teen";
+                      const isMember  = r.type === "member";
+                      const isChild   = r.type === "child";
+                      const isFt      = r.type === "first_timer";
+                      const avatarCls = isMember ? "bg-purple-100 text-purple-700" : isChild ? "bg-blue-100 text-blue-700" : isFt ? "bg-yellow-100 text-yellow-700" : "bg-teal-100 text-teal-700";
+                      const hoverCls  = isMember ? "hover:bg-purple-50" : isChild ? "hover:bg-blue-50" : isFt ? "hover:bg-yellow-50" : "hover:bg-teal-50";
+                      const badgeCls  = isMember ? "bg-purple-100 text-purple-700" : isChild ? "bg-blue-100 text-blue-700" : isFt ? "bg-yellow-100 text-yellow-700 border border-yellow-300" : "bg-teal-100 text-teal-700";
+                      const label     = isMember ? "Member" : isChild ? "Child" : isFt ? "FT" : "Teen";
                       const subtitle  = isMember
                         ? `${r.membershipId ?? ""}${r.cellName ? ` · ${r.cellName}` : ""}`
-                        : isChild ? (r.class ?? "").replace(/_/g, " ") : "Teens Church";
+                        : isChild ? (r.class ?? "").replace(/_/g, " ")
+                        : isFt ? "First Timer · tap to register as returning"
+                        : "Teens Church";
+                      const nameColor = isFt ? "text-yellow-800" : "text-gray-800";
                       return (
                         <button key={`${r.type}-${r.id}`} type="button" disabled={submitting}
                           className={`w-full flex items-center gap-3 px-4 py-3 ${hoverCls} border-b last:border-0 text-left disabled:opacity-60`}
                           onClick={() => {
                             if (isMember) checkinMember({ memberId: r.id }, "search");
                             else if (isChild) registerChild(r);
+                            else if (isFt) registerReturning(r);
                             else registerTeen(r);
                           }}>
                           <div className={`w-9 h-9 rounded-full ${avatarCls} font-bold text-sm flex items-center justify-center flex-shrink-0 overflow-hidden`}>
@@ -1619,12 +1619,14 @@ function RegisterPage({
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1.5 flex-wrap">
-                              <p className="font-semibold text-sm text-gray-800">{r.title ? `${r.title} ` : ""}{r.firstName} {r.lastName}</p>
+                              <p className={`font-semibold text-sm ${nameColor}`}>{r.title ? `${r.title} ` : ""}{r.firstName} {r.lastName}</p>
                               <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${badgeCls}`}>{label}</span>
                             </div>
                             {subtitle && <p className="text-xs text-gray-400 truncate capitalize">{subtitle}</p>}
                           </div>
-                          <span className="text-xs text-purple-600 font-semibold flex-shrink-0">Register →</span>
+                          <span className={`text-xs font-semibold flex-shrink-0 ${isFt ? "text-yellow-600" : "text-purple-600"}`}>
+                            {isFt ? "Returning →" : "Register →"}
+                          </span>
                         </button>
                       );
                     })}
@@ -1751,136 +1753,83 @@ function RegisterPage({
             </div>
             <div className="space-y-1.5">
               <Label>Invited By</Label>
-              <div className="flex flex-wrap gap-2 mb-2">
-                {(["member", "child", "teen", "first_timer"] as const).map(t => (
-                  <button key={t} type="button"
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${inviterType === t ? "bg-purple-700 text-white border-purple-700" : "bg-white text-gray-500 border-gray-200 hover:bg-purple-50"}`}
-                    onClick={() => { setInviterType(t); setInvitedBy(null); setInviterChildSearch(""); setInviterTeenSearch(""); setInviterFtSearch(""); setInviterFtResults([]); }}>
-                    {t === "member" ? "👤 Member" : t === "child" ? "👶 Child" : t === "teen" ? "😊 Teen" : "🙋 First Timer"}
-                  </button>
-                ))}
-              </div>
-              {inviterType === "member" && (
-                <>
-                  <InvitedBySearch value={invitedBy} label="Search member who invited them..." onChange={setInvitedBy} />
-                  {invitedBy?.fellowship && (
-                    <p className="text-xs text-purple-600 mt-1">Counted for <strong>{invitedBy.fellowship}</strong> fellowship.</p>
-                  )}
-                </>
-              )}
-              {inviterType === "child" && (
-                <div className="space-y-1">
-                  {invitedBy ? (
-                    <div className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg">
-                      <span className="text-sm font-medium text-blue-800 flex-1">{invitedBy.name}</span>
-                      <button type="button" className="text-xs text-gray-400 hover:text-red-500" onClick={() => setInvitedBy(null)}>✕</button>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="relative">
-                        <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
-                        <Input className="pl-9" placeholder="Search child by name..." value={inviterChildSearch} onChange={e => setInviterChildSearch(e.target.value)} />
-                      </div>
-                      {inviterChildResults.length > 0 && (
-                        <div className="border rounded-lg overflow-hidden bg-white shadow-sm">
-                          {inviterChildResults.map((c: any) => (
-                            <button key={c.id} type="button"
-                              className="w-full flex items-center gap-2 px-3 py-2 hover:bg-blue-50 border-b last:border-0 text-left text-sm"
-                              onClick={() => { setInvitedBy({ id: c.id, name: `${c.firstName} ${c.lastName}`, type: "child" }); setInviterChildSearch(""); setInviterChildResults([]); }}>
-                              <span className="font-medium">{c.firstName} {c.lastName}</span>
-                              <span className="text-xs text-gray-400 capitalize">{(c.class ?? "").replace(/_/g, " ")}</span>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-              )}
-              {inviterType === "teen" && (
-                <div className="space-y-1">
-                  {invitedBy ? (
-                    <div className="flex items-center gap-2 p-2 bg-teal-50 rounded-lg">
-                      <span className="text-sm font-medium text-teal-800 flex-1">{invitedBy.name}</span>
-                      <button type="button" className="text-xs text-gray-400 hover:text-red-500" onClick={() => setInvitedBy(null)}>✕</button>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="relative">
-                        <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
-                        <Input className="pl-9" placeholder="Search teen by name..." value={inviterTeenSearch} onChange={e => setInviterTeenSearch(e.target.value)} />
-                      </div>
-                      {inviterTeenResults.length > 0 && (
-                        <div className="border rounded-lg overflow-hidden bg-white shadow-sm">
-                          {inviterTeenResults.map((t: any) => (
-                            <button key={t.id} type="button"
-                              className="w-full flex items-center gap-2 px-3 py-2 hover:bg-teal-50 border-b last:border-0 text-left text-sm"
-                              onClick={() => { setInvitedBy({ id: t.id, name: `${t.firstName} ${t.lastName}`, type: "teen" }); setInviterTeenSearch(""); setInviterTeenResults([]); }}>
-                              <span className="font-medium">{t.firstName} {t.lastName}</span>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-              )}
-              {inviterType === "first_timer" && (
-                <div className="space-y-1">
-                  {invitedBy ? (
-                    <div className="flex items-center gap-2 p-2 bg-yellow-50 rounded-lg border border-yellow-200">
+              {invitedBy ? (
+                (() => {
+                  const t = invitedBy.type ?? "member";
+                  const bg = t === "child" ? "bg-blue-50 border-blue-200" : t === "teen" ? "bg-teal-50 border-teal-200" : t === "first_timer" ? "bg-yellow-50 border-yellow-200" : "bg-purple-50 border-purple-200";
+                  const nameColor = t === "child" ? "text-blue-800" : t === "teen" ? "text-teal-800" : t === "first_timer" ? "text-yellow-800" : "text-purple-800";
+                  const badgeCls = t === "child" ? "bg-blue-100 text-blue-700" : t === "teen" ? "bg-teal-100 text-teal-700" : t === "first_timer" ? "bg-yellow-100 text-yellow-700" : "bg-purple-100 text-purple-700";
+                  const badgeLabel = t === "child" ? "Child" : t === "teen" ? "Teen" : t === "first_timer" ? "FT" : "Member";
+                  return (
+                    <div className={`flex items-center gap-2 p-2.5 rounded-lg border ${bg}`}>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-yellow-800">{invitedBy.name}</p>
-                        {invitedBy.fellowship
-                          ? <p className="text-xs text-yellow-600 mt-0.5">Counted for <strong>{invitedBy.fellowship}</strong> fellowship</p>
-                          : <p className="text-xs text-gray-400 mt-0.5">No fellowship — will be registered under no fellowship</p>
-                        }
-                      </div>
-                      <button type="button" className="text-xs text-gray-400 hover:text-red-500 flex-shrink-0" onClick={() => { setInvitedBy(null); setInviterFtSearch(""); setInviterFtResults([]); }}>✕</button>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="relative">
-                        <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
-                        <Input className="pl-9" placeholder="Search first-timer by name..." value={inviterFtSearch} onChange={e => setInviterFtSearch(e.target.value)} autoFocus />
-                      </div>
-                      {inviterFtResults.length > 0 && (
-                        <div className="border rounded-lg overflow-hidden bg-white shadow-sm">
-                          {inviterFtResults.map((ft: any) => (
-                            <button key={ft.id} type="button"
-                              className="w-full flex items-start gap-2 px-3 py-2 hover:bg-yellow-50 border-b last:border-0 text-left text-sm"
-                              onClick={() => {
-                                setInvitedBy({
-                                  id: ft.id,
-                                  name: `${ft.firstName} ${ft.lastName}`,
-                                  fellowship: ft.invitedByFellowship ?? undefined,
-                                  type: "first_timer",
-                                  effectiveInvitedById: ft.invitedById ?? null,
-                                  effectiveInvitedByChildId: ft.invitedByChildId ?? null,
-                                  effectiveInvitedByTeenId: ft.invitedByTeenId ?? null,
-                                });
-                                setInviterFtSearch("");
-                                setInviterFtResults([]);
-                              }}>
-                              <div className="flex-1 min-w-0">
-                                <p className="font-medium text-gray-800">{ft.firstName} {ft.lastName}</p>
-                                <p className="text-xs text-gray-400">
-                                  {ft.invitedByFellowship
-                                    ? <>Fellowship: <span className="text-purple-600 font-medium">{ft.invitedByFellowship}</span></>
-                                    : ft.invitedByName
-                                    ? <>Invited by {ft.invitedByName}</>
-                                    : <span className="italic">No fellowship</span>
-                                  }
-                                </p>
-                              </div>
-                            </button>
-                          ))}
+                        <div className="flex items-center gap-1.5">
+                          <p className={`text-sm font-medium ${nameColor}`}>{invitedBy.name}</p>
+                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${badgeCls}`}>{badgeLabel}</span>
                         </div>
-                      )}
-                      {inviterFtSearch.length >= 2 && inviterFtResults.length === 0 && (
-                        <p className="text-center text-xs text-gray-400 py-3">No first-timers found</p>
-                      )}
-                    </>
+                        {invitedBy.fellowship && (
+                          <p className="text-xs text-purple-600 mt-0.5">Counted for <strong>{invitedBy.fellowship}</strong> fellowship</p>
+                        )}
+                      </div>
+                      <button type="button" className="text-gray-400 hover:text-red-500 flex-shrink-0"
+                        onClick={() => { setInvitedBy(null); setInviterUnifiedQuery(""); setInviterUnifiedResults([]); }}>
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  );
+                })()
+              ) : (
+                <div className="space-y-1">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+                    <Input className="pl-9" placeholder="Search member, child, teen or first-timer..."
+                      value={inviterUnifiedQuery}
+                      onChange={e => setInviterUnifiedQuery(e.target.value)} />
+                  </div>
+                  {inviterUnifiedSearching && (
+                    <p className="text-center text-xs text-gray-400 animate-pulse py-1">Searching...</p>
+                  )}
+                  {inviterUnifiedResults.length > 0 && (
+                    <div className="border rounded-lg overflow-hidden bg-white shadow-sm max-h-52 overflow-y-auto">
+                      {inviterUnifiedResults.map((r: any) => {
+                        const rt = r._type as "member" | "child" | "teen" | "first_timer";
+                        const hoverCls = rt === "child" ? "hover:bg-blue-50" : rt === "teen" ? "hover:bg-teal-50" : rt === "first_timer" ? "hover:bg-yellow-50" : "hover:bg-purple-50";
+                        const badgeCls = rt === "child" ? "bg-blue-100 text-blue-700" : rt === "teen" ? "bg-teal-100 text-teal-700" : rt === "first_timer" ? "bg-yellow-100 text-yellow-700 border border-yellow-300" : "bg-purple-100 text-purple-700";
+                        const nameColor = rt === "first_timer" ? "text-yellow-800" : "text-gray-800";
+                        const badgeLabel = rt === "child" ? "Child" : rt === "teen" ? "Teen" : rt === "first_timer" ? "FT" : "Member";
+                        const sub = rt === "member" ? (r.cellName ?? "") : rt === "child" ? (r.class ?? "").replace(/_/g, " ") : rt === "teen" ? "Teens Church" : (r.invitedByName ? `Inv. by ${r.invitedByName}` : "First Timer");
+                        return (
+                          <button key={`${rt}-${r.id}`} type="button"
+                            className={`w-full flex items-center gap-2 px-3 py-2.5 ${hoverCls} border-b last:border-0 text-left text-sm`}
+                            onClick={() => {
+                              const name = rt === "member"
+                                ? `${r.title ? r.title + " " : ""}${r.firstName} ${r.lastName}`
+                                : `${r.firstName} ${r.lastName}`;
+                              const fellowship = rt === "member" ? (r.cellName ?? undefined) : rt === "first_timer" ? (r.invitedByFellowship ?? undefined) : undefined;
+                              setInviterType(rt);
+                              setInvitedBy({
+                                id: r.id, name, fellowship, type: rt,
+                                effectiveInvitedById: rt === "first_timer" ? (r.invitedById ?? null) : null,
+                                effectiveInvitedByChildId: rt === "first_timer" ? (r.invitedByChildId ?? null) : null,
+                                effectiveInvitedByTeenId: rt === "first_timer" ? (r.invitedByTeenId ?? null) : null,
+                              });
+                              setInviterUnifiedQuery("");
+                              setInviterUnifiedResults([]);
+                            }}>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5">
+                                <span className={`font-medium ${nameColor}`}>{r.title ? r.title + " " : ""}{r.firstName} {r.lastName}</span>
+                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${badgeCls}`}>{badgeLabel}</span>
+                              </div>
+                              {sub && <p className="text-xs text-gray-400 capitalize truncate">{sub}</p>}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {inviterUnifiedQuery.length >= 2 && !inviterUnifiedSearching && inviterUnifiedResults.length === 0 && (
+                    <p className="text-center text-xs text-gray-400 py-2">No results found</p>
                   )}
                 </div>
               )}
@@ -1890,52 +1839,6 @@ function RegisterPage({
               {submitting ? "Registering..." : "Register First Timer"}
             </Button>
           </form>
-        )}
-
-        {/* ── Returning First Timer ─────────────────────────────── */}
-        {tab === "returning" && (
-          <div className="space-y-3">
-            <p className="text-sm text-gray-500">Search existing first-timers to register for this service.</p>
-            <div className="relative">
-              <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
-              <Input className="pl-9 bg-white" placeholder="Search by name..."
-                value={returningSearch} onChange={e => setReturningSearch(e.target.value)} autoFocus />
-            </div>
-            {(() => {
-              // Build set of FT ids already registered for this service
-              const alreadyThisService = new Set(
-                (attendanceData?.attendeeList ?? [])
-                  .filter((r: any) => r.type === "first_timer" || r.type === "returning_first_timer")
-                  .map((r: any) => r.ftId)
-              );
-              const eligible = returningResults.filter((ft: any) => !alreadyThisService.has(ft.id));
-              return eligible.length > 0 ? (
-                <div className="border rounded-xl overflow-hidden bg-white shadow-sm">
-                  {eligible.map((ft: any) => (
-                    <button key={ft.id} type="button" disabled={submitting}
-                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-yellow-50 border-b last:border-0 text-left disabled:opacity-60"
-                      onClick={() => registerReturning(ft)}>
-                      <div className="w-9 h-9 rounded-full bg-yellow-100 text-yellow-700 font-bold text-sm flex items-center justify-center flex-shrink-0">
-                        {ft.firstName?.[0]}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm text-gray-800">{ft.firstName} {ft.lastName}</p>
-                        <p className="text-xs text-gray-400">
-                          {ft.serviceDate} {ft.invitedByName ? `· Inv. by ${ft.invitedByName}` : ""}
-                          {ft.invitedByFellowship ? ` (${ft.invitedByFellowship})` : ""}
-                        </p>
-                      </div>
-                      <span className="text-xs text-yellow-600 font-semibold flex-shrink-0">Register →</span>
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-center text-sm text-gray-400 py-6">
-                  {returningResults.length > 0 ? "All matching first-timers are already registered for this service" : "No first-timers found"}
-                </p>
-              );
-            })()}
-          </div>
         )}
 
         {/* ── My Fellowship card (cell leaders only) ───────────── */}
