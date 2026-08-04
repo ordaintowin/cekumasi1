@@ -65,14 +65,14 @@ function PersonSearch({ onSelect, selectedPerson, onClear }: {
   selectedPerson: any;
   onClear: () => void;
 }) {
-  const [personType, setPersonType] = useState("member");
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const debouncedQ = useDebounce(q, 300);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Pass type="" to search all groups at once
   const { data: results, isFetching } = useGivingSearch(
-    { q: debouncedQ, type: personType },
+    { q: debouncedQ, type: "" },
     { query: { enabled: debouncedQ.length >= 2 } }
   );
 
@@ -99,7 +99,9 @@ function PersonSearch({ onSelect, selectedPerson, onClear }: {
         </div>
         <span className="text-sm text-purple-800 flex-1 font-medium">
           {selectedPerson.firstName} {selectedPerson.lastName}
-          <span className="text-xs text-gray-400 ml-1">({typeInfo?.label ?? selectedPerson.personType})</span>
+          <span className={`text-[10px] font-semibold ml-1.5 px-1.5 py-0.5 rounded-full text-white ${typeInfo?.color ?? "bg-gray-400"}`}>
+            {typeInfo?.label ?? selectedPerson.personType}
+          </span>
         </span>
         <button type="button" onClick={() => { onClear(); setQ(""); }} className="text-gray-400 hover:text-red-500">
           <X className="w-3.5 h-3.5" />
@@ -108,60 +110,50 @@ function PersonSearch({ onSelect, selectedPerson, onClear }: {
     );
   }
 
-  const currentType = PERSON_TYPES.find(t => t.value === personType);
-
   return (
-    <div className="space-y-2">
-      <div className="flex gap-1.5 flex-wrap">
-        {PERSON_TYPES.map(t => (
-          <button
-            key={t.value}
-            type="button"
-            onClick={() => { setPersonType(t.value); setQ(""); setOpen(false); }}
-            className={`px-3 py-1 text-xs rounded-full font-medium border transition-colors ${personType === t.value ? `${t.color} text-white border-transparent` : "bg-white text-gray-500 border-gray-200 hover:border-gray-400"}`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-      <div className="relative" ref={containerRef}>
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-        {isFetching && debouncedQ.length >= 2 && (
-          <Loader2 className="absolute right-2.5 top-2.5 h-4 w-4 text-purple-500 animate-spin" />
-        )}
-        <Input
-          className="pl-9 pr-8"
-          placeholder={`Search ${currentType?.label ?? "person"} by name...`}
-          value={q}
-          onChange={e => { setQ(e.target.value); if (e.target.value.length >= 2) setOpen(true); }}
-          onFocus={() => { if (debouncedQ.length >= 2) setOpen(true); }}
-          autoComplete="off"
-        />
-        {open && debouncedQ.length >= 2 && (
-          <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border rounded-lg shadow-lg max-h-48 overflow-y-auto">
-            {isFetching ? (
-              <div className="px-3 py-3 text-sm text-gray-400 flex items-center gap-2">
-                <Loader2 className="w-3.5 h-3.5 animate-spin" /> Searching...
-              </div>
-            ) : (results ?? []).length === 0 ? (
-              <div className="px-3 py-3 text-sm text-gray-400">No {currentType?.label ?? "person"} found for "{debouncedQ}"</div>
-            ) : (
-              (results ?? []).map((p: any) => (
+    <div className="relative" ref={containerRef}>
+      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+      {isFetching && debouncedQ.length >= 2 && (
+        <Loader2 className="absolute right-2.5 top-2.5 h-4 w-4 text-purple-500 animate-spin" />
+      )}
+      <Input
+        className="pl-9 pr-8"
+        placeholder="Search by name — members, teens, children, visitors..."
+        value={q}
+        onChange={e => { setQ(e.target.value); if (e.target.value.length >= 2) setOpen(true); }}
+        onFocus={() => { if (debouncedQ.length >= 2) setOpen(true); }}
+        autoComplete="off"
+      />
+      {open && debouncedQ.length >= 2 && (
+        <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border rounded-lg shadow-lg max-h-56 overflow-y-auto">
+          {isFetching ? (
+            <div className="px-3 py-3 text-sm text-gray-400 flex items-center gap-2">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" /> Searching...
+            </div>
+          ) : (results ?? []).length === 0 ? (
+            <div className="px-3 py-3 text-sm text-gray-400">No one found for "{debouncedQ}"</div>
+          ) : (
+            (results ?? []).map((p: any) => {
+              const typeInfo = PERSON_TYPES.find(t => t.value === p.personType);
+              return (
                 <button key={`${p.personType}-${p.id}`} type="button"
                   className="w-full text-left px-3 py-2 hover:bg-purple-50 text-sm flex items-center gap-2 border-b last:border-0"
                   onMouseDown={e => e.preventDefault()}
                   onClick={() => { onSelect(p); setQ(""); setOpen(false); }}>
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0 ${currentType?.color ?? "bg-gray-500"}`}>
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0 ${typeInfo?.color ?? "bg-gray-500"}`}>
                     {p.firstName?.[0]}
                   </div>
-                  <span>{p.firstName} {p.lastName}</span>
+                  <span className="flex-1">{p.firstName} {p.lastName}</span>
                   {p.membershipId && <span className="text-gray-400 text-xs font-mono">{p.membershipId}</span>}
+                  <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full text-white ${typeInfo?.color ?? "bg-gray-400"}`}>
+                    {typeInfo?.label ?? p.personType}
+                  </span>
                 </button>
-              ))
-            )}
-          </div>
-        )}
-      </div>
+              );
+            })
+          )}
+        </div>
+      )}
     </div>
   );
 }
