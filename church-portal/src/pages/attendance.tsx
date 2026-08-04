@@ -87,7 +87,7 @@ async function exportToExcel(service: any, attendanceData: any) {
 // ─── types ────────────────────────────────────────────────────────────────────
 
 type View = "services" | "register";
-type RegTab = "search" | "id" | "qr" | "firsttimer" | "returning" | "child" | "teen";
+type RegTab = "search" | "id" | "qr" | "firsttimer" | "returning";
 type RegResult = { type: "success" | "error"; name: string; detail: string } | null;
 
 // ─── InvitedBySearch ──────────────────────────────────────────────────────────
@@ -1196,25 +1196,19 @@ function RegisterPage({
   }, [attendanceData, myCellName]);
 
   const isChildrenAdmin = (user as any)?.roleSubtype === "children";
-  const [tab, setTab] = useState<RegTab>(() => isChildrenAdmin ? "child" : "search");
+  const [tab, setTab] = useState<RegTab>("search");
   const [lastResult, setLastResult] = useState<RegResult>(null);
   const [submitting, setSubmitting] = useState(false);
   const resultTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Name search
+  // Unified name search (members + children + teens)
   const [searchQuery, setSearchQuery] = useState("");
-  const [memberResults, setMemberResults] = useState<any[]>([]);
-  const [memberSearching, setMemberSearching] = useState(false);
+  const [unifiedResults, setUnifiedResults] = useState<any[]>([]);
+  const [unifiedSearching, setUnifiedSearching] = useState(false);
 
   // ID + QR
   const [idInput, setIdInput] = useState("");
   const [qrInput, setQrInput] = useState("");
-
-  // Children/Teens
-  const [childSearch, setChildSearch] = useState("");
-  const [childResults, setChildResults] = useState<any[]>([]);
-  const [teenSearch, setTeenSearch] = useState("");
-  const [teenResults, setTeenResults] = useState<any[]>([]);
 
   // First Timer form
   const [inviterType, setInviterType] = useState<"member" | "child" | "teen" | "first_timer">("member");
@@ -1248,15 +1242,15 @@ function RegisterPage({
     resultTimer.current = setTimeout(() => setLastResult(null), 7000);
   }, []);
 
-  // Member search
+  // Unified search (members + children + teens)
   useEffect(() => {
-    if (searchQuery.length < 2) { setMemberResults([]); return; }
+    if (searchQuery.length < 2) { setUnifiedResults([]); return; }
     const t = setTimeout(async () => {
-      setMemberSearching(true);
+      setUnifiedSearching(true);
       try {
-        const d = await apiFetch(`/api/members?search=${encodeURIComponent(searchQuery)}&limit=8${leaderFellowshipSuffix}`);
-        setMemberResults(d.data ?? []);
-      } catch { setMemberResults([]); } finally { setMemberSearching(false); }
+        const d = await apiFetch(`/api/members/unified-search?q=${encodeURIComponent(searchQuery)}`);
+        setUnifiedResults(d.data ?? []);
+      } catch { setUnifiedResults([]); } finally { setUnifiedSearching(false); }
     }, 300);
     return () => clearTimeout(t);
   }, [searchQuery]);
@@ -1297,29 +1291,7 @@ function RegisterPage({
     return () => clearTimeout(t);
   }, [inviterFtSearch]);
 
-  // Child search
-  useEffect(() => {
-    if (childSearch.length < 2) { setChildResults([]); return; }
-    const t = setTimeout(async () => {
-      try {
-        const d = await apiFetch(`/api/children?search=${encodeURIComponent(childSearch)}&limit=8`);
-        setChildResults(d.data ?? []);
-      } catch { setChildResults([]); }
-    }, 300);
-    return () => clearTimeout(t);
-  }, [childSearch]);
 
-  // Teen search
-  useEffect(() => {
-    if (teenSearch.length < 2) { setTeenResults([]); return; }
-    const t = setTimeout(async () => {
-      try {
-        const d = await apiFetch(`/api/teens?search=${encodeURIComponent(teenSearch)}&limit=8`);
-        setTeenResults(d.data ?? []);
-      } catch { setTeenResults([]); }
-    }, 300);
-    return () => clearTimeout(t);
-  }, [teenSearch]);
 
   // Returning FT search
   useEffect(() => {
@@ -1370,7 +1342,7 @@ function RegisterPage({
         showResult({ type: "success", name, detail: `Children's Church — ${(child.class ?? "").replace(/_/g, " ")}` });
         setFtInviteFor({ name, id: child.id, type: "child" });
       }
-      setChildSearch("");
+      setSearchQuery("");
     } catch (e: any) {
       showResult({ type: "error", name: "Error", detail: e.message });
     } finally { setSubmitting(false); }
@@ -1391,7 +1363,7 @@ function RegisterPage({
         showResult({ type: "success", name, detail: "Teens Church" });
         setFtInviteFor({ name, id: teen.id, type: "teen" });
       }
-      setTeenSearch("");
+      setSearchQuery("");
     } catch (e: any) {
       showResult({ type: "error", name: "Error", detail: e.message });
     } finally { setSubmitting(false); }
@@ -1495,12 +1467,8 @@ function RegisterPage({
     { key: "qr", label: "📷 QR" },
     { key: "firsttimer", label: "👋 First Timer" },
     { key: "returning", label: "🔄 Returning" },
-    { key: "child", label: "👶 Child" },
-    { key: "teen", label: "😊 Teen" },
   ];
-  const tabs = isChildrenAdmin
-    ? allTabs.filter(t => t.key === "child" || t.key === "teen")
-    : allTabs;
+  const tabs = allTabs;
 
   return (
     <>
@@ -1572,35 +1540,100 @@ function RegisterPage({
           ))}
         </div>
 
-        {/* ── Name Search ─────────────────────────────────────── */}
+        {/* ── Unified Name Search (Members · Children · Teens) ─── */}
         {tab === "search" && (
           <div className="space-y-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
-              <Input className="pl-9 bg-white" placeholder="Type member's name to search..."
-                value={searchQuery} onChange={e => setSearchQuery(e.target.value)} autoFocus />
-            </div>
-            {memberSearching && <p className="text-center text-xs text-gray-400 animate-pulse">Searching...</p>}
-            {memberResults.length > 0 && (
-              <div className="border rounded-xl overflow-hidden bg-white shadow-sm">
-                {memberResults.map(m => (
-                  <button key={m.id} type="button" disabled={submitting}
-                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-purple-50 border-b last:border-0 text-left disabled:opacity-60"
-                    onClick={() => checkinMember({ memberId: m.id }, "search")}>
-                    <div className="w-9 h-9 rounded-full bg-purple-100 text-purple-700 font-bold text-sm flex items-center justify-center flex-shrink-0 overflow-hidden">
-                      {m.profilePhoto ? <img src={m.profilePhoto} alt="" className="w-full h-full object-cover" /> : <span>{m.firstName?.[0]}{m.lastName?.[0]}</span>}
+            {/* FT invite prompt shown inline after a child/teen is registered */}
+            {ftInviteFor ? (
+              <div className={`border rounded-xl p-4 space-y-3 ${ftInviteFor.type === "child" ? "bg-blue-50 border-blue-200" : "bg-teal-50 border-teal-200"}`}>
+                <p className={`text-sm font-semibold ${ftInviteFor.type === "child" ? "text-blue-900" : "text-teal-900"}`}>
+                  Did <span className={ftInviteFor.type === "child" ? "text-blue-700" : "text-teal-700"}>{ftInviteFor.name}</span> bring a guest today?
+                </p>
+                <p className={`text-xs ${ftInviteFor.type === "child" ? "text-blue-600" : "text-teal-600"}`}>
+                  Register their first-timer guest and it will be attributed to {ftInviteFor.name}.
+                </p>
+                <form onSubmit={e => { e.preventDefault(); submitFirstTimer(e, ftInviteFor.type, ftInviteFor.id, ftInviteFor.name); }} className="space-y-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label className="text-xs">Guest First Name <span className="text-red-400">*</span></Label>
+                      <Input className="h-9 text-sm" value={ftForm.firstName} onChange={e => setFtForm(f => ({ ...f, firstName: e.target.value }))} required />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-sm text-gray-800">{m.title ? `${m.title} ` : ""}{m.firstName} {m.lastName}</p>
-                      <p className="text-xs text-gray-400 truncate">{m.membershipId}{m.cellName ? ` · ${m.cellName}` : ""}</p>
+                    <div>
+                      <Label className="text-xs">Guest Last Name <span className="text-red-400">*</span></Label>
+                      <Input className="h-9 text-sm" value={ftForm.lastName} onChange={e => setFtForm(f => ({ ...f, lastName: e.target.value }))} required />
                     </div>
-                    <span className="text-xs text-purple-600 font-semibold flex-shrink-0">Register →</span>
-                  </button>
-                ))}
+                  </div>
+                  <Select value={ftForm.gender} onValueChange={v => setFtForm(f => ({ ...f, gender: v }))}>
+                    <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Gender *" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="male">Male</SelectItem>
+                      <SelectItem value="female">Female</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input className="h-9 text-sm" value={ftForm.contact} onChange={e => setFtForm(f => ({ ...f, contact: e.target.value }))} placeholder="Phone (optional)" />
+                  <div className="flex gap-2">
+                    <Button type="submit"
+                      className={`flex-1 text-white h-9 text-sm ${ftInviteFor.type === "child" ? "bg-blue-700 hover:bg-blue-800" : "bg-teal-700 hover:bg-teal-800"}`}
+                      disabled={submitting || !ftForm.firstName || !ftForm.lastName || !ftForm.gender}>
+                      {submitting ? "Registering..." : "Register Guest as FT"}
+                    </Button>
+                    <Button type="button" variant="outline" className="h-9 text-sm"
+                      onClick={() => { setFtInviteFor(null); setFtForm({ firstName: "", lastName: "", gender: "", contact: "" }); }}>
+                      Skip
+                    </Button>
+                  </div>
+                </form>
               </div>
-            )}
-            {searchQuery.length >= 2 && !memberSearching && memberResults.length === 0 && (
-              <p className="text-center text-sm text-gray-400 py-6">No members found for "{searchQuery}"</p>
+            ) : (
+              <>
+                <div className="relative">
+                  <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+                  <Input className="pl-9 bg-white" placeholder="Search members, children or teens by name..."
+                    value={searchQuery} onChange={e => setSearchQuery(e.target.value)} autoFocus />
+                </div>
+                {unifiedSearching && <p className="text-center text-xs text-gray-400 animate-pulse">Searching...</p>}
+                {unifiedResults.length > 0 && (
+                  <div className="border rounded-xl overflow-hidden bg-white shadow-sm">
+                    {unifiedResults.map((r: any) => {
+                      const isMember = r.type === "member";
+                      const isChild  = r.type === "child";
+                      const avatarCls = isMember ? "bg-purple-100 text-purple-700" : isChild ? "bg-blue-100 text-blue-700" : "bg-teal-100 text-teal-700";
+                      const hoverCls  = isMember ? "hover:bg-purple-50" : isChild ? "hover:bg-blue-50" : "hover:bg-teal-50";
+                      const badgeCls  = isMember ? "bg-purple-100 text-purple-700" : isChild ? "bg-blue-100 text-blue-700" : "bg-teal-100 text-teal-700";
+                      const label     = isMember ? "Member" : isChild ? "Child" : "Teen";
+                      const subtitle  = isMember
+                        ? `${r.membershipId ?? ""}${r.cellName ? ` · ${r.cellName}` : ""}`
+                        : isChild ? (r.class ?? "").replace(/_/g, " ") : "Teens Church";
+                      return (
+                        <button key={`${r.type}-${r.id}`} type="button" disabled={submitting}
+                          className={`w-full flex items-center gap-3 px-4 py-3 ${hoverCls} border-b last:border-0 text-left disabled:opacity-60`}
+                          onClick={() => {
+                            if (isMember) checkinMember({ memberId: r.id }, "search");
+                            else if (isChild) registerChild(r);
+                            else registerTeen(r);
+                          }}>
+                          <div className={`w-9 h-9 rounded-full ${avatarCls} font-bold text-sm flex items-center justify-center flex-shrink-0 overflow-hidden`}>
+                            {isMember && r.profilePhoto
+                              ? <img src={r.profilePhoto} alt="" className="w-full h-full object-cover" />
+                              : <span>{r.firstName?.[0]}{r.lastName?.[0]}</span>}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <p className="font-semibold text-sm text-gray-800">{r.title ? `${r.title} ` : ""}{r.firstName} {r.lastName}</p>
+                              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${badgeCls}`}>{label}</span>
+                            </div>
+                            {subtitle && <p className="text-xs text-gray-400 truncate capitalize">{subtitle}</p>}
+                          </div>
+                          <span className="text-xs text-purple-600 font-semibold flex-shrink-0">Register →</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+                {searchQuery.length >= 2 && !unifiedSearching && unifiedResults.length === 0 && (
+                  <p className="text-center text-sm text-gray-400 py-6">No results found for "{searchQuery}"</p>
+                )}
+              </>
             )}
           </div>
         )}
@@ -1902,146 +1935,6 @@ function RegisterPage({
                 </p>
               );
             })()}
-          </div>
-        )}
-
-        {/* ── Children ────────────────────────────────────────── */}
-        {tab === "child" && (
-          <div className="space-y-3">
-            {ftInviteFor?.type === "child" ? (
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-3">
-                <p className="text-sm font-semibold text-blue-900">Did <span className="text-blue-700">{ftInviteFor.name}</span> bring a guest today?</p>
-                <p className="text-xs text-blue-600">Register their first-timer guest and it will be attributed to {ftInviteFor.name}.</p>
-                <form onSubmit={e => {
-                  e.preventDefault();
-                  submitFirstTimer(e, "child", ftInviteFor.id, ftInviteFor.name);
-                }} className="space-y-3">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <Label className="text-xs">Guest First Name <span className="text-red-400">*</span></Label>
-                      <Input className="h-9 text-sm" value={ftForm.firstName} onChange={e => setFtForm(f => ({ ...f, firstName: e.target.value }))} required />
-                    </div>
-                    <div>
-                      <Label className="text-xs">Guest Last Name <span className="text-red-400">*</span></Label>
-                      <Input className="h-9 text-sm" value={ftForm.lastName} onChange={e => setFtForm(f => ({ ...f, lastName: e.target.value }))} required />
-                    </div>
-                  </div>
-                  <Select value={ftForm.gender} onValueChange={v => setFtForm(f => ({ ...f, gender: v }))}>
-                    <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Gender *" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="male">Male</SelectItem>
-                      <SelectItem value="female">Female</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Input className="h-9 text-sm" value={ftForm.contact} onChange={e => setFtForm(f => ({ ...f, contact: e.target.value }))} placeholder="Phone (optional)" />
-                  <div className="flex gap-2">
-                    <Button type="submit" className="flex-1 bg-blue-700 hover:bg-blue-800 text-white h-9 text-sm" disabled={submitting || !ftForm.firstName || !ftForm.lastName || !ftForm.gender}>
-                      {submitting ? "Registering..." : "Register Guest as FT"}
-                    </Button>
-                    <Button type="button" variant="outline" className="h-9 text-sm" onClick={() => { setFtInviteFor(null); setFtForm({ firstName: "", lastName: "", gender: "", contact: "" }); }}>
-                      Skip
-                    </Button>
-                  </div>
-                </form>
-              </div>
-            ) : (
-              <>
-                <div className="relative">
-                  <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
-                  <Input className="pl-9 bg-white" placeholder="Search child by name..."
-                    value={childSearch} onChange={e => setChildSearch(e.target.value)} autoFocus />
-                </div>
-                {childResults.length > 0 && (
-                  <div className="border rounded-xl overflow-hidden bg-white shadow-sm">
-                    {childResults.map((c: any) => (
-                      <button key={c.id} type="button" disabled={submitting}
-                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-pink-50 border-b last:border-0 text-left disabled:opacity-60"
-                        onClick={() => registerChild(c)}>
-                        <div className="w-9 h-9 rounded-full bg-pink-100 text-pink-700 font-bold text-sm flex items-center justify-center flex-shrink-0">
-                          {c.firstName?.[0]}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-sm text-gray-800">{c.firstName} {c.lastName}</p>
-                          <p className="text-xs text-gray-400 capitalize">{(c.class ?? "").replace(/_/g, " ")}</p>
-                        </div>
-                        <span className="text-xs text-purple-600 font-semibold flex-shrink-0">Register →</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {childSearch.length >= 2 && childResults.length === 0 && <p className="text-center text-sm text-gray-400 py-6">No children found</p>}
-              </>
-            )}
-          </div>
-        )}
-
-        {/* ── Teens ───────────────────────────────────────────── */}
-        {tab === "teen" && (
-          <div className="space-y-3">
-            {ftInviteFor?.type === "teen" ? (
-              <div className="bg-teal-50 border border-teal-200 rounded-xl p-4 space-y-3">
-                <p className="text-sm font-semibold text-teal-900">Did <span className="text-teal-700">{ftInviteFor.name}</span> bring a guest today?</p>
-                <p className="text-xs text-teal-600">Register their first-timer guest and it will be attributed to {ftInviteFor.name}.</p>
-                <form onSubmit={e => {
-                  e.preventDefault();
-                  submitFirstTimer(e, "teen", ftInviteFor.id, ftInviteFor.name);
-                }} className="space-y-3">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <Label className="text-xs">Guest First Name <span className="text-red-400">*</span></Label>
-                      <Input className="h-9 text-sm" value={ftForm.firstName} onChange={e => setFtForm(f => ({ ...f, firstName: e.target.value }))} required />
-                    </div>
-                    <div>
-                      <Label className="text-xs">Guest Last Name <span className="text-red-400">*</span></Label>
-                      <Input className="h-9 text-sm" value={ftForm.lastName} onChange={e => setFtForm(f => ({ ...f, lastName: e.target.value }))} required />
-                    </div>
-                  </div>
-                  <Select value={ftForm.gender} onValueChange={v => setFtForm(f => ({ ...f, gender: v }))}>
-                    <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Gender *" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="male">Male</SelectItem>
-                      <SelectItem value="female">Female</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Input className="h-9 text-sm" value={ftForm.contact} onChange={e => setFtForm(f => ({ ...f, contact: e.target.value }))} placeholder="Phone (optional)" />
-                  <div className="flex gap-2">
-                    <Button type="submit" className="flex-1 bg-teal-700 hover:bg-teal-800 text-white h-9 text-sm" disabled={submitting || !ftForm.firstName || !ftForm.lastName || !ftForm.gender}>
-                      {submitting ? "Registering..." : "Register Guest as FT"}
-                    </Button>
-                    <Button type="button" variant="outline" className="h-9 text-sm" onClick={() => { setFtInviteFor(null); setFtForm({ firstName: "", lastName: "", gender: "", contact: "" }); }}>
-                      Skip
-                    </Button>
-                  </div>
-                </form>
-              </div>
-            ) : (
-              <>
-                <div className="relative">
-                  <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
-                  <Input className="pl-9 bg-white" placeholder="Search teen by name..."
-                    value={teenSearch} onChange={e => setTeenSearch(e.target.value)} autoFocus />
-                </div>
-                {teenResults.length > 0 && (
-                  <div className="border rounded-xl overflow-hidden bg-white shadow-sm">
-                    {teenResults.map((t: any) => (
-                      <button key={t.id} type="button" disabled={submitting}
-                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-teal-50 border-b last:border-0 text-left disabled:opacity-60"
-                        onClick={() => registerTeen(t)}>
-                        <div className="w-9 h-9 rounded-full bg-teal-100 text-teal-700 font-bold text-sm flex items-center justify-center flex-shrink-0">
-                          {t.firstName?.[0]}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-sm text-gray-800">{t.firstName} {t.lastName}</p>
-                          <p className="text-xs text-gray-400">Teens Church</p>
-                        </div>
-                        <span className="text-xs text-purple-600 font-semibold flex-shrink-0">Register →</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {teenSearch.length >= 2 && teenResults.length === 0 && <p className="text-center text-sm text-gray-400 py-6">No teens found</p>}
-              </>
-            )}
           </div>
         )}
 
