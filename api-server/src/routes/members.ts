@@ -5,7 +5,7 @@ import {
   cellsTable, seniorCellsTable, pcfsTable,
   departmentMembersTable, departmentsTable, givingsTable, attendanceRecordsTable,
   familiesTable, familyChildrenTable, ministryYearsTable, servicesTable, givingTypesTable,
-  teensTable, childrenTable,
+  teensTable, childrenTable, firstTimersTable,
 } from "@workspace/db";
 import { eq, and, ilike, or, sql, ne, gte, lte, inArray } from "drizzle-orm";
 import { authenticateToken, requireRole } from "../middlewares/auth";
@@ -180,7 +180,7 @@ router.get("/unified-search", async (req, res) => {
   if (!q || String(q).trim().length < 2) return res.json({ data: [] });
   const search = String(q).trim();
 
-  const [members, children, teens] = await Promise.all([
+  const [members, children, teens, firstTimers] = await Promise.all([
     db.select({
       id: membersTable.id,
       firstName: membersTable.firstName,
@@ -230,6 +230,24 @@ router.get("/unified-search", async (req, res) => {
         )
       ))
       .orderBy(teensTable.firstName).limit(4),
+
+    db.select({
+      id: firstTimersTable.id,
+      firstName: firstTimersTable.firstName,
+      lastName: firstTimersTable.lastName,
+      invitedById: firstTimersTable.invitedById,
+      invitedByChildId: firstTimersTable.invitedByChildId,
+      invitedByTeenId: firstTimersTable.invitedByTeenId,
+    }).from(firstTimersTable)
+      .where(and(
+        eq(firstTimersTable.isArchived, false),
+        eq(firstTimersTable.isReturning, false),
+        or(
+          ilike(firstTimersTable.firstName, `%${search}%`),
+          ilike(firstTimersTable.lastName, `%${search}%`)
+        )
+      ))
+      .orderBy(firstTimersTable.firstName).limit(4),
   ]);
 
   const cellIds = members.map(m => m.cellId).filter(Boolean) as number[];
@@ -273,6 +291,20 @@ router.get("/unified-search", async (req, res) => {
       profilePhoto: null as string | null,
       cellName: null as string | null,
       class: null as string | null,
+    })),
+    ...firstTimers.map(ft => ({
+      type: 'first_timer' as const,
+      id: ft.id,
+      firstName: ft.firstName,
+      lastName: ft.lastName,
+      membershipId: null as string | null,
+      title: null as string | null,
+      profilePhoto: null as string | null,
+      cellName: null as string | null,
+      class: null as string | null,
+      invitedById: ft.invitedById ?? null,
+      invitedByChildId: ft.invitedByChildId ?? null,
+      invitedByTeenId: ft.invitedByTeenId ?? null,
     })),
   ];
 
