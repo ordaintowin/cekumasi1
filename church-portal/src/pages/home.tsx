@@ -423,7 +423,7 @@ export default function Home() {
       {/* ── Upcoming Birthdays & Anniversaries ────────────────── */}
       {(upcomingBirthdays.length > 0 || upcomingAnniversaries.length > 0) && (
         <section className="space-y-3">
-          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Coming Up (Next 7 Days)</h2>
+          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Coming Up (Next 2 Days)</h2>
           <div className="space-y-2">
             {[
               ...upcomingBirthdays.map(m => ({ ...m, _type: "birthday" as const })),
