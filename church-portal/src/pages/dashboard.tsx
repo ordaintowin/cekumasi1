@@ -96,7 +96,7 @@ export default function Dashboard() {
       const nextYear = new Date(now.getFullYear() + 1, wed.getMonth(), wed.getDate());
       const upcoming = thisYear >= todayMidnight ? thisYear : nextYear;
       const days = Math.round((upcoming.getTime() - todayMidnight.getTime()) / (1000 * 60 * 60 * 24));
-      if (days <= 10) {
+      if (days <= 2) {
         seen.add(m.id);
         if (m.spouseId) seen.add(m.spouseId);
         const spouse = m.spouseId ? allMembers.find((x: any) => x.id === m.spouseId) : null;
@@ -245,12 +245,12 @@ export default function Dashboard() {
             <h2 className="text-sm font-semibold text-gray-700 flex-1">Upcoming Birthdays</h2>
           </div>
           <div className="px-4 py-2">
-            {birthdays.filter((b: any) => b.daysUntil <= 10).length === 0 ? (
-              <p className="text-xs text-gray-400 py-4 text-center">No birthdays in the next 10 days</p>
+            {birthdays.filter((b: any) => b.daysUntil <= 2).length === 0 ? (
+              <p className="text-xs text-gray-400 py-4 text-center">No birthdays in the next 2 days</p>
             ) : (
               <div className="divide-y divide-gray-50">
                 {birthdays
-                  .filter((b: any) => b.daysUntil <= 10)
+                  .filter((b: any) => b.daysUntil <= 2)
                   .sort((a: any, b: any) => a.daysUntil - b.daysUntil)
                   .slice(0, 6)
                   .map((b: any) => {
@@ -287,7 +287,7 @@ export default function Dashboard() {
           </div>
           <div className="px-4 py-2">
             {upcomingAnniversaries.length === 0 ? (
-              <p className="text-xs text-gray-400 py-4 text-center">No anniversaries in the next 10 days</p>
+              <p className="text-xs text-gray-400 py-4 text-center">No anniversaries in the next 2 days</p>
             ) : (
               <div className="divide-y divide-gray-50">
                 {upcomingAnniversaries.slice(0, 6).map((m: any) => {
