@@ -382,7 +382,7 @@ router.get("/children/:id/parent-summary", async (req, res) => {
   const serviceIds = [...new Set(attendanceRows.map(r => r.serviceId))];
   let servicesMap: Record<number, any> = {};
   if (serviceIds.length) {
-    const svcs = await db.select().from(servicesTable).where(sql`${servicesTable.id} = ANY(ARRAY[${sql.join(serviceIds.map(id => sql`${id}`), sql`, `)}])`);
+    const svcs = await db.select().from(servicesTable).where(inArray(servicesTable.id, serviceIds));
     svcs.forEach(s => { servicesMap[s.id] = s; });
   }
 
@@ -434,7 +434,7 @@ router.get("/teens/:id/parent-summary", async (req, res) => {
   const serviceIds = [...new Set(attendanceRows.map(r => r.serviceId))];
   let servicesMap: Record<number, any> = {};
   if (serviceIds.length) {
-    const svcs = await db.select().from(servicesTable).where(sql`${servicesTable.id} = ANY(ARRAY[${sql.join(serviceIds.map(id => sql`${id}`), sql`, `)}])`);
+    const svcs = await db.select().from(servicesTable).where(inArray(servicesTable.id, serviceIds));
     svcs.forEach(s => { servicesMap[s.id] = s; });
   }
 
@@ -509,7 +509,7 @@ router.get("/teens/:id/attendance-history", async (req, res) => {
           .where(and(sql`${servicesTable.date} >= ${year.startDate}`, sql`${servicesTable.date} <= ${year.endDate}`));
         const ids = svcs.map((s: any) => s.id);
         serviceIdFilter = ids.length
-          ? sql`${serviceTeensAttendanceTable.serviceId} = ANY(ARRAY[${sql.join(ids.map((id: number) => sql`${id}`), sql`, `)}])`
+          ? inArray(serviceTeensAttendanceTable.serviceId, ids)
           : sql`false`;
       }
     }
@@ -529,7 +529,7 @@ router.get("/teens/:id/attendance-history", async (req, res) => {
     const svcsMap: Record<number, any> = {};
     if (uniqueSvcIds.length) {
       const svcs = await db.select().from(servicesTable)
-        .where(sql`${servicesTable.id} = ANY(ARRAY[${sql.join(uniqueSvcIds.map((id: any) => sql`${id}`), sql`, `)}])`);
+        .where(inArray(servicesTable.id, uniqueSvcIds));
       (svcs as any[]).forEach((s: any) => { svcsMap[s.id] = s; });
     }
 
