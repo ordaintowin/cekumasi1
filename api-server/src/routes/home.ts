@@ -16,7 +16,7 @@ router.get("/home/feed", authenticateToken, async (req, res) => {
     const todayMD = `${mm}-${dd}`;
 
     const upcomingMDs: string[] = [];
-    for (let i = 1; i <= 7; i++) {
+    for (let i = 1; i <= 2; i++) {
       const d = new Date(today);
       d.setDate(d.getDate() + i);
       upcomingMDs.push(`${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`);
