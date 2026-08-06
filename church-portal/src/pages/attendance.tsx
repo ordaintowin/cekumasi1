@@ -87,7 +87,7 @@ async function exportToExcel(service: any, attendanceData: any) {
 // ─── types ────────────────────────────────────────────────────────────────────
 
 type View = "services" | "register";
-type RegTab = "search" | "id" | "qr" | "firsttimer";
+type RegTab = "search" | "id" | "qr" | "firsttimer" | "visitor";
 type RegResult = { type: "success" | "error"; name: string; detail: string } | null;
 
 // ─── InvitedBySearch ──────────────────────────────────────────────────────────
@@ -155,7 +155,9 @@ function InvitedBySearch({
                 setQuery(""); setOpen(false);
               }}>
               <span className="flex-1 font-medium text-gray-800">{m.title ? m.title + " " : ""}{m.firstName} {m.lastName}</span>
-              {m.cellName && <span className="text-xs text-gray-400">{m.cellName}</span>}
+              {m.memberType === "visitor"
+                ? <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-700 flex-shrink-0">Visitor</span>
+                : m.cellName && <span className="text-xs text-gray-400">{m.cellName}</span>}
             </button>
           ))}
           {ftResults.map(ft => (
@@ -1253,6 +1255,12 @@ function RegisterPage({
   // Child/Teen FT invite prompt
   const [ftInviteFor, setFtInviteFor] = useState<{ name: string; id: number; type: "child" | "teen" } | null>(null);
 
+  // Visitor form
+  const [visitorForm, setVisitorForm] = useState({ title: "", firstName: "", lastName: "", gender: "", phone: "" });
+  const [visitorDuplicates, setVisitorDuplicates] = useState<any[]>([]);
+  const [visitorChecking, setVisitorChecking] = useState(false);
+  const [visitorWarnDismissed, setVisitorWarnDismissed] = useState(false);
+
   // Children/Teens modal (header badges)
   const [ctModal, setCtModal] = useState<{ type: "children" | "teens"; list: any[] } | null>(null);
   const [ctModalPage, setCtModalPage] = useState(1);
@@ -1300,6 +1308,28 @@ function RegisterPage({
     }, 300);
     return () => clearTimeout(t);
   }, [inviterUnifiedQuery]);
+
+  // Visitor duplicate check (debounced)
+  useEffect(() => {
+    const { firstName, lastName, phone } = visitorForm;
+    if (firstName.length < 2 && lastName.length < 2 && phone.length < 5) {
+      setVisitorDuplicates([]);
+      return;
+    }
+    setVisitorWarnDismissed(false);
+    const t = setTimeout(async () => {
+      setVisitorChecking(true);
+      try {
+        const params = new URLSearchParams();
+        if (firstName.length >= 2) params.set("firstName", firstName);
+        if (lastName.length >= 2) params.set("lastName", lastName);
+        if (phone.length >= 5) params.set("phone", phone);
+        const d = await apiFetch(`/api/visitors/check-duplicate?${params}`);
+        setVisitorDuplicates(d.matches ?? []);
+      } catch { setVisitorDuplicates([]); } finally { setVisitorChecking(false); }
+    }, 500);
+    return () => clearTimeout(t);
+  }, [visitorForm.firstName, visitorForm.lastName, visitorForm.phone]);
 
   async function checkinMember(params: { memberId?: number; membershipId?: string }, method = "manual") {
     setSubmitting(true);
@@ -1362,6 +1392,32 @@ function RegisterPage({
       setSearchQuery("");
     } catch (e: any) {
       showResult({ type: "error", name: "Error", detail: e.message });
+    } finally { setSubmitting(false); }
+  }
+
+  async function registerVisitor(e: React.FormEvent) {
+    e.preventDefault();
+    const { title, firstName, lastName, gender, phone } = visitorForm;
+    if (!firstName.trim() || !lastName.trim() || !gender) return;
+    setSubmitting(true);
+    try {
+      const res = await apiFetch(`/api/services/${serviceId}/register-visitor`, {
+        method: "POST",
+        body: JSON.stringify({ title: title || undefined, firstName: firstName.trim(), lastName: lastName.trim(), gender, phone: phone.trim() || undefined }),
+      });
+      queryClient.invalidateQueries({ queryKey: getGetActiveServiceQueryKey() });
+      queryClient.invalidateQueries({ queryKey: getGetServiceAttendanceQueryKey(serviceId) });
+      const m = res.member;
+      const name = `${m.title ? m.title + " " : ""}${m.firstName} ${m.lastName}`.trim();
+      if (res.alreadyCheckedIn) {
+        showResult({ type: "error", name, detail: `${name} is already checked in for this service` });
+      } else {
+        showResult({ type: "success", name, detail: `Visitor registered — ${m.membershipId}` });
+        setVisitorForm({ title: "", firstName: "", lastName: "", gender: "", phone: "" });
+        setVisitorDuplicates([]);
+      }
+    } catch (err: any) {
+      showResult({ type: "error", name: "Error", detail: err.message });
     } finally { setSubmitting(false); }
   }
 
@@ -1462,6 +1518,7 @@ function RegisterPage({
     { key: "id", label: "🪪 ID" },
     { key: "qr", label: "📷 QR" },
     { key: "firsttimer", label: "👋 First Timer" },
+    { key: "visitor", label: "👤 Visitor" },
   ];
   const tabs = allTabs;
 
@@ -1837,6 +1894,109 @@ function RegisterPage({
             <Button type="submit" className="w-full bg-purple-700 hover:bg-purple-800 text-white h-11"
               disabled={submitting || !ftForm.firstName || !ftForm.lastName || !ftForm.gender}>
               {submitting ? "Registering..." : "Register First Timer"}
+            </Button>
+          </form>
+        )}
+
+        {/* ── Visitor ──────────────────────────────────────────── */}
+        {tab === "visitor" && (
+          <form onSubmit={registerVisitor} className="space-y-4 bg-white border rounded-xl p-5 shadow-sm">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-8 h-8 bg-green-100 rounded-xl flex items-center justify-center">
+                <span className="text-base">👤</span>
+              </div>
+              <div>
+                <p className="font-semibold text-sm text-gray-800">Register Visitor</p>
+                <p className="text-xs text-gray-400">Creates a visitor record and checks them in</p>
+              </div>
+            </div>
+
+            {/* Title + First Name */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1.5">
+                <Label>Title</Label>
+                <Select value={visitorForm.title} onValueChange={v => setVisitorForm(f => ({ ...f, title: v === "__none__" ? "" : v }))}>
+                  <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+                  <SelectContent position="popper" className="max-h-56 overflow-y-auto">
+                    <SelectItem value="__none__">None</SelectItem>
+                    <SelectItem value="Mr.">Mr.</SelectItem>
+                    <SelectItem value="Mrs.">Mrs.</SelectItem>
+                    <SelectItem value="Ms.">Ms.</SelectItem>
+                    <SelectItem value="Dr.">Dr.</SelectItem>
+                    <SelectItem value="Rev.">Rev.</SelectItem>
+                    <SelectItem value="Elder">Elder</SelectItem>
+                    <SelectItem value="Deacon">Deacon</SelectItem>
+                    <SelectItem value="Deaconess">Deaconess</SelectItem>
+                    <SelectItem value="Bro.">Bro.</SelectItem>
+                    <SelectItem value="Sis.">Sis.</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="col-span-2 space-y-1.5">
+                <Label>First Name <span className="text-red-400">*</span></Label>
+                <Input value={visitorForm.firstName} onChange={e => setVisitorForm(f => ({ ...f, firstName: e.target.value }))} required autoFocus />
+              </div>
+            </div>
+
+            {/* Last Name + Gender */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Last Name <span className="text-red-400">*</span></Label>
+                <Input value={visitorForm.lastName} onChange={e => setVisitorForm(f => ({ ...f, lastName: e.target.value }))} required />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Gender <span className="text-red-400">*</span></Label>
+                <Select value={visitorForm.gender} onValueChange={v => setVisitorForm(f => ({ ...f, gender: v }))}>
+                  <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Phone */}
+            <div className="space-y-1.5">
+              <Label>Phone Number <span className="text-gray-400 font-normal text-xs">(optional)</span></Label>
+              <Input value={visitorForm.phone} onChange={e => setVisitorForm(f => ({ ...f, phone: e.target.value.replace(/\D/g, "") }))} placeholder="e.g. 0244000000" type="tel" inputMode="numeric" />
+            </div>
+
+            {/* Duplicate warning */}
+            {visitorChecking && (
+              <p className="text-xs text-gray-400 animate-pulse">Checking for existing records…</p>
+            )}
+            {!visitorWarnDismissed && visitorDuplicates.length > 0 && (
+              <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-xs font-semibold text-amber-800">⚠️ Similar records already exist — please check before registering:</p>
+                  <button type="button" onClick={() => setVisitorWarnDismissed(true)} className="text-amber-500 hover:text-amber-700 flex-shrink-0">
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <div className="divide-y divide-amber-100">
+                  {visitorDuplicates.map((d: any, i: number) => {
+                    const srcLabel = d.source === "visitor" ? "Visitor" : d.source === "first_timer" ? "First Timer" : "Member";
+                    const srcCls = d.source === "visitor" ? "bg-green-100 text-green-700" : d.source === "first_timer" ? "bg-yellow-100 text-yellow-700" : "bg-purple-100 text-purple-700";
+                    return (
+                      <div key={i} className="flex items-center gap-2 py-1.5 first:pt-0 last:pb-0">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium text-gray-800">{d.firstName} {d.lastName}</p>
+                          {d.phone && d.phone !== "N/A" && <p className="text-[10px] text-gray-500">{d.phone}</p>}
+                        </div>
+                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0 ${srcCls}`}>{srcLabel}</span>
+                        {d.membershipId && <span className="text-[9px] text-gray-400 flex-shrink-0">{d.membershipId}</span>}
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="text-[10px] text-amber-600">You can still register if this is a genuinely new person.</p>
+              </div>
+            )}
+
+            <Button type="submit" className="w-full bg-green-700 hover:bg-green-800 text-white h-11"
+              disabled={submitting || !visitorForm.firstName.trim() || !visitorForm.lastName.trim() || !visitorForm.gender}>
+              {submitting ? "Registering…" : "Register Visitor"}
             </Button>
           </form>
         )}

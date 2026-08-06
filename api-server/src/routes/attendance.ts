@@ -321,6 +321,79 @@ router.delete("/services/:serviceId/register-teen/:teenId", async (req, res) => 
   res.json({ success: true });
 });
 
+// \u2500\u2500 Register Visitor: create member record + check into service \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+router.post("/services/:id/register-visitor", async (req, res) => {
+  const serviceId = parseInt(req.params.id);
+  if (isNaN(serviceId)) return res.status(400).json({ error: "Invalid service ID" });
+
+  const { title, firstName, lastName, gender, phone } = req.body;
+  if (!firstName?.trim() || !lastName?.trim() || !gender) {
+    return res.status(400).json({ error: "First name, last name, and gender are required" });
+  }
+
+  const service = await db.select().from(servicesTable).where(eq(servicesTable.id, serviceId)).limit(1);
+  if (!service.length) return res.status(404).json({ error: "Service not found" });
+
+  const phone1 = phone?.trim() || "N/A";
+
+  // Phone uniqueness \u2014 only enforce when a real number was provided
+  if (phone?.trim()) {
+    const phoneConflict = await db.select({
+      id: membersTable.id, firstName: membersTable.firstName, lastName: membersTable.lastName,
+    }).from(membersTable).where(
+      and(eq(membersTable.phone1, phone.trim()), eq(membersTable.isArchived, false))
+    ).limit(1);
+    if (phoneConflict.length) {
+      return res.status(409).json({
+        error: `Phone number already registered to ${phoneConflict[0].firstName} ${phoneConflict[0].lastName}`,
+        existingMember: phoneConflict[0],
+      });
+    }
+  }
+
+  const pin = String(Math.floor(1000 + Math.random() * 9000));
+  const membershipId = await generateMembershipId(firstName.trim(), lastName.trim(), "visitor");
+
+  const created = await db.insert(membersTable).values({
+    membershipId,
+    firstName: firstName.trim(),
+    lastName: lastName.trim(),
+    gender,
+    title: title?.trim() || null,
+    phone1,
+    memberType: "visitor",
+    pin,
+    emergencyContact: "",
+    occupation: "",
+    residentialAddress: "",
+  } as any).returning();
+
+  const visitor = created[0];
+
+  // Check into service (idempotent)
+  const alreadyIn = await db.select().from(attendanceRecordsTable)
+    .where(and(eq(attendanceRecordsTable.serviceId, serviceId), eq(attendanceRecordsTable.memberId, visitor.id)))
+    .limit(1);
+
+  if (!alreadyIn.length) {
+    await db.insert(attendanceRecordsTable).values({
+      serviceId, memberId: visitor.id, cellId: null as any, method: "manual",
+    });
+  }
+
+  const actor = (req as any).user;
+  await db.insert(activityLogTable).values({
+    type: "new_visitor",
+    description: `Visitor ${firstName.trim()} ${lastName.trim()} added (${membershipId})`,
+    memberId: visitor.id,
+    memberName: `${firstName.trim()} ${lastName.trim()}`,
+    performedByUserId: actor?.id ?? null,
+    performedByName: actor?.username ?? null,
+  } as any);
+
+  res.status(201).json({ member: visitor, alreadyCheckedIn: alreadyIn.length > 0 });
+});
+
 router.get("/services/:id/attendance", async (req, res) => {
   const serviceId = parseInt(req.params.id);
 
@@ -727,6 +800,57 @@ router.get("/first-timers/check-name", async (req, res) => {
       eq(firstTimersTable.isRegistrationError, false),
     ));
   res.json({ matches });
+});
+
+// \u2500\u2500 Visitor duplicate check \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+router.get("/visitors/check-duplicate", async (req, res) => {
+  const fn = String((req.query as any).firstName ?? "").trim();
+  const ln = String((req.query as any).lastName ?? "").trim();
+  const ph = String((req.query as any).phone ?? "").trim();
+  const matches: any[] = [];
+
+  if (fn.length >= 2 || ln.length >= 2) {
+    const nameWhere: any[] = [eq(membersTable.isArchived, false)];
+    if (fn) nameWhere.push(ilike(membersTable.firstName, `%${fn}%`));
+    if (ln) nameWhere.push(ilike(membersTable.lastName, `%${ln}%`));
+
+    const memberRows = await db.select({
+      id: membersTable.id, firstName: membersTable.firstName, lastName: membersTable.lastName,
+      phone1: membersTable.phone1, memberType: membersTable.memberType, membershipId: membersTable.membershipId,
+    }).from(membersTable).where(and(...nameWhere)).limit(6);
+
+    for (const m of memberRows) {
+      matches.push({ source: m.memberType === "visitor" ? "visitor" : "member", id: m.id, firstName: m.firstName, lastName: m.lastName, phone: m.phone1, membershipId: m.membershipId });
+    }
+
+    const ftWhere: any[] = [eq(firstTimersTable.isArchived, false)];
+    if (fn) ftWhere.push(ilike(firstTimersTable.firstName, `%${fn}%`));
+    if (ln) ftWhere.push(ilike(firstTimersTable.lastName, `%${ln}%`));
+
+    const ftRows = await db.select({
+      id: firstTimersTable.id, firstName: firstTimersTable.firstName,
+      lastName: firstTimersTable.lastName, contact: firstTimersTable.contact,
+    }).from(firstTimersTable).where(and(...ftWhere)).limit(5);
+
+    for (const ft of ftRows) {
+      matches.push({ source: "first_timer", id: ft.id, firstName: ft.firstName, lastName: ft.lastName, phone: ft.contact });
+    }
+  }
+
+  if (ph.length >= 5) {
+    const phoneRows = await db.select({
+      id: membersTable.id, firstName: membersTable.firstName, lastName: membersTable.lastName,
+      phone1: membersTable.phone1, memberType: membersTable.memberType, membershipId: membersTable.membershipId,
+    }).from(membersTable).where(and(eq(membersTable.phone1, ph), eq(membersTable.isArchived, false))).limit(3);
+
+    for (const m of phoneRows) {
+      if (!matches.find(x => x.source !== "first_timer" && x.id === m.id)) {
+        matches.push({ source: m.memberType === "visitor" ? "visitor" : "member", id: m.id, firstName: m.firstName, lastName: m.lastName, phone: m.phone1, membershipId: m.membershipId });
+      }
+    }
+  }
+
+  res.json({ matches: matches.slice(0, 8) });
 });
 
 router.post("/first-timers", async (req, res) => {

@@ -847,7 +847,7 @@ function MemberDetail({ memberId, onBack, canDelete, canManage, cells, seniorCel
 
         {m.memberType === "visitor" && (
           <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50 shrink-0"
-            onClick={() => convertToMember.mutate({ id: memberId, data: { cellId: 0 } })}>
+            onClick={() => convertToMember.mutate({ id: memberId, data: {} })}>
             <UserCheck className="w-3.5 h-3.5 sm:mr-1" />
             <span className="hidden sm:inline">Convert to Member</span>
             <span className="sm:hidden">Convert</span>
@@ -862,11 +862,13 @@ function MemberDetail({ memberId, onBack, canDelete, canManage, cells, seniorCel
           </Button>
         )}
 
-        <Button size="sm" variant="outline" className="text-purple-600 border-purple-200 hover:bg-purple-50 shrink-0"
-          onClick={() => setShowQR(true)}>
-          <QrCode className="w-3.5 h-3.5 sm:mr-1" />
-          <span className="hidden sm:inline">QR Code</span>
-        </Button>
+        {m.memberType !== "visitor" && (
+          <Button size="sm" variant="outline" className="text-purple-600 border-purple-200 hover:bg-purple-50 shrink-0"
+            onClick={() => setShowQR(true)}>
+            <QrCode className="w-3.5 h-3.5 sm:mr-1" />
+            <span className="hidden sm:inline">QR Code</span>
+          </Button>
+        )}
 
         {(user?.roleLevel ?? 5) <= 1 && (
           <Button size="sm" variant="outline" className="text-yellow-600 border-yellow-200 hover:bg-yellow-50 shrink-0"
@@ -1003,7 +1005,7 @@ function MemberDetail({ memberId, onBack, canDelete, canManage, cells, seniorCel
           {(user?.roleLevel ?? 5) <= 2 && (
             <TabsTrigger value="givings-year" className="text-xs data-[state=active]:bg-purple-700 data-[state=active]:text-white">Givings</TabsTrigger>
           )}
-          {(user?.roleLevel ?? 5) <= 1 && (
+          {(user?.roleLevel ?? 5) <= 1 && m.memberType !== "visitor" && (
             <TabsTrigger value="credentials" className="text-xs data-[state=active]:bg-purple-700 data-[state=active]:text-white">Credentials</TabsTrigger>
           )}
         </TabsList>
@@ -1156,7 +1158,7 @@ function MemberDetail({ memberId, onBack, canDelete, canManage, cells, seniorCel
           </TabsContent>
         )}
 
-        {(user?.roleLevel ?? 5) <= 1 && (
+        {(user?.roleLevel ?? 5) <= 1 && m.memberType !== "visitor" && (
           <TabsContent value="credentials" className="pt-3">
             <CredentialsTab memberId={memberId} />
           </TabsContent>

@@ -30998,9 +30998,9 @@ var require_jsonwebtoken = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/bn.js@4.12.4/node_modules/bn.js/lib/bn.js
+// ../node_modules/.pnpm/bn.js@4.12.5/node_modules/bn.js/lib/bn.js
 var require_bn = __commonJS({
-  "../node_modules/.pnpm/bn.js@4.12.4/node_modules/bn.js/lib/bn.js"(exports, module) {
+  "../node_modules/.pnpm/bn.js@4.12.5/node_modules/bn.js/lib/bn.js"(exports, module) {
     (function(module2, exports2) {
       "use strict";
       function assert2(val, msg) {
@@ -32652,7 +32652,10 @@ var require_bn = __commonJS({
           this.words[i] = carry;
           this.length++;
         }
-        this.length = num === 0 ? 1 : this.length;
+        if (num === 0) {
+          this.length = 1;
+          this._normSign();
+        }
         return this;
       };
       BN.prototype.muln = function muln(num) {
@@ -33045,12 +33048,14 @@ var require_bn = __commonJS({
       BN.prototype.divRound = function divRound(num) {
         var dm = this.divmod(num);
         if (dm.mod.isZero()) return dm.div;
-        var mod = dm.div.negative !== 0 ? dm.mod.isub(num) : dm.mod;
-        var half = num.ushrn(1);
-        var r2 = num.andln(1);
+        var mod = dm.mod.abs();
+        var half = num.abs().iushrn(1);
+        var r2 = num.words[0] & 1;
         var cmp = mod.cmp(half);
         if (cmp < 0 || r2 === 1 && cmp === 0) return dm.div;
-        return dm.div.negative !== 0 ? dm.div.isubn(1) : dm.div.iaddn(1);
+        var up = new BN(1);
+        up.negative = this.negative ^ num.negative;
+        return dm.div.iadd(up);
       };
       BN.prototype.modn = function modn(num) {
         assert2(num <= 67108863);
@@ -51653,6 +51658,56 @@ router3.get("/public/cells", async (_req, res) => {
     res.status(500).json({ error: "Failed to load cells" });
   }
 });
+router3.get("/public/children-search", async (req, res) => {
+  const q = String(req.query.q || "").trim();
+  if (q.length < 2) return res.json([]);
+  try {
+    const results = await db.select({
+      id: childrenTable.id,
+      firstName: childrenTable.firstName,
+      lastName: childrenTable.lastName,
+      parentId: childrenTable.parentId,
+      parentExternal: childrenTable.parentExternal
+    }).from(childrenTable).where(and(
+      eq(childrenTable.isArchived, false),
+      or(ilike(childrenTable.firstName, `%${q}%`), ilike(childrenTable.lastName, `%${q}%`))
+    )).limit(20);
+    const parentIds = results.map((r) => r.parentId).filter(Boolean);
+    const parents = parentIds.length ? await db.select({ id: membersTable.id, firstName: membersTable.firstName, lastName: membersTable.lastName }).from(membersTable).where(inArray(membersTable.id, parentIds)) : [];
+    const parentMap = new Map(parents.map((p) => [p.id, `${p.firstName} ${p.lastName}`]));
+    res.json(results.map((r) => ({
+      ...r,
+      parentName: r.parentId ? parentMap.get(r.parentId) ?? null : null
+    })));
+  } catch {
+    res.json([]);
+  }
+});
+router3.get("/public/teens-search", async (req, res) => {
+  const q = String(req.query.q || "").trim();
+  if (q.length < 2) return res.json([]);
+  try {
+    const results = await db.select({
+      id: teensTable.id,
+      firstName: teensTable.firstName,
+      lastName: teensTable.lastName,
+      parentId: teensTable.parentId,
+      parentExternal: teensTable.parentExternal
+    }).from(teensTable).where(and(
+      eq(teensTable.isArchived, false),
+      or(ilike(teensTable.firstName, `%${q}%`), ilike(teensTable.lastName, `%${q}%`))
+    )).limit(20);
+    const parentIds = results.map((r) => r.parentId).filter(Boolean);
+    const parents = parentIds.length ? await db.select({ id: membersTable.id, firstName: membersTable.firstName, lastName: membersTable.lastName }).from(membersTable).where(inArray(membersTable.id, parentIds)) : [];
+    const parentMap = new Map(parents.map((p) => [p.id, `${p.firstName} ${p.lastName}`]));
+    res.json(results.map((r) => ({
+      ...r,
+      parentName: r.parentId ? parentMap.get(r.parentId) ?? null : null
+    })));
+  } catch {
+    res.json([]);
+  }
+});
 router3.get("/public/members-search", async (req, res) => {
   const q = String(req.query.q || "").trim();
   if (q.length < 2) return res.json([]);
@@ -51921,13 +51976,13 @@ router4.use(authenticateToken);
 function fmt(m) {
   return m.title ? `${m.title} ${m.firstName} ${m.lastName}` : `${m.firstName} ${m.lastName}`;
 }
-async function generateMembershipId2(firstName, lastName, type = "member") {
+async function generateMembershipId2(firstName, lastName, _type = "member") {
   const initials = ((firstName[0] ?? "X") + (lastName[0] ?? "X")).toUpperCase();
-  const prefix = type === "visitor" ? `VST-${initials}` : `CEKSI-${initials}`;
+  const prefix = `CEKSI-${initials}`;
   const [fromMembers, fromTeens, fromChildren] = await Promise.all([
     db.select({ mid: membersTable.membershipId }).from(membersTable).where(ilike(membersTable.membershipId, `${prefix}%`)),
-    type === "visitor" ? Promise.resolve([]) : db.select({ mid: teensTable.membershipId }).from(teensTable).where(ilike(teensTable.membershipId, `${prefix}%`)),
-    type === "visitor" ? Promise.resolve([]) : db.select({ mid: childrenTable.membershipId }).from(childrenTable).where(ilike(childrenTable.membershipId, `${prefix}%`))
+    db.select({ mid: teensTable.membershipId }).from(teensTable).where(ilike(teensTable.membershipId, `${prefix}%`)),
+    db.select({ mid: childrenTable.membershipId }).from(childrenTable).where(ilike(childrenTable.membershipId, `${prefix}%`))
   ]);
   let max = 0;
   for (const row of [...fromMembers, ...fromTeens, ...fromChildren]) {
@@ -52043,10 +52098,129 @@ async function getMemberWithRoles(id) {
     activeMinistryYear
   };
 }
+router4.get("/unified-search", async (req, res) => {
+  const { q } = req.query;
+  if (!q || String(q).trim().length < 2) return res.json({ data: [] });
+  const search = String(q).trim();
+  const [members, children, teens, firstTimers] = await Promise.all([
+    db.select({
+      id: membersTable.id,
+      firstName: membersTable.firstName,
+      lastName: membersTable.lastName,
+      membershipId: membersTable.membershipId,
+      title: membersTable.title,
+      profilePhoto: membersTable.profilePhoto,
+      cellId: membersTable.cellId
+    }).from(membersTable).where(and(
+      eq(membersTable.isArchived, false),
+      or(
+        ilike(membersTable.firstName, `%${search}%`),
+        ilike(membersTable.lastName, `%${search}%`),
+        ilike(membersTable.membershipId, `%${search}%`)
+      )
+    )).orderBy(membersTable.firstName).limit(6),
+    db.select({
+      id: childrenTable.id,
+      firstName: childrenTable.firstName,
+      lastName: childrenTable.lastName,
+      membershipId: childrenTable.membershipId,
+      class: childrenTable.class
+    }).from(childrenTable).where(and(
+      eq(childrenTable.isArchived, false),
+      or(
+        ilike(childrenTable.firstName, `%${search}%`),
+        ilike(childrenTable.lastName, `%${search}%`)
+      )
+    )).orderBy(childrenTable.firstName).limit(4),
+    db.select({
+      id: teensTable.id,
+      firstName: teensTable.firstName,
+      lastName: teensTable.lastName,
+      membershipId: teensTable.membershipId
+    }).from(teensTable).where(and(
+      eq(teensTable.isArchived, false),
+      or(
+        ilike(teensTable.firstName, `%${search}%`),
+        ilike(teensTable.lastName, `%${search}%`)
+      )
+    )).orderBy(teensTable.firstName).limit(4),
+    db.select({
+      id: firstTimersTable.id,
+      firstName: firstTimersTable.firstName,
+      lastName: firstTimersTable.lastName,
+      invitedById: firstTimersTable.invitedById,
+      invitedByChildId: firstTimersTable.invitedByChildId,
+      invitedByTeenId: firstTimersTable.invitedByTeenId
+    }).from(firstTimersTable).where(and(
+      eq(firstTimersTable.isArchived, false),
+      eq(firstTimersTable.isReturning, false),
+      or(
+        ilike(firstTimersTable.firstName, `%${search}%`),
+        ilike(firstTimersTable.lastName, `%${search}%`)
+      )
+    )).orderBy(firstTimersTable.firstName).limit(4)
+  ]);
+  const cellIds = members.map((m) => m.cellId).filter(Boolean);
+  const cellMap = /* @__PURE__ */ new Map();
+  if (cellIds.length > 0) {
+    const cells = await db.select({ id: cellsTable.id, name: cellsTable.name }).from(cellsTable).where(inArray(cellsTable.id, cellIds));
+    for (const c of cells) cellMap.set(c.id, c.name);
+  }
+  const results = [
+    ...members.map((m) => ({
+      type: "member",
+      id: m.id,
+      firstName: m.firstName,
+      lastName: m.lastName,
+      membershipId: m.membershipId,
+      title: m.title ?? null,
+      profilePhoto: m.profilePhoto ?? null,
+      cellName: m.cellId ? cellMap.get(m.cellId) ?? null : null,
+      class: null
+    })),
+    ...children.map((c) => ({
+      type: "child",
+      id: c.id,
+      firstName: c.firstName,
+      lastName: c.lastName,
+      membershipId: c.membershipId ?? null,
+      title: null,
+      profilePhoto: null,
+      cellName: null,
+      class: c.class ?? null
+    })),
+    ...teens.map((t) => ({
+      type: "teen",
+      id: t.id,
+      firstName: t.firstName,
+      lastName: t.lastName,
+      membershipId: t.membershipId ?? null,
+      title: null,
+      profilePhoto: null,
+      cellName: null,
+      class: null
+    })),
+    ...firstTimers.map((ft) => ({
+      type: "first_timer",
+      id: ft.id,
+      firstName: ft.firstName,
+      lastName: ft.lastName,
+      membershipId: null,
+      title: null,
+      profilePhoto: null,
+      cellName: null,
+      class: null,
+      invitedById: ft.invitedById ?? null,
+      invitedByChildId: ft.invitedByChildId ?? null,
+      invitedByTeenId: ft.invitedByTeenId ?? null
+    }))
+  ];
+  res.json({ data: results });
+});
 router4.get("/", async (req, res) => {
   const { search, type, cellId, seniorCellId, pcfId, page = "1", limit = "25" } = req.query;
   const pageNum = parseInt(page);
-  const limitNum = Math.min(parseInt(limit), 100);
+  const limitNum = Math.min(parseInt(limit) || 25, 1e4);
   const offset = (pageNum - 1) * limitNum;
   const conditions = [eq(membersTable.isArchived, false)];
   if (type === "member") conditions.push(eq(membersTable.memberType, "member"));
@@ -52078,29 +52252,54 @@ router4.get("/", async (req, res) => {
   }
   const members = await db.select().from(membersTable).where(and(...conditions)).limit(limitNum).offset(offset).orderBy(membersTable.firstName);
   const total = await db.select({ count: sql`count(*)` }).from(membersTable).where(and(...conditions));
-  const enriched = await Promise.all(members.map(async (m) => {
-    const roles = await db.select().from(leadershipRolesTable).where(eq(leadershipRolesTable.memberId, m.id));
+  const memberIds = members.map((m) => m.id);
+  const [allRoles, allCells, allSeniorCells, allPcfs, leaderCells, leaderSeniorCells, leaderPcfs] = await Promise.all([
+    memberIds.length > 0 ? db.select().from(leadershipRolesTable).where(inArray(leadershipRolesTable.memberId, memberIds)) : Promise.resolve([]),
+    db.select({ id: cellsTable.id, name: cellsTable.name, seniorCellId: cellsTable.seniorCellId }).from(cellsTable).where(eq(cellsTable.isArchived, false)),
+    db.select({ id: seniorCellsTable.id, name: seniorCellsTable.name, pcfId: seniorCellsTable.pcfId }).from(seniorCellsTable).where(eq(seniorCellsTable.isArchived, false)),
+    db.select({ id: pcfsTable.id, name: pcfsTable.name }).from(pcfsTable).where(eq(pcfsTable.isArchived, false)),
+    memberIds.length > 0 ? db.select({ id: cellsTable.id, name: cellsTable.name, leaderId: cellsTable.leaderId }).from(cellsTable).where(and(inArray(cellsTable.leaderId, memberIds), eq(cellsTable.isArchived, false))) : Promise.resolve([]),
+    memberIds.length > 0 ? db.select({ id: seniorCellsTable.id, name: seniorCellsTable.name, leaderId: seniorCellsTable.leaderId }).from(seniorCellsTable).where(and(inArray(seniorCellsTable.leaderId, memberIds), eq(seniorCellsTable.isArchived, false))) : Promise.resolve([]),
+    memberIds.length > 0 ? db.select({ id: pcfsTable.id, name: pcfsTable.name, leaderId: pcfsTable.leaderId }).from(pcfsTable).where(and(inArray(pcfsTable.leaderId, memberIds), eq(pcfsTable.isArchived, false))) : Promise.resolve([])
+  ]);
+  const cellMap = new Map(allCells.map((c) => [c.id, c]));
+  const seniorCellMap = new Map(allSeniorCells.map((sc) => [sc.id, sc]));
+  const pcfMap = new Map(allPcfs.map((p) => [p.id, p]));
+  const cellLeaderMap = new Map(leaderCells.map((c) => [c.leaderId, { id: c.id, name: c.name }]));
+  const seniorCellLeaderMap = new Map(leaderSeniorCells.map((sc) => [sc.leaderId, { id: sc.id, name: sc.name }]));
+  const pcfLeaderMap = new Map(leaderPcfs.map((p) => [p.leaderId, { id: p.id, name: p.name }]));
+  const rolesByMember = /* @__PURE__ */ new Map();
+  for (const r of allRoles) {
+    if (!rolesByMember.has(r.memberId)) rolesByMember.set(r.memberId, []);
+    rolesByMember.get(r.memberId).push(r.role);
+  }
+  const enriched = members.map((m) => {
     let cellName = null;
     let seniorCellName = null;
     let pcfName = null;
     if (m.cellId) {
-      const cell = await db.select({ name: cellsTable.name, seniorCellId: cellsTable.seniorCellId }).from(cellsTable).where(eq(cellsTable.id, m.cellId)).limit(1);
-      if (cell.length) {
-        cellName = cell[0].name;
-        if (cell[0].seniorCellId) {
-          const sc = await db.select({ name: seniorCellsTable.name, pcfId: seniorCellsTable.pcfId }).from(seniorCellsTable).where(eq(seniorCellsTable.id, cell[0].seniorCellId)).limit(1);
-          if (sc.length) {
-            seniorCellName = sc[0].name;
-            if (sc[0].pcfId) {
-              const pcf = await db.select({ name: pcfsTable.name }).from(pcfsTable).where(eq(pcfsTable.id, sc[0].pcfId)).limit(1);
-              if (pcf.length) pcfName = pcf[0].name;
+      const cell = cellMap.get(m.cellId);
+      if (cell) {
+        cellName = cell.name;
+        if (cell.seniorCellId) {
+          const sc = seniorCellMap.get(cell.seniorCellId);
+          if (sc) {
+            seniorCellName = sc.name;
+            if (sc.pcfId) {
+              const pcf = pcfMap.get(sc.pcfId);
+              if (pcf) pcfName = pcf.name;
             }
           }
         }
       }
     }
-    return { ...m, leadershipRoles: roles.map((r) => r.role), cellName, seniorCellName, pcfName };
-  }));
+    const leadershipPositions = {
+      cellLeader: cellLeaderMap.get(m.id) ?? null,
+      seniorCellLeader: seniorCellLeaderMap.get(m.id) ?? null,
+      pcfLeader: pcfLeaderMap.get(m.id) ?? null
+    };
+    return { ...m, leadershipRoles: rolesByMember.get(m.id) ?? [], cellName, seniorCellName, pcfName, leadershipPositions };
+  });
   res.json({ data: enriched, total: Number(total[0].count), page: pageNum, limit: limitNum });
 });
 router4.post("/", async (req, res) => {
@@ -52222,29 +52421,43 @@ router4.patch("/:id", async (req, res) => {
   }
   const updated = await db.update(membersTable).set({ firstName, lastName, phone1, ...rest }).where(eq(membersTable.id, id)).returning();
   if (!updated.length) return res.status(404).json({ error: "Member not found" });
+  const oldCellId = currentMember[0].cellId;
+  const newCellId = Object.prototype.hasOwnProperty.call(rest, "cellId") ? rest.cellId ? parseInt(rest.cellId) : null : void 0;
+  if (newCellId !== void 0 && newCellId !== oldCellId && oldCellId) {
+    const ledCell = await db.select({ id: cellsTable.id }).from(cellsTable).where(and(eq(cellsTable.leaderId, id), eq(cellsTable.id, oldCellId))).limit(1);
+    if (ledCell.length) {
+      await db.update(cellsTable).set({ leaderId: null }).where(eq(cellsTable.id, oldCellId));
+      await db.update(seniorCellsTable).set({ leaderId: null }).where(and(eq(seniorCellsTable.leaderId, id), eq(seniorCellsTable.isArchived, false)));
+      await db.update(pcfsTable).set({ leaderId: null }).where(and(eq(pcfsTable.leaderId, id), eq(pcfsTable.isArchived, false)));
+      const leaderUser = await db.select({ id: usersTable.id }).from(usersTable).where(and(eq(usersTable.memberId, id), eq(usersTable.roleLevel, 4))).limit(1);
+      if (leaderUser.length) {
+        await db.update(usersTable).set({ roleLevel: 5 }).where(eq(usersTable.memberId, id));
+      }
+    }
+  }
   if (incomingSpouseId !== void 0) {
     if (incomingSpouseId === null) {
       if (oldSpouseId) {
         await db.update(membersTable).set({ spouseId: null }).where(eq(membersTable.id, oldSpouseId));
-      }
-      const myFamily = await db.select().from(familiesTable).where(or(eq(familiesTable.headId, id), eq(familiesTable.spouseId, id))).limit(1);
-      if (myFamily.length) {
-        const fam = myFamily[0];
-        if (fam.headId === id) {
-          await db.update(familiesTable).set({ headId: null }).where(eq(familiesTable.id, fam.id));
-        } else {
-          await db.update(familiesTable).set({ spouseId: null }).where(eq(familiesTable.id, fam.id));
-        }
-        const updatedFam = await db.select().from(familiesTable).where(eq(familiesTable.id, fam.id)).limit(1);
-        if (updatedFam.length && !updatedFam[0].headId && !updatedFam[0].spouseId) {
-          const kidCount = await db.select({ count: sql`count(*)` }).from(familyChildrenTable).where(eq(familyChildrenTable.familyId, fam.id));
-          if (Number(kidCount[0].count) === 0) {
-            await db.delete(familiesTable).where(eq(familiesTable.id, fam.id));
+        const myFamily = await db.select().from(familiesTable).where(or(eq(familiesTable.headId, id), eq(familiesTable.spouseId, id))).limit(1);
+        if (myFamily.length) {
+          const fam = myFamily[0];
+          if (fam.headId === id) {
+            await db.update(familiesTable).set({ headId: null }).where(eq(familiesTable.id, fam.id));
+          } else {
+            await db.update(familiesTable).set({ spouseId: null }).where(eq(familiesTable.id, fam.id));
+          }
+          const updatedFam = await db.select().from(familiesTable).where(eq(familiesTable.id, fam.id)).limit(1);
+          if (updatedFam.length && !updatedFam[0].headId && !updatedFam[0].spouseId) {
+            const kidCount = await db.select({ count: sql`count(*)` }).from(familyChildrenTable).where(eq(familyChildrenTable.familyId, fam.id));
+            if (Number(kidCount[0].count) === 0) {
+              await db.delete(familiesTable).where(eq(familiesTable.id, fam.id));
+            }
           }
         }
       }
-    } else {
-      if (oldSpouseId && oldSpouseId !== incomingSpouseId) {
+    } else if (incomingSpouseId !== oldSpouseId) {
+      if (oldSpouseId) {
         await db.update(membersTable).set({ spouseId: null }).where(eq(membersTable.id, oldSpouseId));
       }
       const spouseUpdates = { spouseId: id, maritalStatus: "married" };
@@ -52288,7 +52501,7 @@ router4.patch("/:id", async (req, res) => {
   } else if (rest.weddingDate && oldSpouseId) {
     await db.update(membersTable).set({ weddingDate: rest.weddingDate }).where(eq(membersTable.id, oldSpouseId));
   }
-  const maritalStatusChangingToNonMarried = Object.prototype.hasOwnProperty.call(rest, "maritalStatus") && rest.maritalStatus !== "married";
+  const maritalStatusChangingToNonMarried = Object.prototype.hasOwnProperty.call(rest, "maritalStatus") && rest.maritalStatus !== "married" && rest.maritalStatus !== currentMember[0].maritalStatus;
   if (maritalStatusChangingToNonMarried && incomingSpouseId === void 0) {
     const myFamily = await db.select().from(familiesTable).where(or(eq(familiesTable.headId, id), eq(familiesTable.spouseId, id))).limit(1);
     if (myFamily.length) {
@@ -52336,9 +52549,22 @@ router4.delete("/:id", async (req, res) => {
 router4.post("/:id/convert", async (req, res) => {
   const id = parseInt(req.params.id);
   const { cellId } = req.body;
-  if (!cellId) return res.status(400).json({ error: "Cell ID required" });
-  const updated = await db.update(membersTable).set({ memberType: "member", cellId }).where(eq(membersTable.id, id)).returning();
+  const member = await db.select().from(membersTable).where(and(eq(membersTable.id, id), eq(membersTable.isArchived, false))).limit(1);
+  if (!member.length) return res.status(404).json({ error: "Member not found" });
+  const updateData = { memberType: "member" };
+  if (cellId) updateData.cellId = parseInt(cellId);
+  const updated = await db.update(membersTable).set(updateData).where(eq(membersTable.id, id)).returning();
   if (!updated.length) return res.status(404).json({ error: "Member not found" });
+  const existingUser = await db.select().from(usersTable).where(eq(usersTable.memberId, id)).limit(1);
+  if (!existingUser.length) {
+    const pin = updated[0].pin ?? generatePin2();
+    await db.insert(usersTable).values({
+      username: updated[0].membershipId,
+      passwordHash: hashPassword3(pin),
+      roleLevel: 5,
+      memberId: id
+    });
+  }
   res.json({ ...updated[0], leadershipRoles: [] });
 });
 router4.post("/:id/send-credentials", async (req, res) => {
@@ -52389,8 +52615,17 @@ router4.get("/:id/givings", async (req, res) => {
   const limitNum = Math.min(parseInt(limit), 50);
   const offset = (pageNum - 1) * limitNum;
   const yearFilter = ministryYearId ? parseInt(ministryYearId) : null;
-  const memberRow = await db.select({ transferredFromTeenId: membersTable.transferredFromTeenId }).from(membersTable).where(eq(membersTable.id, memberId)).limit(1);
+  const memberRow = await db.select({
+    transferredFromTeenId: membersTable.transferredFromTeenId,
+    spouseId: membersTable.spouseId,
+    firstName: membersTable.firstName,
+    lastName: membersTable.lastName,
+    title: membersTable.title
+  }).from(membersTable).where(eq(membersTable.id, memberId)).limit(1);
   const transferredFromTeenId = memberRow[0]?.transferredFromTeenId ?? null;
+  const spouseId = memberRow[0]?.spouseId ?? null;
+  const memberInfo = memberRow[0];
+  const memberFmt = memberInfo ? memberInfo.title ? `${memberInfo.title} ${memberInfo.firstName} ${memberInfo.lastName}` : `${memberInfo.firstName} ${memberInfo.lastName}` : null;
   let transferredFromChildId = null;
   if (transferredFromTeenId) {
     const teenRow = await db.select({ transferredFromChildId: teensTable.transferredFromChildId }).from(teensTable).where(eq(teensTable.id, transferredFromTeenId)).limit(1);
@@ -52400,17 +52635,24 @@ router4.get("/:id/givings", async (req, res) => {
   if (yearFilter) memberConditions.push(eq(givingsTable.ministryYearId, yearFilter));
   const teenConditions = transferredFromTeenId ? [eq(givingsTable.teenId, transferredFromTeenId), eq(givingsTable.isArchived, false), ...yearFilter ? [eq(givingsTable.ministryYearId, yearFilter)] : []] : null;
   const childConditions = transferredFromChildId ? [eq(givingsTable.childId, transferredFromChildId), eq(givingsTable.isArchived, false), ...yearFilter ? [eq(givingsTable.ministryYearId, yearFilter)] : []] : null;
-  const [memberGivings, teenGivings, childGivings] = await Promise.all([
+  const spouseConditions = spouseId ? [eq(givingsTable.memberId, spouseId), eq(givingsTable.isArchived, false), ...yearFilter ? [eq(givingsTable.ministryYearId, yearFilter)] : []] : null;
+  const [memberGivings, teenGivings, childGivings, spouseGivings, spouseInfoRows] = await Promise.all([
     db.select().from(givingsTable).where(and(...memberConditions)),
     teenConditions ? db.select().from(givingsTable).where(and(...teenConditions)) : Promise.resolve([]),
-    childConditions ? db.select().from(givingsTable).where(and(...childConditions)) : Promise.resolve([])
+    childConditions ? db.select().from(givingsTable).where(and(...childConditions)) : Promise.resolve([]),
+    spouseConditions ? db.select().from(givingsTable).where(and(...spouseConditions)) : Promise.resolve([]),
+    spouseId ? db.select({ firstName: membersTable.firstName, lastName: membersTable.lastName, title: membersTable.title }).from(membersTable).where(eq(membersTable.id, spouseId)).limit(1) : Promise.resolve([])
   ]);
+  const spouseInfo = spouseInfoRows[0];
+  const spouseFmt = spouseInfo ? spouseInfo.title ? `${spouseInfo.title} ${spouseInfo.firstName} ${spouseInfo.lastName}` : `${spouseInfo.firstName} ${spouseInfo.lastName}` : null;
   const allGivings = [
-    ...memberGivings.map((g) => ({ ...g, _stage: "member" })),
-    ...teenGivings.map((g) => ({ ...g, _stage: "teen" })),
-    ...childGivings.map((g) => ({ ...g, _stage: "child" }))
+    ...memberGivings.map((g) => ({ ...g, _stage: "member", paidByName: memberFmt })),
+    ...spouseGivings.map((g) => ({ ...g, _stage: "spouse", paidByName: spouseFmt })),
+    ...teenGivings.map((g) => ({ ...g, _stage: "teen", paidByName: null })),
+    ...childGivings.map((g) => ({ ...g, _stage: "child", paidByName: null }))
   ].sort((a, b2) => (b2.date ?? "").localeCompare(a.date ?? ""));
   const total = allGivings.length;
+  const yearTotal = allGivings.reduce((s, g) => s + parseFloat(String(g.amount)), 0);
   const paginated = allGivings.slice(offset, offset + limitNum);
   const typeIds = [...new Set(paginated.map((g) => g.givingTypeId))];
   const yearIds = [...new Set(paginated.map((g) => g.ministryYearId))];
@@ -52431,14 +52673,30 @@ router4.get("/:id/givings", async (req, res) => {
     amount: parseFloat(String(g.amount)),
     givingTypeName: typesMap[g.givingTypeId] ?? "Unknown",
     ministryYearName: yearsMap[g.ministryYearId] ?? "Unknown",
-    stage: g._stage
+    stage: g._stage,
+    paidByName: g.paidByName ?? null
   }));
-  res.json({ data: enriched, total, page: pageNum, limit: limitNum });
+  res.json({ data: enriched, total, page: pageNum, limit: limitNum, yearTotal });
 });
 router4.get("/:id/dependents-givings", async (req, res) => {
   const memberId = parseInt(req.params.id);
-  const children = await db.select().from(childrenTable).where(and(eq(childrenTable.parentId, memberId), eq(childrenTable.isArchived, false)));
-  const teens = await db.select().from(teensTable).where(and(eq(teensTable.parentId, memberId), eq(teensTable.isArchived, false)));
+  const memberRow = await db.select({ spouseId: membersTable.spouseId }).from(membersTable).where(eq(membersTable.id, memberId)).limit(1);
+  const spouseId = memberRow.length ? memberRow[0].spouseId : null;
+  const parentIds = [memberId, ...spouseId ? [spouseId] : []];
+  const allChildrenRows = await db.select().from(childrenTable).where(and(inArray(childrenTable.parentId, parentIds), eq(childrenTable.isArchived, false)));
+  const seenChildIds = /* @__PURE__ */ new Set();
+  const children = allChildrenRows.filter((c) => {
+    if (seenChildIds.has(c.id)) return false;
+    seenChildIds.add(c.id);
+    return true;
+  });
+  const allTeensRows = await db.select().from(teensTable).where(and(inArray(teensTable.parentId, parentIds), eq(teensTable.isArchived, false)));
+  const seenTeenIds = /* @__PURE__ */ new Set();
+  const teens = allTeensRows.filter((t) => {
+    if (seenTeenIds.has(t.id)) return false;
+    seenTeenIds.add(t.id);
+    return true;
+  });
   const allGivingRows = [];
   for (const child of children) {
     const rows = await db.select().from(givingsTable).where(and(eq(givingsTable.childId, child.id), eq(givingsTable.isArchived, false))).orderBy(givingsTable.date);
@@ -53228,7 +53486,18 @@ router7.get("/children", async (req, res) => {
       let parentName = null;
       if (c.parentId) {
         const p = await db.select().from(membersTable).where(eq(membersTable.id, c.parentId)).limit(1);
-        if (p.length) parentName = `${p[0].firstName} ${p[0].lastName}`;
+        if (p.length) {
+          if (p[0].spouseId) {
+            let fatherLastName = p[0].lastName;
+            if (p[0].gender === "female") {
+              const father = await db.select({ lastName: membersTable.lastName }).from(membersTable).where(eq(membersTable.id, p[0].spouseId)).limit(1);
+              if (father.length) fatherLastName = father[0].lastName;
+            }
+            parentName = `${fatherLastName} Family`;
+          } else {
+            parentName = `${p[0].firstName} ${p[0].lastName}`;
+          }
+        }
       }
       return { ...c, parentName };
     })
@@ -53333,88 +53602,164 @@ router7.delete("/children/:id", async (req, res) => {
   res.json({ success: true });
 });
 router7.get("/children/:id/parent-summary", async (req, res) => {
-  const id = parseInt(req.params.id);
-  const child = await db.select().from(childrenTable).where(and(eq(childrenTable.id, id), eq(childrenTable.isArchived, false))).limit(1);
-  if (!child.length) return res.status(404).json({ error: "Child not found" });
-  const attendanceRows = await db.select({ serviceId: serviceChildrenAttendanceTable.serviceId, registeredAt: serviceChildrenAttendanceTable.registeredAt }).from(serviceChildrenAttendanceTable).where(eq(serviceChildrenAttendanceTable.childId, id)).orderBy(desc(serviceChildrenAttendanceTable.registeredAt)).limit(20);
-  const serviceIds = [...new Set(attendanceRows.map((r) => r.serviceId))];
-  let servicesMap = {};
-  if (serviceIds.length) {
-    const svcs = await db.select().from(servicesTable).where(sql`${servicesTable.id} = ANY(ARRAY[${sql.join(serviceIds.map((id2) => sql`${id2}`), sql`, `)}])`);
-    svcs.forEach((s) => {
-      servicesMap[s.id] = s;
-    });
-  }
-  const attendance = attendanceRows.map((r) => ({
-    serviceId: r.serviceId,
-    registeredAt: r.registeredAt,
-    serviceDate: servicesMap[r.serviceId]?.date ?? null,
-    serviceName: servicesMap[r.serviceId]?.name ?? null,
-    serviceType: servicesMap[r.serviceId]?.type ?? null
-  }));
-  const givingRows = await db.select().from(givingsTable).where(and(eq(givingsTable.childId, id), eq(givingsTable.isArchived, false))).orderBy(desc(givingsTable.date)).limit(20);
-  const typeIds = [...new Set(givingRows.map((g) => g.givingTypeId).filter(Boolean))];
-  let typesMap = {};
-  if (typeIds.length) {
-    const gts = await db.select().from(givingTypesTable).where(sql`${givingTypesTable.id} = ANY(ARRAY[${sql.join(typeIds.map((id2) => sql`${id2}`), sql`, `)}])`);
-    gts.forEach((gt2) => {
+  try {
+    const id = parseInt(req.params.id);
+    const child = await db.select().from(childrenTable).where(eq(childrenTable.id, id)).limit(1);
+    if (!child.length) return res.status(404).json({ error: "Child not found" });
+    const attendanceRows = await db.select({ serviceId: serviceChildrenAttendanceTable.serviceId, registeredAt: serviceChildrenAttendanceTable.registeredAt }).from(serviceChildrenAttendanceTable).where(eq(serviceChildrenAttendanceTable.childId, id)).orderBy(desc(serviceChildrenAttendanceTable.registeredAt)).limit(20);
+    const serviceIds = [...new Set(attendanceRows.map((r) => r.serviceId))];
+    let servicesMap = {};
+    if (serviceIds.length) {
+      const svcs = await db.select().from(servicesTable).where(inArray(servicesTable.id, serviceIds));
+      svcs.forEach((s) => {
+        servicesMap[s.id] = s;
+      });
+    }
+    const attendance = attendanceRows.map((r) => ({
+      serviceId: r.serviceId,
+      registeredAt: r.registeredAt,
+      serviceDate: servicesMap[r.serviceId]?.date ?? null,
+      serviceName: servicesMap[r.serviceId]?.name ?? null,
+      serviceType: servicesMap[r.serviceId]?.type ?? null
+    }));
+    const givingRows = await db.select().from(givingsTable).where(and(eq(givingsTable.childId, id), eq(givingsTable.isArchived, false))).orderBy(desc(givingsTable.date)).limit(20);
+    const allGivingTypes = await db.select({ id: givingTypesTable.id, name: givingTypesTable.name }).from(givingTypesTable);
+    const typesMap = {};
+    allGivingTypes.forEach((gt2) => {
       typesMap[gt2.id] = gt2.name;
     });
+    const givings = givingRows.map((g) => ({
+      id: g.id,
+      date: g.date,
+      amount: g.amount,
+      givingType: typesMap[g.givingTypeId] ?? "Gift",
+      notes: g.notes
+    }));
+    res.json({ ...child[0], attendance, givings });
+  } catch (err) {
+    res.status(500).json({ error: err?.message ?? "Server error loading child summary" });
   }
-  const givings = givingRows.map((g) => ({
-    id: g.id,
-    date: g.date,
-    amount: g.amount,
-    givingType: typesMap[g.givingTypeId] ?? "Gift",
-    notes: g.notes
-  }));
-  res.json({ ...child[0], attendance, givings });
 });
 router7.get("/teens/:id/parent-summary", async (req, res) => {
-  const id = parseInt(req.params.id);
-  const teen = await db.select().from(teensTable).where(and(eq(teensTable.id, id), eq(teensTable.isArchived, false))).limit(1);
-  if (!teen.length) return res.status(404).json({ error: "Teen not found" });
-  const attendanceRows = await db.select({ serviceId: serviceTeensAttendanceTable.serviceId, registeredAt: serviceTeensAttendanceTable.registeredAt }).from(serviceTeensAttendanceTable).where(eq(serviceTeensAttendanceTable.teenId, id)).orderBy(desc(serviceTeensAttendanceTable.registeredAt)).limit(20);
-  const serviceIds = [...new Set(attendanceRows.map((r) => r.serviceId))];
-  let servicesMap = {};
-  if (serviceIds.length) {
-    const svcs = await db.select().from(servicesTable).where(sql`${servicesTable.id} = ANY(ARRAY[${sql.join(serviceIds.map((id2) => sql`${id2}`), sql`, `)}])`);
-    svcs.forEach((s) => {
-      servicesMap[s.id] = s;
-    });
-  }
-  const attendance = attendanceRows.map((r) => ({
-    serviceId: r.serviceId,
-    registeredAt: r.registeredAt,
-    serviceDate: servicesMap[r.serviceId]?.date ?? null,
-    serviceName: servicesMap[r.serviceId]?.name ?? null,
-    serviceType: servicesMap[r.serviceId]?.type ?? null
-  }));
-  const openYears = await db.select({ id: ministryYearsTable.id }).from(ministryYearsTable).where(eq(ministryYearsTable.isClosed, false));
-  const openYearIds = openYears.map((y) => y.id);
-  const teenGivingRows = openYearIds.length ? await db.select().from(givingsTable).where(and(eq(givingsTable.teenId, id), eq(givingsTable.isArchived, false), inArray(givingsTable.ministryYearId, openYearIds))).orderBy(desc(givingsTable.date)).limit(50) : [];
-  let childGivingRows = [];
-  if (teen[0].transferredFromChildId) {
-    childGivingRows = openYearIds.length ? await db.select().from(givingsTable).where(and(eq(givingsTable.childId, teen[0].transferredFromChildId), eq(givingsTable.isArchived, false), inArray(givingsTable.ministryYearId, openYearIds))).orderBy(desc(givingsTable.date)).limit(50) : [];
-  }
-  const allGivingRows = [...teenGivingRows, ...childGivingRows].sort((a, b2) => (b2.date ?? "").localeCompare(a.date ?? "")).slice(0, 50);
-  const typeIds = [...new Set(allGivingRows.map((g) => g.givingTypeId).filter((x) => x != null))];
-  let typesMap = {};
-  if (typeIds.length) {
-    const gts = await db.select().from(givingTypesTable).where(inArray(givingTypesTable.id, typeIds));
-    gts.forEach((gt2) => {
+  try {
+    const id = parseInt(req.params.id);
+    const teen = await db.select().from(teensTable).where(eq(teensTable.id, id)).limit(1);
+    if (!teen.length) return res.status(404).json({ error: "Teen not found" });
+    const attendanceRows = await db.select({ serviceId: serviceTeensAttendanceTable.serviceId, registeredAt: serviceTeensAttendanceTable.registeredAt }).from(serviceTeensAttendanceTable).where(eq(serviceTeensAttendanceTable.teenId, id)).orderBy(desc(serviceTeensAttendanceTable.registeredAt)).limit(20);
+    const serviceIds = [...new Set(attendanceRows.map((r) => r.serviceId))];
+    let servicesMap = {};
+    if (serviceIds.length) {
+      const svcs = await db.select().from(servicesTable).where(inArray(servicesTable.id, serviceIds));
+      svcs.forEach((s) => {
+        servicesMap[s.id] = s;
+      });
+    }
+    const attendance = attendanceRows.map((r) => ({
+      serviceId: r.serviceId,
+      registeredAt: r.registeredAt,
+      serviceDate: servicesMap[r.serviceId]?.date ?? null,
+      serviceName: servicesMap[r.serviceId]?.name ?? null,
+      serviceType: servicesMap[r.serviceId]?.type ?? null
+    }));
+    const openYears = await db.select({ id: ministryYearsTable.id }).from(ministryYearsTable).where(eq(ministryYearsTable.isClosed, false));
+    const openYearIds = openYears.map((y) => y.id);
+    const teenGivingRows = openYearIds.length ? await db.select().from(givingsTable).where(and(eq(givingsTable.teenId, id), eq(givingsTable.isArchived, false), inArray(givingsTable.ministryYearId, openYearIds))).orderBy(desc(givingsTable.date)).limit(50) : [];
+    let childGivingRows = [];
+    if (teen[0].transferredFromChildId) {
+      childGivingRows = openYearIds.length ? await db.select().from(givingsTable).where(and(eq(givingsTable.childId, teen[0].transferredFromChildId), eq(givingsTable.isArchived, false), inArray(givingsTable.ministryYearId, openYearIds))).orderBy(desc(givingsTable.date)).limit(50) : [];
+    }
+    const allGivingRows = [...teenGivingRows, ...childGivingRows].sort((a, b2) => (b2.date ?? "").localeCompare(a.date ?? "")).slice(0, 50);
+    const allGivingTypes = await db.select({ id: givingTypesTable.id, name: givingTypesTable.name }).from(givingTypesTable);
+    const typesMap = {};
+    allGivingTypes.forEach((gt2) => {
       typesMap[gt2.id] = gt2.name;
     });
+    const givings = allGivingRows.map((g) => ({
+      id: g.id,
+      date: g.date,
+      amount: g.amount,
+      givingType: typesMap[g.givingTypeId] ?? "Gift",
+      notes: g.notes,
+      stage: g.teenId ? "teen" : "child"
+    }));
+    res.json({ ...teen[0], attendance, givings });
+  } catch (err) {
+    res.status(500).json({ error: err?.message ?? "Server error loading teen summary" });
   }
-  const givings = allGivingRows.map((g) => ({
-    id: g.id,
-    date: g.date,
-    amount: g.amount,
-    givingType: typesMap[g.givingTypeId] ?? "Gift",
-    notes: g.notes,
-    stage: g.teenId ? "teen" : "child"
-  }));
-  res.json({ ...teen[0], attendance, givings });
+});
+router7.get("/teens/:id/attendance-history", async (req, res) => {
+  try {
+    const teenId = parseInt(req.params.id);
+    const ministryYearId = req.query.ministryYearId ? parseInt(req.query.ministryYearId) : void 0;
+    const page = Math.max(1, parseInt(req.query.page || "1"));
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit || "10")));
+    const offset = (page - 1) * limit;
+    const [teenRowA] = await db.select({ id: teensTable.id }).from(teensTable).where(eq(teensTable.id, teenId)).limit(1);
+    if (!teenRowA) return res.status(404).json({ error: "Teen not found" });
+    let serviceIdFilter = sql`true`;
+    if (ministryYearId) {
+      const [year2] = await db.select().from(ministryYearsTable).where(eq(ministryYearsTable.id, ministryYearId)).limit(1);
+      if (year2) {
+        const svcs = await db.select({ id: servicesTable.id }).from(servicesTable).where(and(sql`${servicesTable.date} >= ${year2.startDate}`, sql`${servicesTable.date} <= ${year2.endDate}`));
+        const ids = svcs.map((s) => s.id);
+        serviceIdFilter = ids.length ? inArray(serviceTeensAttendanceTable.serviceId, ids) : sql`false`;
+      }
+    }
+    const baseWhereA = and(eq(serviceTeensAttendanceTable.teenId, teenId), serviceIdFilter);
+    const [cntA] = await db.select({ cnt: sql`count(*)` }).from(serviceTeensAttendanceTable).where(baseWhereA);
+    const totalA = Number(cntA?.cnt ?? 0);
+    const rowsA = await db.select({ serviceId: serviceTeensAttendanceTable.serviceId, registeredAt: serviceTeensAttendanceTable.registeredAt }).from(serviceTeensAttendanceTable).where(baseWhereA).orderBy(desc(serviceTeensAttendanceTable.registeredAt)).limit(limit).offset(offset);
+    const uniqueSvcIds = [...new Set(rowsA.map((r) => r.serviceId))];
+    const svcsMap = {};
+    if (uniqueSvcIds.length) {
+      const svcs = await db.select().from(servicesTable).where(inArray(servicesTable.id, uniqueSvcIds));
+      svcs.forEach((s) => {
+        svcsMap[s.id] = s;
+      });
+    }
+    const dataA = rowsA.map((r) => ({
+      serviceId: r.serviceId,
+      checkInTime: r.registeredAt,
+      serviceDate: svcsMap[r.serviceId]?.date ?? null,
+      serviceName: svcsMap[r.serviceId]?.name ?? "Service",
+      serviceType: svcsMap[r.serviceId]?.type ?? null,
+      method: "manual"
+    }));
+    res.json({ data: dataA, total: totalA, page, limit });
+  } catch (err) {
+    res.status(500).json({ error: err?.message ?? "Server error" });
+  }
+});
+router7.get("/teens/:id/givings-history", async (req, res) => {
+  try {
+    const teenId = parseInt(req.params.id);
+    const ministryYearId = req.query.ministryYearId ? parseInt(req.query.ministryYearId) : void 0;
+    const page = Math.max(1, parseInt(req.query.page || "1"));
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit || "10")));
+    const offset = (page - 1) * limit;
+    const [teenRowG] = await db.select({ id: teensTable.id }).from(teensTable).where(eq(teensTable.id, teenId)).limit(1);
+    if (!teenRowG) return res.status(404).json({ error: "Teen not found" });
+    const yearFilter = ministryYearId ? eq(givingsTable.ministryYearId, ministryYearId) : void 0;
+    const baseWhereG = and(eq(givingsTable.teenId, teenId), eq(givingsTable.isArchived, false), ...yearFilter ? [yearFilter] : []);
+    const [cntG] = await db.select({ cnt: sql`count(*)` }).from(givingsTable).where(baseWhereG);
+    const totalG = Number(cntG?.cnt ?? 0);
+    const rowsG = await db.select().from(givingsTable).where(baseWhereG).orderBy(desc(givingsTable.date)).limit(limit).offset(offset);
+    const allTypes = await db.select({ id: givingTypesTable.id, name: givingTypesTable.name }).from(givingTypesTable);
+    const typesMap = {};
+    allTypes.forEach((gt2) => {
+      typesMap[gt2.id] = gt2.name;
+    });
+    const dataG = rowsG.map((g) => ({
+      id: g.id,
+      date: g.date,
+      amount: g.amount,
+      givingTypeName: typesMap[g.givingTypeId] ?? "Gift",
+      notes: g.notes
+    }));
+    res.json({ data: dataG, total: totalG, page, limit });
+  } catch (err) {
+    res.status(500).json({ error: err?.message ?? "Server error" });
+  }
 });
 router7.patch("/children/:id/basic-info", async (req, res) => {
   const id = parseInt(req.params.id);
@@ -53462,7 +53807,18 @@ router7.get("/teens", async (req, res) => {
       let parentName = null;
       if (t.parentId) {
         const p = await db.select().from(membersTable).where(eq(membersTable.id, t.parentId)).limit(1);
-        if (p.length) parentName = `${p[0].firstName} ${p[0].lastName}`;
+        if (p.length) {
+          if (p[0].spouseId) {
+            let fatherLastName = p[0].lastName;
+            if (p[0].gender === "female") {
+              const father = await db.select({ lastName: membersTable.lastName }).from(membersTable).where(eq(membersTable.id, p[0].spouseId)).limit(1);
+              if (father.length) fatherLastName = father[0].lastName;
+            }
+            parentName = `${fatherLastName} Family`;
+          } else {
+            parentName = `${p[0].firstName} ${p[0].lastName}`;
+          }
+        }
       }
       return { ...t, parentName };
     })
@@ -53628,10 +53984,17 @@ async function getMemberName(id) {
   const m = await db.select().from(membersTable).where(eq(membersTable.id, id)).limit(1);
   return m.length ? fmt4(m[0]) : null;
 }
+async function getMemberLastName(id) {
+  if (!id) return null;
+  const m = await db.select({ lastName: membersTable.lastName }).from(membersTable).where(eq(membersTable.id, id)).limit(1);
+  return m.length ? m[0].lastName : null;
+}
 async function getFamilyDetail(fam) {
   const fatherName = await getMemberName(fam.headId);
   const motherName = await getMemberName(fam.spouseId);
-  const surname = fatherName?.split(" ").pop() ?? motherName?.split(" ").pop() ?? "Unknown";
+  const fatherLastName = await getMemberLastName(fam.headId);
+  const motherLastName = await getMemberLastName(fam.spouseId);
+  const surname = fatherLastName ?? motherLastName ?? "Unknown";
   const fc = await db.select().from(familyChildrenTable).where(eq(familyChildrenTable.familyId, fam.id));
   const children = [];
   for (const f of fc) {
@@ -53951,6 +54314,10 @@ router9.get("/services", async (req, res) => {
   res.json({ data: enriched, total: Number(total[0].count), page: pageNum, limit: limitNum });
 });
 router9.post("/services", async (req, res) => {
+  const user = req.user;
+  if (user.roleLevel === 3 && user.roleSubtype === "children") {
+    return res.status(403).json({ error: "Not authorized" });
+  }
   const { name, date: date2, time: time2, force } = req.body;
   if (!name || !date2) return res.status(400).json({ error: "Name and date are required" });
   const open = await db.select().from(servicesTable).where(eq(servicesTable.status, "open")).limit(1);
@@ -53970,6 +54337,7 @@ router9.patch("/services/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   const user = req.user;
   if (user.roleLevel > 3) return res.status(403).json({ error: "Not authorized" });
+  if (user.roleLevel === 3 && user.roleSubtype === "children") return res.status(403).json({ error: "Not authorized" });
   const { name, date: date2, time: time2 } = req.body;
   const updates = {};
   if (name !== void 0) updates.name = name;
@@ -54015,6 +54383,10 @@ router9.get("/services/:id", async (req, res) => {
   res.json({ ...service[0], totalCheckins: Number(cnt[0].count) });
 });
 router9.post("/services/:id/close", async (req, res) => {
+  const user = req.user;
+  if (user.roleLevel === 3 && user.roleSubtype === "children") {
+    return res.status(403).json({ error: "Not authorized" });
+  }
   const id = parseInt(req.params.id);
   await db.update(servicesTable).set({ status: "closed", closedAt: /* @__PURE__ */ new Date() }).where(eq(servicesTable.id, id));
   res.json({ success: true });
@@ -54141,6 +54513,67 @@ router9.delete("/services/:serviceId/register-teen/:teenId", async (req, res) =>
   const teenId = parseInt(req.params.teenId);
   await db.delete(serviceTeensAttendanceTable).where(and(eq(serviceTeensAttendanceTable.serviceId, serviceId), eq(serviceTeensAttendanceTable.teenId, teenId)));
   res.json({ success: true });
+});
+router9.post("/services/:id/register-visitor", async (req, res) => {
+  const serviceId = parseInt(req.params.id);
+  if (isNaN(serviceId)) return res.status(400).json({ error: "Invalid service ID" });
+  const { title, firstName, lastName, gender, phone } = req.body;
+  if (!firstName?.trim() || !lastName?.trim() || !gender) {
+    return res.status(400).json({ error: "First name, last name, and gender are required" });
+  }
+  const service = await db.select().from(servicesTable).where(eq(servicesTable.id, serviceId)).limit(1);
+  if (!service.length) return res.status(404).json({ error: "Service not found" });
+  const phone1 = phone?.trim() || "N/A";
+  if (phone?.trim()) {
+    const phoneConflict = await db.select({
+      id: membersTable.id,
+      firstName: membersTable.firstName,
+      lastName: membersTable.lastName
+    }).from(membersTable).where(
+      and(eq(membersTable.phone1, phone.trim()), eq(membersTable.isArchived, false))
+    ).limit(1);
+    if (phoneConflict.length) {
+      return res.status(409).json({
+        error: `Phone number already registered to ${phoneConflict[0].firstName} ${phoneConflict[0].lastName}`,
+        existingMember: phoneConflict[0]
+      });
+    }
+  }
+  const pin = String(Math.floor(1e3 + Math.random() * 9e3));
+  const membershipId = await generateMembershipId3(firstName.trim(), lastName.trim(), "visitor");
+  const created = await db.insert(membersTable).values({
+    membershipId,
+    firstName: firstName.trim(),
+    lastName: lastName.trim(),
+    gender,
+    title: title?.trim() || null,
+    phone1,
+    memberType: "visitor",
+    pin,
+    emergencyContact: "",
+    occupation: "",
+    residentialAddress: ""
+  }).returning();
+  const visitor = created[0];
+  const alreadyIn = await db.select().from(attendanceRecordsTable).where(and(eq(attendanceRecordsTable.serviceId, serviceId), eq(attendanceRecordsTable.memberId, visitor.id))).limit(1);
+  if (!alreadyIn.length) {
+    await db.insert(attendanceRecordsTable).values({
+      serviceId,
+      memberId: visitor.id,
+      cellId: null,
+      method: "manual"
+    });
+  }
+  const actor = req.user;
+  await db.insert(activityLogTable).values({
+    type: "new_visitor",
+    description: `Visitor ${firstName.trim()} ${lastName.trim()} added (${membershipId})`,
+    memberId: visitor.id,
+    memberName: `${firstName.trim()} ${lastName.trim()}`,
+    performedByUserId: actor?.id ?? null,
+    performedByName: actor?.username ?? null
+  });
+  res.status(201).json({ member: visitor, alreadyCheckedIn: alreadyIn.length > 0 });
 });
 router9.get("/services/:id/attendance", async (req, res) => {
   const serviceId = parseInt(req.params.id);
@@ -54501,6 +54934,56 @@ router9.get("/first-timers/check-name", async (req, res) => {
     eq(firstTimersTable.isRegistrationError, false)
   ));
   res.json({ matches });
+});
+router9.get("/visitors/check-duplicate", async (req, res) => {
+  const fn = String(req.query.firstName ?? "").trim();
+  const ln = String(req.query.lastName ?? "").trim();
+  const ph = String(req.query.phone ?? "").trim();
+  const matches = [];
+  if (fn.length >= 2 || ln.length >= 2) {
+    const nameWhere = [eq(membersTable.isArchived, false)];
+    if (fn) nameWhere.push(ilike(membersTable.firstName, `%${fn}%`));
+    if (ln) nameWhere.push(ilike(membersTable.lastName, `%${ln}%`));
+    const memberRows = await db.select({
+      id: membersTable.id,
+      firstName: membersTable.firstName,
+      lastName: membersTable.lastName,
+      phone1: membersTable.phone1,
+      memberType: membersTable.memberType,
+      membershipId: membersTable.membershipId
+    }).from(membersTable).where(and(...nameWhere)).limit(6);
+    for (const m of memberRows) {
+      matches.push({ source: m.memberType === "visitor" ? "visitor" : "member", id: m.id, firstName: m.firstName, lastName: m.lastName, phone: m.phone1, membershipId: m.membershipId });
+    }
+    const ftWhere = [eq(firstTimersTable.isArchived, false)];
+    if (fn) ftWhere.push(ilike(firstTimersTable.firstName, `%${fn}%`));
+    if (ln) ftWhere.push(ilike(firstTimersTable.lastName, `%${ln}%`));
+    const ftRows = await db.select({
+      id: firstTimersTable.id,
+      firstName: firstTimersTable.firstName,
+      lastName: firstTimersTable.lastName,
+      contact: firstTimersTable.contact
+    }).from(firstTimersTable).where(and(...ftWhere)).limit(5);
+    for (const ft of ftRows) {
+      matches.push({ source: "first_timer", id: ft.id, firstName: ft.firstName, lastName: ft.lastName, phone: ft.contact });
+    }
+  }
+  if (ph.length >= 5) {
+    const phoneRows = await db.select({
+      id: membersTable.id,
+      firstName: membersTable.firstName,
+      lastName: membersTable.lastName,
+      phone1: membersTable.phone1,
+      memberType: membersTable.memberType,
+      membershipId: membersTable.membershipId
+    }).from(membersTable).where(and(eq(membersTable.phone1, ph), eq(membersTable.isArchived, false))).limit(3);
+    for (const m of phoneRows) {
+      if (!matches.find((x) => x.source !== "first_timer" && x.id === m.id)) {
+        matches.push({ source: m.memberType === "visitor" ? "visitor" : "member", id: m.id, firstName: m.firstName, lastName: m.lastName, phone: m.phone1, membershipId: m.membershipId });
+      }
+    }
+  }
+  res.json({ matches: matches.slice(0, 8) });
 });
 router9.post("/first-timers", async (req, res) => {
   const { firstName, lastName, gender, contact, invitedById, invitedByChildId, invitedByTeenId, serviceId } = req.body;
@@ -55393,27 +55876,47 @@ router9.get("/reports/ct-attendance", async (req, res) => {
 router9.post("/services/self-checkin", async (req, res) => {
   const user = req.user;
   const memberId = user?.memberId;
-  if (!memberId) return res.status(403).json({ error: "Member account required to self check-in" });
-  const { qrData } = req.body;
-  if (!qrData || typeof qrData !== "string") return res.status(400).json({ error: "qrData required" });
-  const match = qrData.trim().match(/^CEKSI-SVC-(\d+)$/);
-  if (!match) return res.status(400).json({ error: "Invalid QR code \u2014 please scan the correct service QR." });
-  const serviceId = parseInt(match[1]);
+  const teenId = user?.teenId;
+  if (!memberId && !teenId) return res.status(403).json({ error: "Member or teen account required to self check-in" });
+  const { qrData, serviceId: directId } = req.body;
+  let serviceId = null;
+  if (directId !== void 0 && directId !== null) {
+    serviceId = parseInt(String(directId));
+  } else if (qrData && typeof qrData === "string") {
+    const legacyMatch = qrData.trim().match(/^CEKSI-SVC-(\d+)$/);
+    if (legacyMatch) {
+      serviceId = parseInt(legacyMatch[1]);
+    } else {
+      const urlMatch = qrData.match(/[?&]svc=(\d+)/);
+      if (urlMatch) serviceId = parseInt(urlMatch[1]);
+    }
+  }
+  if (!serviceId || isNaN(serviceId)) {
+    return res.status(400).json({ error: "Invalid QR code \u2014 please scan the correct service QR." });
+  }
   const [service] = await db.select().from(servicesTable).where(eq(servicesTable.id, serviceId)).limit(1);
   if (!service || service.status !== "open") {
     return res.status(400).json({ error: "Service is not active. Registration is closed." });
   }
+  if (teenId && !memberId) {
+    const [teen] = await db.select().from(teensTable).where(and(eq(teensTable.id, teenId), eq(teensTable.isArchived, false))).limit(1);
+    if (!teen) return res.status(404).json({ error: "Teen record not found" });
+    const [existing2] = await db.select().from(serviceTeensAttendanceTable).where(and(eq(serviceTeensAttendanceTable.serviceId, serviceId), eq(serviceTeensAttendanceTable.teenId, teenId))).limit(1);
+    if (existing2) return res.json({ success: true, alreadyCheckedIn: true, serviceName: service.name });
+    await db.insert(serviceTeensAttendanceTable).values({ serviceId, teenId });
+    return res.json({ success: true, alreadyCheckedIn: false, serviceName: service.name });
+  }
   const [member] = await db.select().from(membersTable).where(and(eq(membersTable.id, memberId), eq(membersTable.isArchived, false))).limit(1);
   if (!member) return res.status(404).json({ error: "Member record not found" });
   const [existing] = await db.select().from(attendanceRecordsTable).where(and(eq(attendanceRecordsTable.serviceId, serviceId), eq(attendanceRecordsTable.memberId, memberId))).limit(1);
-  if (existing) return res.json({ success: true, alreadyCheckedIn: true });
+  if (existing) return res.json({ success: true, alreadyCheckedIn: true, serviceName: service.name });
   await db.insert(attendanceRecordsTable).values({
     serviceId,
     memberId,
     cellId: member.cellId ?? null,
     method: "qr"
   });
-  res.json({ success: true, alreadyCheckedIn: false });
+  res.json({ success: true, alreadyCheckedIn: false, serviceName: service.name });
 });
 var attendance_default = router9;
 
@@ -56130,6 +56633,7 @@ router14.post("/videos/:id/end-live", authenticateToken, requireRole(3), async (
     isNull(videoWatcherSessionsTable.leftAt)
   ));
   const [updated] = await db.update(videosTable).set({ isLive: false, liveEnded: true }).where(eq(videosTable.id, id)).returning();
+  overlayStore.delete(id);
   res.json(updated);
 });
 router14.delete("/videos/:id", authenticateToken, requireRole(3), async (req, res) => {
@@ -56774,6 +57278,30 @@ router14.get("/reports/online-services", authenticateToken, requireRole(1), asyn
     console.error("online-services report error:", err);
     res.status(500).json({ error: "Failed to load online services report" });
   }
+});
+var overlayStore = /* @__PURE__ */ new Map();
+router14.get("/videos/:id/overlay", async (req, res) => {
+  const videoId = parseInt(req.params.id);
+  const state = overlayStore.get(videoId) ?? { images: [], active: false, updatedAt: 0 };
+  res.json(state);
+});
+router14.post("/videos/:id/overlay", authenticateToken, requireRole(3), async (req, res) => {
+  const videoId = parseInt(req.params.id);
+  const { images, active } = req.body;
+  if (!Array.isArray(images) || images.length > 3) {
+    return res.status(400).json({ error: "Maximum 3 images allowed" });
+  }
+  for (const img of images) {
+    if (typeof img.src === "string") {
+      const approxBytes = img.src.length * 0.75;
+      if (approxBytes > 2.8 * 1024 * 1024) {
+        return res.status(400).json({ error: "Each image must be under 2 MB" });
+      }
+    }
+  }
+  const state = { images, active: active ?? true, updatedAt: Date.now() };
+  overlayStore.set(videoId, state);
+  res.json({ ok: true, updatedAt: state.updatedAt });
 });
 var online_default = router14;
 
@@ -61013,7 +61541,7 @@ router16.get("/home/feed", authenticateToken, async (req, res) => {
     const dd = String(today.getDate()).padStart(2, "0");
     const todayMD = `${mm}-${dd}`;
     const upcomingMDs = [];
-    for (let i = 1; i <= 7; i++) {
+    for (let i = 1; i <= 2; i++) {
       const d = new Date(today);
       d.setDate(d.getDate() + i);
       upcomingMDs.push(`${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`);
@@ -61025,7 +61553,21 @@ router16.get("/home/feed", authenticateToken, async (req, res) => {
         return fallback2;
       }
     };
-    const [todayBirthdays, todayAnniversaries, upcomingBirthdays, upcomingAnniversaries, latestVideoRows, announcements, liveMeetings] = await Promise.all([
+    const mdArray = sql`ARRAY[${sql.join(upcomingMDs.map((d) => sql`${d}`), sql`, `)}]`;
+    const [
+      memberTodayBdays,
+      teenTodayBdays,
+      childTodayBdays,
+      todayAnniversaries,
+      memberUpcomingBdays,
+      teenUpcomingBdays,
+      childUpcomingBdays,
+      upcomingAnniversaries,
+      latestVideoRows,
+      announcements,
+      liveMeetings
+    ] = await Promise.all([
+      // Members birthday today
       safeQuery(() => db.select({
         id: membersTable.id,
         firstName: membersTable.firstName,
@@ -61038,6 +61580,31 @@ router16.get("/home/feed", authenticateToken, async (req, res) => {
           sql`${membersTable.dateOfBirth} IS NOT NULL AND TO_CHAR(${membersTable.dateOfBirth}::date, 'MM-DD') = ${todayMD}`
         )
       ), []),
+      // Teens birthday today
+      safeQuery(() => db.select({
+        id: teensTable.id,
+        firstName: teensTable.firstName,
+        lastName: teensTable.lastName,
+        dateOfBirth: teensTable.dateOfBirth
+      }).from(teensTable).where(
+        and(
+          eq(teensTable.isArchived, false),
+          sql`${teensTable.dateOfBirth} IS NOT NULL AND TO_CHAR(${teensTable.dateOfBirth}::date, 'MM-DD') = ${todayMD}`
+        )
+      ), []),
+      // Children birthday today
+      safeQuery(() => db.select({
+        id: childrenTable.id,
+        firstName: childrenTable.firstName,
+        lastName: childrenTable.lastName,
+        dateOfBirth: childrenTable.dateOfBirth
+      }).from(childrenTable).where(
+        and(
+          eq(childrenTable.isArchived, false),
+          sql`${childrenTable.dateOfBirth} IS NOT NULL AND TO_CHAR(${childrenTable.dateOfBirth}::date, 'MM-DD') = ${todayMD}`
+        )
+      ), []),
+      // Anniversaries today
       safeQuery(() => db.select({
         id: membersTable.id,
         firstName: membersTable.firstName,
@@ -61052,6 +61619,7 @@ router16.get("/home/feed", authenticateToken, async (req, res) => {
           sql`${membersTable.weddingDate} IS NOT NULL AND TO_CHAR(${membersTable.weddingDate}::date, 'MM-DD') = ${todayMD}`
         )
       ), []),
+      // Members birthday upcoming
       safeQuery(() => db.select({
         id: membersTable.id,
         firstName: membersTable.firstName,
@@ -61060,9 +61628,34 @@ router16.get("/home/feed", authenticateToken, async (req, res) => {
       }).from(membersTable).where(
         and(
           eq(membersTable.isArchived, false),
-          sql`${membersTable.dateOfBirth} IS NOT NULL AND TO_CHAR(${membersTable.dateOfBirth}::date, 'MM-DD') = ANY(ARRAY[${sql.join(upcomingMDs.map((d) => sql`${d}`), sql`, `)}])`
+          sql`${membersTable.dateOfBirth} IS NOT NULL AND TO_CHAR(${membersTable.dateOfBirth}::date, 'MM-DD') = ANY(${mdArray})`
         )
       ), []),
+      // Teens birthday upcoming
+      safeQuery(() => db.select({
+        id: teensTable.id,
+        firstName: teensTable.firstName,
+        lastName: teensTable.lastName,
+        dateOfBirth: teensTable.dateOfBirth
+      }).from(teensTable).where(
+        and(
+          eq(teensTable.isArchived, false),
+          sql`${teensTable.dateOfBirth} IS NOT NULL AND TO_CHAR(${teensTable.dateOfBirth}::date, 'MM-DD') = ANY(${mdArray})`
+        )
+      ), []),
+      // Children birthday upcoming
+      safeQuery(() => db.select({
+        id: childrenTable.id,
+        firstName: childrenTable.firstName,
+        lastName: childrenTable.lastName,
+        dateOfBirth: childrenTable.dateOfBirth
+      }).from(childrenTable).where(
+        and(
+          eq(childrenTable.isArchived, false),
+          sql`${childrenTable.dateOfBirth} IS NOT NULL AND TO_CHAR(${childrenTable.dateOfBirth}::date, 'MM-DD') = ANY(${mdArray})`
+        )
+      ), []),
+      // Anniversaries upcoming
       safeQuery(() => db.select({
         id: membersTable.id,
         firstName: membersTable.firstName,
@@ -61073,10 +61666,12 @@ router16.get("/home/feed", authenticateToken, async (req, res) => {
       }).from(membersTable).where(
         and(
           eq(membersTable.isArchived, false),
-          sql`${membersTable.weddingDate} IS NOT NULL AND TO_CHAR(${membersTable.weddingDate}::date, 'MM-DD') = ANY(ARRAY[${sql.join(upcomingMDs.map((d) => sql`${d}`), sql`, `)}])`
+          sql`${membersTable.weddingDate} IS NOT NULL AND TO_CHAR(${membersTable.weddingDate}::date, 'MM-DD') = ANY(${mdArray})`
         )
       ), []),
+      // Latest video
       safeQuery(() => db.select().from(videosTable).orderBy(desc(videosTable.createdAt)).limit(1), []),
+      // Announcements
       safeQuery(() => db.select().from(announcementsTable).where(
         and(
           eq(announcementsTable.isActive, true),
@@ -61090,6 +61685,7 @@ router16.get("/home/feed", authenticateToken, async (req, res) => {
           )
         )
       ).orderBy(desc(announcementsTable.createdAt)).limit(10), []),
+      // Live meetings
       safeQuery(() => db.select({
         id: onlineMeetingsTable.id,
         title: onlineMeetingsTable.title,
@@ -61103,6 +61699,16 @@ router16.get("/home/feed", authenticateToken, async (req, res) => {
         )
       ).limit(5), [])
     ]);
+    const todayBirthdays = [
+      ...memberTodayBdays.map((m) => ({ ...m, personType: "member" })),
+      ...teenTodayBdays.map((t) => ({ ...t, personType: "teen" })),
+      ...childTodayBdays.map((c) => ({ ...c, personType: "child" }))
+    ];
+    const upcomingBirthdays = [
+      ...memberUpcomingBdays.map((m) => ({ ...m, personType: "member" })),
+      ...teenUpcomingBdays.map((t) => ({ ...t, personType: "teen" })),
+      ...childUpcomingBdays.map((c) => ({ ...c, personType: "child" }))
+    ];
     res.json({
       todayBirthdays,
       todayAnniversaries,

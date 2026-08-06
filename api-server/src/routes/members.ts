@@ -18,14 +18,15 @@ function fmt(m: { title?: string | null; firstName: string; lastName: string }):
   return m.title ? `${m.title} ${m.firstName} ${m.lastName}` : `${m.firstName} ${m.lastName}`;
 }
 
-async function generateMembershipId(firstName: string, lastName: string, type: "member" | "visitor" = "member"): Promise<string> {
+async function generateMembershipId(firstName: string, lastName: string, _type: "member" | "visitor" = "member"): Promise<string> {
   const initials = ((firstName[0] ?? "X") + (lastName[0] ?? "X")).toUpperCase();
-  const prefix = type === "visitor" ? `VST-${initials}` : `CEKSI-${initials}`;
+  // Visitors and members share the same CEKSI- prefix and counter space
+  const prefix = `CEKSI-${initials}`;
   // Check across all three tables so IDs are globally unique on the platform
   const [fromMembers, fromTeens, fromChildren] = await Promise.all([
     db.select({ mid: membersTable.membershipId }).from(membersTable).where(ilike(membersTable.membershipId, `${prefix}%`)),
-    type === "visitor" ? Promise.resolve([]) : db.select({ mid: teensTable.membershipId }).from(teensTable).where(ilike(teensTable.membershipId, `${prefix}%`)),
-    type === "visitor" ? Promise.resolve([]) : db.select({ mid: childrenTable.membershipId }).from(childrenTable).where(ilike(childrenTable.membershipId, `${prefix}%`)),
+    db.select({ mid: teensTable.membershipId }).from(teensTable).where(ilike(teensTable.membershipId, `${prefix}%`)),
+    db.select({ mid: childrenTable.membershipId }).from(childrenTable).where(ilike(childrenTable.membershipId, `${prefix}%`)),
   ]);
   let max = 0;
   for (const row of [...fromMembers, ...fromTeens, ...fromChildren]) {
@@ -743,10 +744,30 @@ router.delete("/:id", async (req, res) => {
 router.post("/:id/convert", async (req, res) => {
   const id = parseInt(req.params.id);
   const { cellId } = req.body;
-  if (!cellId) return res.status(400).json({ error: "Cell ID required" });
+
+  const member = await db.select().from(membersTable)
+    .where(and(eq(membersTable.id, id), eq(membersTable.isArchived, false))).limit(1);
+  if (!member.length) return res.status(404).json({ error: "Member not found" });
+
+  const updateData: Record<string, any> = { memberType: "member" };
+  if (cellId) updateData.cellId = parseInt(cellId);
+
   const updated = await db.update(membersTable)
-    .set({ memberType: "member", cellId }).where(eq(membersTable.id, id)).returning();
+    .set(updateData).where(eq(membersTable.id, id)).returning();
   if (!updated.length) return res.status(404).json({ error: "Member not found" });
+
+  // Create a user account for the newly converted member if one does not exist
+  const existingUser = await db.select().from(usersTable).where(eq(usersTable.memberId, id)).limit(1);
+  if (!existingUser.length) {
+    const pin = updated[0].pin ?? generatePin();
+    await db.insert(usersTable).values({
+      username: updated[0].membershipId,
+      passwordHash: hashPassword(pin),
+      roleLevel: 5,
+      memberId: id,
+    });
+  }
+
   res.json({ ...updated[0], leadershipRoles: [] });
 });
 
