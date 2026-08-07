@@ -13,19 +13,41 @@ import { authenticateToken } from "../middlewares/auth";
 const router = Router();
 router.use(authenticateToken);
 
-async function generateMembershipId(firstName: string, lastName: string, type: "member" | "visitor" = "member"): Promise<string> {
+async function generateMembershipId(
+  firstName: string,
+  lastName: string,
+  _type: "member" | "visitor" = "member",
+  executor: any = db,
+): Promise<string> {
   const initials = ((firstName[0] ?? "X") + (lastName[0] ?? "X")).toUpperCase();
-  const prefix = type === "visitor" ? `VST-${initials}` : `CEKSI-${initials}`;
-  const existing = await db
-    .select({ membershipId: membersTable.membershipId })
-    .from(membersTable)
-    .where(ilike(membersTable.membershipId, `${prefix}%`));
+  const prefix = `CEKSI-${initials}`;
+  const [memberIds, teenIds, childIds] = await Promise.all([
+    executor
+      .select({ membershipId: membersTable.membershipId })
+      .from(membersTable)
+      .where(ilike(membersTable.membershipId, `${prefix}%`)),
+    executor
+      .select({ membershipId: teensTable.membershipId })
+      .from(teensTable)
+      .where(ilike(teensTable.membershipId, `${prefix}%`)),
+    executor
+      .select({ membershipId: childrenTable.membershipId })
+      .from(childrenTable)
+      .where(ilike(childrenTable.membershipId, `${prefix}%`)),
+  ]);
   let max = 0;
-  for (const row of existing) {
+  for (const row of [...memberIds, ...teenIds, ...childIds]) {
+    if (!row.membershipId) continue;
     const num = parseInt(row.membershipId.slice(prefix.length), 10);
     if (!isNaN(num) && num > max) max = num;
   }
   return `${prefix}${String(max + 1).padStart(3, "0")}`;
+}
+
+const MEMBERSHIP_ID_LOCK_KEY = 746321;
+
+async function lockMembershipIdGeneration(tx: any) {
+  await tx.execute(sql`SELECT pg_advisory_xact_lock(${MEMBERSHIP_ID_LOCK_KEY})`);
 }
 
 function fmt(m: { title?: string | null; firstName: string; lastName: string }): string {
@@ -34,6 +56,26 @@ function fmt(m: { title?: string | null; firstName: string; lastName: string }):
 
 function todayStr() {
   return new Date().toISOString().split("T")[0];
+}
+
+async function ensureFirstTimerServiceEnded(firstTimer: any): Promise<{ ok: true } | { ok: false; status: number; error: string }> {
+  const service = await db
+    .select({ status: servicesTable.status })
+    .from(servicesTable)
+    .where(eq(servicesTable.id, firstTimer.serviceId))
+    .limit(1);
+
+  if (!service.length) {
+    return { ok: false, status: 404, error: "Associated service not found" };
+  }
+  if (service[0].status === "open") {
+    return {
+      ok: false,
+      status: 409,
+      error: "This first timer can only be converted after the associated service has ended",
+    };
+  }
+  return { ok: true };
 }
 
 // ─── SERVICES ────────────────────────────────────────────────────────────────
@@ -735,7 +777,14 @@ router.get("/first-timers", async (req, res) => {
       const t = await db.select().from(teensTable).where(eq(teensTable.id, ft.invitedByTeenId)).limit(1);
       if (t.length) invitedByName = `${t[0].firstName} ${t[0].lastName} (Teens)`;
     }
-    return { ...ft, serviceName: svc.length ? svc[0].name : "Unknown", serviceDate: svc.length ? svc[0].date : null, invitedByName, invitedByFellowship };
+    return {
+      ...ft,
+      serviceName: svc.length ? svc[0].name : "Unknown",
+      serviceDate: svc.length ? svc[0].date : null,
+      serviceStatus: svc.length ? svc[0].status : null,
+      invitedByName,
+      invitedByFellowship,
+    };
   }));
 
   res.json({ data: enriched, total: Number(total[0].count), page: pageNum, limit: limitNum });
@@ -955,15 +1004,23 @@ router.post("/first-timers/:id/send-to-teens", async (req, res) => {
   const id = parseInt(req.params.id);
   const ft = await db.select().from(firstTimersTable).where(eq(firstTimersTable.id, id)).limit(1);
   if (!ft.length) return res.status(404).json({ error: "First timer not found" });
-  const teen = await db.insert(teensTable).values({
-    firstName: ft[0].firstName, lastName: ft[0].lastName,
-    gender: ft[0].gender ?? undefined,
-    phone1: ft[0].contact ?? undefined,
-    residentialAddress: ft[0].residence ?? undefined,
-    dateJoined: new Date().toISOString().split("T")[0],
-  }).returning();
-  await db.update(firstTimersTable).set({ isArchived: true, archiveReason: "Sent to Teens Church" }).where(eq(firstTimersTable.id, id));
-  res.json(teen[0]);
+  const serviceCheck = await ensureFirstTimerServiceEnded(ft[0]);
+  if (!serviceCheck.ok) return res.status(serviceCheck.status).json({ error: serviceCheck.error });
+  const teen = await db.transaction(async (tx) => {
+    await lockMembershipIdGeneration(tx);
+    const membershipId = await generateMembershipId(ft[0].firstName, ft[0].lastName, "member", tx);
+    const created = await tx.insert(teensTable).values({
+      membershipId,
+      firstName: ft[0].firstName, lastName: ft[0].lastName,
+      gender: ft[0].gender ?? undefined,
+      phone1: ft[0].contact ?? undefined,
+      residentialAddress: ft[0].residence ?? undefined,
+      dateJoined: new Date().toISOString().split("T")[0],
+    }).returning();
+    await tx.update(firstTimersTable).set({ isArchived: true, archiveReason: "Sent to Teens Church" }).where(eq(firstTimersTable.id, id));
+    return created[0];
+  });
+  res.json(teen);
 });
 
 router.post("/first-timers/:id/send-to-children", async (req, res) => {
@@ -972,13 +1029,21 @@ router.post("/first-timers/:id/send-to-children", async (req, res) => {
   if (!childClass) return res.status(400).json({ error: "Class required" });
   const ft = await db.select().from(firstTimersTable).where(eq(firstTimersTable.id, id)).limit(1);
   if (!ft.length) return res.status(404).json({ error: "First timer not found" });
-  const child = await db.insert(childrenTable).values({
-    firstName: ft[0].firstName, lastName: ft[0].lastName,
-    gender: ft[0].gender ?? undefined,
-    class: childClass,
-  }).returning();
-  await db.update(firstTimersTable).set({ isArchived: true, archiveReason: "Sent to Children's Church" }).where(eq(firstTimersTable.id, id));
-  res.json(child[0]);
+  const serviceCheck = await ensureFirstTimerServiceEnded(ft[0]);
+  if (!serviceCheck.ok) return res.status(serviceCheck.status).json({ error: serviceCheck.error });
+  const child = await db.transaction(async (tx) => {
+    await lockMembershipIdGeneration(tx);
+    const membershipId = await generateMembershipId(ft[0].firstName, ft[0].lastName, "member", tx);
+    const created = await tx.insert(childrenTable).values({
+      membershipId,
+      firstName: ft[0].firstName, lastName: ft[0].lastName,
+      gender: ft[0].gender ?? undefined,
+      class: childClass,
+    }).returning();
+    await tx.update(firstTimersTable).set({ isArchived: true, archiveReason: "Sent to Children's Church" }).where(eq(firstTimersTable.id, id));
+    return created[0];
+  });
+  res.json(child);
 });
 
 router.post("/first-timers/:id/convert", async (req, res) => {
@@ -987,6 +1052,8 @@ router.post("/first-timers/:id/convert", async (req, res) => {
   if (!cellId) return res.status(400).json({ error: "Cell ID required" });
   const ft = await db.select().from(firstTimersTable).where(eq(firstTimersTable.id, id)).limit(1);
   if (!ft.length) return res.status(404).json({ error: "First timer not found" });
+  const serviceCheck = await ensureFirstTimerServiceEnded(ft[0]);
+  if (!serviceCheck.ok) return res.status(serviceCheck.status).json({ error: serviceCheck.error });
 
   // Duplicate check: warn if a member with the same full name AND phone already exists
   if (!force) {
@@ -1030,6 +1097,8 @@ router.post("/first-timers/:id/convert-to-visitor", async (req, res) => {
   const id = parseInt(req.params.id);
   const ft = await db.select().from(firstTimersTable).where(eq(firstTimersTable.id, id)).limit(1);
   if (!ft.length) return res.status(404).json({ error: "First timer not found" });
+  const serviceCheck = await ensureFirstTimerServiceEnded(ft[0]);
+  if (!serviceCheck.ok) return res.status(serviceCheck.status).json({ error: serviceCheck.error });
 
   const pin = String(Math.floor(1000 + Math.random() * 9000));
   const membershipId = await generateMembershipId(ft[0].firstName, ft[0].lastName, "visitor");
