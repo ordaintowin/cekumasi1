@@ -150,6 +150,14 @@ export default function FirstTimers() {
   }
 
   function openSendTo(ft: any) {
+    if (ft.serviceStatus === "open") {
+      toast({
+        title: "Service is still active",
+        description: "This first timer can only be converted after the service has ended.",
+        variant: "destructive",
+      });
+      return;
+    }
     setSendToId(ft.id);
     setSendToFT(ft);
     setSendToDestination(null);
@@ -328,7 +336,9 @@ export default function FirstTimers() {
                         <Pencil className="w-3 h-3 mr-1" /> Edit
                       </Button>
                       <Button size="sm" variant="ghost" className="text-green-600 hover:bg-green-50 h-7 px-2 text-xs"
-                        onClick={() => openSendTo(ft)}>
+                        onClick={() => openSendTo(ft)}
+                        disabled={ft.serviceStatus === "open"}
+                        title={ft.serviceStatus === "open" ? "Available after the service ends" : "Send to a church department"}>
                         <ArrowRight className="w-3 h-3 mr-1" /> Send To
                       </Button>
                       <Button size="sm" variant="ghost" className="text-red-500 hover:bg-red-50 h-7 px-2"
