@@ -1083,7 +1083,7 @@ export function getGetFirstTimersStatusReportQueryKey(params?: any) {
 }
 export function useGetFirstTimersStatusReport(
   params: { search?: string; page?: number; limit?: number; startDate?: string; endDate?: string } = {},
-  options?: { query?: { enabled?: boolean; queryKey?: any[] } }
+  options?: { query?: { enabled?: boolean; queryKey?: any[]; refetchInterval?: number } }
 ) {
   return useQuery<any>({
     queryKey: options?.query?.queryKey ?? getGetFirstTimersStatusReportQueryKey(params),
