@@ -1,4 +1,4 @@
-import { drizzle } from "drizzle-orm/postgres-js";
+   import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import {
   pgTable, serial, text, integer, boolean, timestamp, numeric,
@@ -56,6 +56,7 @@ export const membersTable = pgTable("members", {
   archivedBy: integer("archived_by"),
   createdAt: timestamp("created_at").notNull().default(sql`now()`),
   transferredFromTeenId: integer("transferred_from_teen_id"),
+  firstTimerId: integer("first_timer_id"),
 });
 
 export const leadershipRolesTable = pgTable("leadership_roles", {
