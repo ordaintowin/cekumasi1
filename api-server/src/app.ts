@@ -35,7 +35,8 @@ async function ensureTables() {
         member_type TEXT NOT NULL DEFAULT 'member', cell_id INTEGER, spouse_id INTEGER,
         profile_photo TEXT, pin TEXT NOT NULL DEFAULT '0000',
         is_archived BOOLEAN NOT NULL DEFAULT FALSE, archive_reason TEXT,
-        archived_at TIMESTAMPTZ, archived_by INTEGER, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())` },
+         archived_at TIMESTAMPTZ, archived_by INTEGER, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+         first_timer_id INTEGER)` },
     { name: "leadership_roles", sql: `CREATE TABLE IF NOT EXISTS leadership_roles (
         id SERIAL PRIMARY KEY, member_id INTEGER NOT NULL, role TEXT NOT NULL)` },
     { name: "activity_log", sql: `CREATE TABLE IF NOT EXISTS activity_log (
@@ -220,6 +221,8 @@ async function ensureTables() {
     `CREATE UNIQUE INDEX IF NOT EXISTS teens_membership_id_key ON teens(membership_id) WHERE membership_id IS NOT NULL`,
     `ALTER TABLE teens ADD COLUMN IF NOT EXISTS pin TEXT NOT NULL DEFAULT '0000'`,
     `ALTER TABLE members ADD COLUMN IF NOT EXISTS transferred_from_teen_id INTEGER`,
+    `ALTER TABLE members ADD COLUMN IF NOT EXISTS first_timer_id INTEGER`,
+    `CREATE INDEX IF NOT EXISTS idx_members_first_timer_id ON members(first_timer_id)`,
   ];
   for (const m of columnMigrations) {
     try { await db.execute(sql.raw(m)); } catch { }
