@@ -1099,7 +1099,7 @@ function FirstTimersReport() {
 
   const params = { search, page, limit: 20, startDate: startDate || undefined, endDate: endDate || undefined };
   const { data, isLoading } = useGetFirstTimersStatusReport(params, {
-    query: { queryKey: getGetFirstTimersStatusReportQueryKey(params) },
+    query: { queryKey: getGetFirstTimersStatusReportQueryKey(params), refetchInterval: 5000 },
   });
 
   const rows        = data?.data       ?? [];
@@ -1122,7 +1122,7 @@ function FirstTimersReport() {
         </div>
       );
     }
-    return null;
+    return <Badge className="text-[10px] border-0 bg-blue-100 text-blue-700 font-semibold">Still Coming</Badge>;
   }
 
   return (
