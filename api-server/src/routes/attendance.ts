@@ -1106,6 +1106,7 @@ router.post("/first-timers/:id/convert-to-visitor", async (req, res) => {
     membershipId, firstName: ft[0].firstName, lastName: ft[0].lastName, gender: ft[0].gender,
     phone1: ft[0].contact || "N/A", memberType: "visitor", cellId: null as any, pin,
     emergencyContact: "", occupation: "", residentialAddress: ft[0].residence || "",
+    firstTimerId: id,
   }).returning();
 
   await db.update(firstTimersTable).set({ isArchived: true, archiveReason: "Converted to visitor" }).where(eq(firstTimersTable.id, id));
@@ -1645,6 +1646,9 @@ router.get("/reports/first-timers-status", async (req, res) => {
     id: membersTable.id, phone1: membersTable.phone1,
     firstName: membersTable.firstName, lastName: membersTable.lastName,
     cellId: membersTable.cellId,
+    memberType: membersTable.memberType,
+    isArchived: membersTable.isArchived,
+    firstTimerId: membersTable.firstTimerId,
   }).from(membersTable);
   const allTeens = await db.select({ id: teensTable.id, phone1: teensTable.phone1, firstName: teensTable.firstName, lastName: teensTable.lastName }).from(teensTable).where(eq(teensTable.isArchived, false));
   const allCells = await db.select({ id: cellsTable.id, name: cellsTable.name }).from(cellsTable);
@@ -1653,6 +1657,24 @@ router.get("/reports/first-timers-status", async (req, res) => {
   // Pre-load all services for visit date lookup
   const allServicesForStatus = await db.select({ id: servicesTable.id, name: servicesTable.name, date: servicesTable.date }).from(servicesTable);
   const svcMapForStatus = new Map(allServicesForStatus.map(s => [s.id, s]));
+
+  const findMemberForFirstTimer = (ft: any) => {
+    const linked = allMembers.find(mm => mm.firstTimerId === ft.id);
+    if (linked) return linked;
+
+    // Legacy visitor conversions happened before first_timer_id existed.
+    // Use phone when available, otherwise fall back to the full name.
+    const contact = ft.contact?.trim();
+    if (contact && contact !== "N/A") {
+      const byPhone = allMembers.find(mm => mm.phone1 === contact);
+      if (byPhone) return byPhone;
+    }
+    const sameName = allMembers.filter(mm =>
+      mm.firstName.toLowerCase() === ft.firstName.toLowerCase() &&
+      mm.lastName.toLowerCase() === ft.lastName.toLowerCase()
+    );
+    return sameName.length === 1 ? sameName[0] : null;
+  };
 
   const enriched = await Promise.all(fts.map(async (ft) => {
     // Count all visits (original + returning) — include serviceId for timeline
@@ -1707,9 +1729,18 @@ router.get("/reports/first-timers-status", async (req, res) => {
         convertedTo = "child";
         movedToDetail = "Children's Church";
       } else if (archiveReason.toLowerCase().includes("visitor")) {
-        status = "Added as Visitor";
-        convertedTo = "visitor";
-        movedToDetail = "Visitor";
+        const visitorRecord = findMemberForFirstTimer(ft);
+        if (visitorRecord?.memberType === "member") {
+          status = "Added as Member";
+          convertedTo = "member";
+          const cellName = visitorRecord.cellId ? cellMap.get(visitorRecord.cellId) : null;
+          movedToDetail = cellName ? `Member → ${cellName}` : "Member";
+        } else {
+          // A visitor is still part of the first-timer follow-up pipeline.
+          // Keep the original record visible until they become established.
+          status = "Active First-Timer";
+          movedToDetail = "Visitor · Still Coming";
+        }
       } else {
         status = "Removed";
         movedToDetail = null;
@@ -1718,10 +1749,15 @@ router.get("/reports/first-timers-status", async (req, res) => {
       // Fallback: match by phone
       const matchingMember = allMembers.find(mm => mm.phone1 === ft.contact && !mm.isArchived);
       if (matchingMember) {
-        status = "Added as Member";
-        convertedTo = "member";
-        const cellName = matchingMember.cellId ? cellMap.get(matchingMember.cellId) : null;
-        movedToDetail = cellName ? `Member → ${cellName}` : "Member";
+        if (matchingMember.memberType === "member") {
+          status = "Added as Member";
+          convertedTo = "member";
+          const cellName = matchingMember.cellId ? cellMap.get(matchingMember.cellId) : null;
+          movedToDetail = cellName ? `Member → ${cellName}` : "Member";
+        } else {
+          status = "Active First-Timer";
+          movedToDetail = "Visitor · Still Coming";
+        }
       } else {
         const matchingTeen = allTeens.find(t => t.phone1 === ft.contact);
         if (matchingTeen) { status = "Added to Teens Church"; convertedTo = "teen"; movedToDetail = "Teens Church"; }
@@ -1757,11 +1793,7 @@ router.get("/reports/first-timers-status", async (req, res) => {
     };
   }));
 
-  // Compute summary stats across the full dataset (not just this page)
-  const allFtsForStats = await db.select({ isArchived: firstTimersTable.isArchived, archiveReason: firstTimersTable.archiveReason })
-    .from(firstTimersTable).where(and(...conditions.filter(c => c !== conditions[conditions.length - 1] || !startDate && !endDate)));
-
-  // Simpler approach: compute from enriched + full count
+  // Compute summary stats from the same live relationships used by each row.
   const statsConditions = [eq(firstTimersTable.isReturning, false), eq(firstTimersTable.isRegistrationError, false)];
   if (startDate || endDate) {
     const serviceConditions2: any[] = [];
@@ -1777,27 +1809,40 @@ router.get("/reports/first-timers-status", async (req, res) => {
     ));
   }
 
-  const [memberCount, teensCount, childrenCount, visitorCount, activeCount] = await Promise.all([
-    db.select({ count: sql<number>`count(*)` }).from(firstTimersTable)
-      .where(and(...statsConditions, eq(firstTimersTable.isArchived, true), ilike(firstTimersTable.archiveReason ?? sql`''`, "%member%"))),
-    db.select({ count: sql<number>`count(*)` }).from(firstTimersTable)
-      .where(and(...statsConditions, eq(firstTimersTable.isArchived, true), ilike(firstTimersTable.archiveReason ?? sql`''`, "%teen%"))),
-    db.select({ count: sql<number>`count(*)` }).from(firstTimersTable)
-      .where(and(...statsConditions, eq(firstTimersTable.isArchived, true), ilike(firstTimersTable.archiveReason ?? sql`''`, "%children%"))),
-    db.select({ count: sql<number>`count(*)` }).from(firstTimersTable)
-      .where(and(...statsConditions, eq(firstTimersTable.isArchived, true), ilike(firstTimersTable.archiveReason ?? sql`''`, "%visitor%"))),
-    db.select({ count: sql<number>`count(*)` }).from(firstTimersTable)
-      .where(and(...statsConditions, eq(firstTimersTable.isArchived, false))),
-  ]);
+  const allFtsForStats = await db.select().from(firstTimersTable).where(and(...statsConditions));
+  let mc = 0;
+  let tc = 0;
+  let cc = 0;
+  let vc = 0;
+  let sc = 0;
+  let removedCount = 0;
 
-  const mc = Number(memberCount[0].count);
-  const tc = Number(teensCount[0].count);
-  const cc = Number(childrenCount[0].count);
-  const vc = Number(visitorCount[0].count);
-  const sc = Number(activeCount[0].count);
+  for (const ft of allFtsForStats) {
+    const reason = (ft.archiveReason ?? "").toLowerCase();
+    const linkedMember = findMemberForFirstTimer(ft);
+    const isEstablishedMember =
+      reason.includes("member") ||
+      (reason.includes("visitor") && linkedMember?.memberType === "member") ||
+      (!ft.isArchived && linkedMember?.memberType === "member");
+
+    if (isEstablishedMember) {
+      mc++;
+    } else if (reason.includes("teen")) {
+      tc++;
+    } else if (reason.includes("children")) {
+      cc++;
+    } else if (reason.includes("visitor")) {
+      vc++;
+      sc++;
+    } else if (!ft.isArchived) {
+      sc++;
+    } else {
+      removedCount++;
+    }
+  }
+
   const establishedCount = mc + tc + cc;
   const grandTotal = Number(totalRows[0].count);
-  const rc = grandTotal - sc - establishedCount - vc;
 
   res.json({
     data: enriched,
@@ -1807,7 +1852,7 @@ router.get("/reports/first-timers-status", async (req, res) => {
     asTeens: tc,
     asChildren: cc,
     asVisitor: vc,
-    removed: Math.max(0, rc),
+    removed: removedCount,
     stillActive: sc,
     page: pageNum,
     limit: limitNum,
