@@ -4,6 +4,7 @@ import {
   useCreateChild, useUpdateChild,
   useDeleteChild,
   useListMembers, getListMembersQueryKey,
+  useTransferRegister,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Trash2, Search, Baby, ChevronLeft, ChevronRight, X, Edit2, ArrowRight, Download } from "lucide-react";
+import { Plus, Trash2, Search, Baby, ChevronLeft, ChevronRight, X, Edit2, ArrowRight, Download, UserCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const CLASSES = [
@@ -302,20 +303,6 @@ function ChildDialog({
   );
 }
 
-async function apicall(path: string, method: string, body?: any) {
-  const token = localStorage.getItem("token");
-  const res = await fetch(path, {
-    method,
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-    ...(body ? { body: JSON.stringify(body) } : {}),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error ?? "Request failed");
-  }
-  return res.json();
-}
-
 export default function Children() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -325,7 +312,7 @@ export default function Children() {
   const [addOpen, setAddOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<any>(null);
   const [sendToTeensTarget, setSendToTeensTarget] = useState<any>(null);
-  const [sendToTeensSaving, setSendToTeensSaving] = useState(false);
+  const [moveDestination, setMoveDestination] = useState<"teens" | "member">("teens");
 
   const queryParams: any = { page, limit: 25, search };
   if (classFilter !== "all") queryParams.class = classFilter;
@@ -366,30 +353,28 @@ export default function Children() {
     },
   });
 
+  const transferChild = useTransferRegister({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListChildrenQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getListMembersQueryKey() });
+        toast({ title: `Moved to ${moveDestination === "teens" ? "Teens Church" : "Adult Members"}`, description: "Membership ID, attendance, giving, and family links were preserved." });
+        setSendToTeensTarget(null);
+      },
+      onError: (e: any) => toast({ title: "Could not move person", description: e?.message, variant: "destructive" }),
+    },
+  });
+
   const total = data?.total ?? 0;
   const totalPages = Math.ceil(total / 25);
 
   async function handleSendToTeens() {
     if (!sendToTeensTarget) return;
-    setSendToTeensSaving(true);
-    try {
-      await apicall("/api/teens", "POST", {
-        firstName: sendToTeensTarget.firstName,
-        lastName: sendToTeensTarget.lastName,
-        gender: sendToTeensTarget.gender,
-        dateOfBirth: sendToTeensTarget.dateOfBirth ?? sendToTeensTarget.dob,
-        parentId: sendToTeensTarget.parentId ?? undefined,
-        parentExternal: sendToTeensTarget.parentExternal ?? undefined,
-        transferFromChildId: sendToTeensTarget.id,
-      });
-      queryClient.invalidateQueries({ queryKey: getListChildrenQueryKey() });
-      toast({ title: `${sendToTeensTarget.firstName} ${sendToTeensTarget.lastName} moved to Teens Church` });
-      setSendToTeensTarget(null);
-    } catch (e: any) {
-      toast({ title: "Error", description: e.message, variant: "destructive" });
-    } finally {
-      setSendToTeensSaving(false);
-    }
+    transferChild.mutate({
+      sourceType: "children",
+      sourceId: sendToTeensTarget.id,
+      destinationType: moveDestination,
+    });
   }
 
   return (
@@ -484,8 +469,8 @@ export default function Children() {
                           <Edit2 className="w-3.5 h-3.5" />
                         </Button>
                         <Button size="sm" variant="ghost" className="text-green-600 hover:bg-green-50 h-7 px-2 text-xs"
-                          onClick={() => setSendToTeensTarget(c)}>
-                          <ArrowRight className="w-3 h-3 mr-1" /> Teens
+                          onClick={() => { setMoveDestination("teens"); setSendToTeensTarget(c); }}>
+                          <ArrowRight className="w-3 h-3 mr-1" /> Move
                         </Button>
                         <Button size="sm" variant="ghost" className="text-red-400 hover:text-red-500 h-7 w-7 p-0"
                           onClick={() => {
@@ -538,7 +523,7 @@ export default function Children() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <ArrowRight className="w-5 h-5 text-green-600" />
-              Send to Teens Church
+              Move to another register
             </DialogTitle>
           </DialogHeader>
           {sendToTeensTarget && (
@@ -548,10 +533,20 @@ export default function Children() {
                 <span className="font-semibold text-gray-900">
                   {sendToTeensTarget.firstName} {sendToTeensTarget.lastName}
                 </span>{" "}
-                from Children's Church to Teens Church.
+                from Children's Church.
               </p>
-              <div className="bg-amber-50 border border-amber-200 rounded-md px-3 py-2 text-xs text-amber-700">
-                This child will be archived from Children's Church and added to Teens Church. This action cannot be undone.
+              <div className="space-y-1.5">
+                <Label>Destination</Label>
+                <Select value={moveDestination} onValueChange={(v: "member" | "teens") => setMoveDestination(v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="teens">Teens Church</SelectItem>
+                    <SelectItem value="member">Adult Members</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="bg-indigo-50 border border-indigo-200 rounded-md px-3 py-2 text-xs text-indigo-700">
+                The same membership ID will be kept. Attendance, giving, and family links will move with this person.
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" className="flex-1" onClick={() => setSendToTeensTarget(null)}>
@@ -559,9 +554,9 @@ export default function Children() {
                 </Button>
                 <Button
                   className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                  disabled={sendToTeensSaving}
+                  disabled={transferChild.isPending}
                   onClick={handleSendToTeens}>
-                  {sendToTeensSaving ? "Moving..." : "Yes, Move to Teens"}
+                  {transferChild.isPending ? "Moving..." : "Move"}
                 </Button>
               </div>
             </div>

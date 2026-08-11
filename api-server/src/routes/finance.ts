@@ -133,12 +133,12 @@ router.get("/giving-search", async (req, res) => {
     results.push(...(rows as any[]).map(r => ({ id: r.id, firstName: r.first_name, lastName: r.last_name, membershipId: r.membership_id, personType: "member" })));
   }
   if (!type || type === "teen") {
-    const rows = await db.execute(sql`SELECT id, first_name, last_name FROM teens WHERE is_archived = false AND (first_name ILIKE ${term} OR last_name ILIKE ${term} OR (first_name || ' ' || last_name) ILIKE ${term}) LIMIT ${lim}`);
-    results.push(...(rows as any[]).map(r => ({ id: r.id, firstName: r.first_name, lastName: r.last_name, membershipId: null, personType: "teen" })));
+    const rows = await db.execute(sql`SELECT id, first_name, last_name, membership_id FROM teens WHERE is_archived = false AND (first_name ILIKE ${term} OR last_name ILIKE ${term} OR (first_name || ' ' || last_name) ILIKE ${term}) LIMIT ${lim}`);
+    results.push(...(rows as any[]).map(r => ({ id: r.id, firstName: r.first_name, lastName: r.last_name, membershipId: r.membership_id, personType: "teen" })));
   }
   if (!type || type === "child") {
-    const rows = await db.execute(sql`SELECT id, first_name, last_name FROM children WHERE is_archived = false AND (first_name ILIKE ${term} OR last_name ILIKE ${term} OR (first_name || ' ' || last_name) ILIKE ${term}) LIMIT ${lim}`);
-    results.push(...(rows as any[]).map(r => ({ id: r.id, firstName: r.first_name, lastName: r.last_name, membershipId: null, personType: "child" })));
+    const rows = await db.execute(sql`SELECT id, first_name, last_name, membership_id FROM children WHERE is_archived = false AND (first_name ILIKE ${term} OR last_name ILIKE ${term} OR (first_name || ' ' || last_name) ILIKE ${term}) LIMIT ${lim}`);
+    results.push(...(rows as any[]).map(r => ({ id: r.id, firstName: r.first_name, lastName: r.last_name, membershipId: r.membership_id, personType: "child" })));
   }
   if (!type || type === "first_timer") {
     const rows = await db.execute(sql`SELECT id, first_name, last_name FROM first_timers WHERE is_archived = false AND (first_name ILIKE ${term} OR last_name ILIKE ${term} OR (first_name || ' ' || last_name) ILIKE ${term}) LIMIT ${lim}`);

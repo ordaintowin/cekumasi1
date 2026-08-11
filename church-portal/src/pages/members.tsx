@@ -8,8 +8,11 @@ import {
   useUpdateMember,
   useDeleteMember,
   useConvertVisitorToMember,
+  useBulkCreateMembers,
+  useSendMemberToMinistry,
   useListCells, getListCellsQueryKey,
   useListSeniorCells, getListSeniorCellsQueryKey,
+  useGetFellowshipHierarchy,
   useGetMemberCredentials, getGetMemberCredentialsQueryKey,
   useResetMemberPassword,
   useGetMemberGivings, getGetMemberGivingsQueryKey,
@@ -28,7 +31,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Search, ChevronLeft, ChevronRight, UserCheck, Trash2, Phone, Mail, MapPin, Briefcase, Calendar, Users, ArrowRight, Download, QrCode, X, Camera, Edit2, Eye, EyeOff, KeyRound, RefreshCw, Gift, Home, Crown, Baby, Smile, Link2 } from "lucide-react";
+import { Plus, Search, ChevronLeft, ChevronRight, UserCheck, Trash2, Phone, Mail, MapPin, Briefcase, Calendar, Users, ArrowRight, Download, QrCode, X, Camera, Edit2, Eye, EyeOff, KeyRound, RefreshCw, Gift, Home, Crown, Baby, Smile, Link2, Upload, Send, ShieldCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 
@@ -708,6 +711,8 @@ function MemberDetail({ memberId, onBack, canDelete, canManage, cells, seniorCel
   const [greetingOpen, setGreetingOpen] = useState(false);
   const [greetingForm, setGreetingForm] = useState({ title: "", message: "", emoji: "🎂" });
   const [isSendingGreeting, setIsSendingGreeting] = useState(false);
+  const [ministryOpen, setMinistryOpen] = useState(false);
+  const [ministryDestination, setMinistryDestination] = useState<"children" | "teens">("children");
 
   const { data: member, isLoading } = useGetMember(memberId, {
     query: { queryKey: getGetMemberQueryKey(memberId) },
@@ -752,6 +757,22 @@ function MemberDetail({ memberId, onBack, canDelete, canManage, cells, seniorCel
         toast({ title: "Member deleted" });
       },
       onError: (e: any) => toast({ title: "Error", description: e?.message, variant: "destructive" }),
+    },
+  });
+
+  const sendToMinistry = useSendMemberToMinistry({
+    mutation: {
+      onSuccess: (result: any) => {
+        setMinistryOpen(false);
+        queryClient.invalidateQueries({ queryKey: getListMembersQueryKey() });
+        queryClient.invalidateQueries({ queryKey: ["/api/families"] });
+        toast({
+          title: `Moved to ${result.destination === "children" ? "Children's Church" : "Teens Church"}`,
+          description: "The membership ID and historical attendance, giving, and family links were preserved.",
+        });
+        onBack();
+      },
+      onError: (e: any) => toast({ title: "Could not move member", description: e?.message, variant: "destructive" }),
     },
   });
 
@@ -871,6 +892,15 @@ function MemberDetail({ memberId, onBack, canDelete, canManage, cells, seniorCel
         )}
 
         {(user?.roleLevel ?? 5) <= 1 && (
+          <Button size="sm" variant="outline" className="text-indigo-600 border-indigo-200 hover:bg-indigo-50 shrink-0"
+            onClick={() => setMinistryOpen(true)}>
+            <Send className="w-3.5 h-3.5 sm:mr-1" />
+            <span className="hidden sm:inline">Send to Ministry</span>
+            <span className="sm:hidden">Ministry</span>
+          </Button>
+        )}
+
+        {canManage && (
           <Button size="sm" variant="outline" className="text-yellow-600 border-yellow-200 hover:bg-yellow-50 shrink-0"
             onClick={() => {
               const firstName = m?.firstName ?? "";
@@ -915,6 +945,38 @@ function MemberDetail({ memberId, onBack, canDelete, canManage, cells, seniorCel
         </div>
       )}
       <input ref={photoUpdateRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoUpdate} />
+
+      <Dialog open={ministryOpen} onOpenChange={setMinistryOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Send to a ministry register</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div className="rounded-lg border border-indigo-100 bg-indigo-50 p-3 text-sm text-indigo-900">
+              <div className="flex items-start gap-2">
+                <ShieldCheck className="w-4 h-4 mt-0.5 shrink-0" />
+                <p>This moves the person out of the active Members register. Their membership ID, historical attendance, giving, and family links will be preserved.</p>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Destination</Label>
+              <Select value={ministryDestination} onValueChange={(v: "children" | "teens") => setMinistryDestination(v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="children">Children&apos;s Church</SelectItem>
+                  <SelectItem value="teens">Teens Church</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <p className="text-xs text-gray-500">
+              The person’s name, membership ID, gender, and date of birth move to the selected register. Teens Church also receives available phone and address details.
+            </p>
+            <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
+              disabled={sendToMinistry.isPending}
+              onClick={() => sendToMinistry.mutate({ id: memberId, destination: ministryDestination })}>
+              {sendToMinistry.isPending ? "Moving..." : "Move to ministry register"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Greeting Dialog */}
       <Dialog open={greetingOpen} onOpenChange={setGreetingOpen}>
@@ -1263,6 +1325,9 @@ export default function Members() {
   const [typeFilter, setTypeFilter] = useState("all");
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkText, setBulkText] = useState("");
+  const [bulkCellId, setBulkCellId] = useState("");
   const [exporting, setExporting] = useState(false);
 
   const limit = 25;
@@ -1299,6 +1364,46 @@ export default function Members() {
   const { data: seniorCells } = useListSeniorCells({}, {
     query: { queryKey: getListSeniorCellsQueryKey() },
   });
+  const { data: fellowshipHierarchy } = useGetFellowshipHierarchy();
+
+  const bulkFellowships = useMemo(() => {
+    const seniorCellMap = new Map((fellowshipHierarchy?.standaloneSeniorCells ?? []).map((sc: any) => [sc.id, sc]));
+    const pcfMap = new Map((fellowshipHierarchy?.pcfs ?? []).map((pcf: any) => [pcf.id, pcf]));
+    const options: Array<{ id: number; label: string }> = [];
+
+    const addCells = (cellsToAdd: any[], pcfName?: string, seniorCellName?: string) => {
+      for (const cell of cellsToAdd) {
+        options.push({
+          id: cell.id,
+          label: [pcfName, seniorCellName, cell.name].filter(Boolean).join("  ›  "),
+        });
+      }
+    };
+
+    for (const pcf of fellowshipHierarchy?.pcfs ?? []) {
+      for (const seniorCell of pcf.seniorCells ?? []) {
+        addCells(seniorCell.cells ?? [], pcf.name, seniorCell.name);
+      }
+    }
+    for (const seniorCell of fellowshipHierarchy?.standaloneSeniorCells ?? []) {
+      addCells(seniorCell.cells ?? [], undefined, seniorCell.name);
+    }
+    addCells(fellowshipHierarchy?.standaloneCells ?? []);
+
+    // Keep the selector usable even if the hierarchy response is temporarily
+    // incomplete by falling back to the existing cell list.
+    if (!options.length) {
+      for (const cell of cells ?? []) {
+        const seniorCell = cell.seniorCellId ? seniorCellMap.get(cell.seniorCellId) : undefined;
+        const pcf = seniorCell?.pcfId ? pcfMap.get(seniorCell.pcfId) : undefined;
+        options.push({
+          id: cell.id,
+          label: [pcf?.name, seniorCell?.name, cell.name].filter(Boolean).join("  ›  "),
+        });
+      }
+    }
+    return options.sort((a, b) => a.label.localeCompare(b.label));
+  }, [fellowshipHierarchy, cells]);
 
   const createMember = useCreateMember({
     mutation: {
@@ -1310,6 +1415,34 @@ export default function Members() {
       onError: (e: any) => toast({ title: "Error", description: e?.message, variant: "destructive" }),
     },
   });
+
+  const bulkCreateMembers = useBulkCreateMembers({
+    mutation: {
+      onSuccess: (result: any) => {
+        queryClient.invalidateQueries({ queryKey: getListMembersQueryKey() });
+        setBulkOpen(false);
+        setBulkText("");
+        setBulkCellId("");
+        const skipped = result.totalSkipped ? ` ${result.totalSkipped} skipped as duplicates or invalid.` : "";
+        toast({ title: `${result.totalCreated} member${result.totalCreated === 1 ? "" : "s"} imported.`, description: skipped || undefined });
+      },
+      onError: (e: any) => toast({ title: "Bulk import failed", description: e?.message, variant: "destructive" }),
+    },
+  });
+
+  const submitBulkImport = () => {
+    const members = bulkText.split(/\r?\n/).map(line => line.trim()).filter(Boolean).map(line => {
+      const parts = line.split(/\t|,/).map(part => part.trim()).filter(Boolean);
+      if (parts.length >= 2) return { firstName: parts[0], lastName: parts.slice(1).join(" ") };
+      const words = line.split(/\s+/);
+      return { firstName: words[0] ?? "", lastName: words.slice(1).join(" ") };
+    });
+    if (!members.length) {
+      toast({ title: "Add names before importing", variant: "destructive" });
+      return;
+    }
+    bulkCreateMembers.mutate({ members, cellId: bulkCellId ? parseInt(bulkCellId, 10) : null });
+  };
 
   const handleExport = useCallback(async () => {
     setExporting(true);
@@ -1375,6 +1508,54 @@ export default function Members() {
                   cells={cells ?? []}
                   seniorCells={seniorCells ?? []}
                 />
+              </DialogContent>
+            </Dialog>
+          )}
+          {(user?.roleLevel ?? 5) <= 3 && (
+            <Dialog open={bulkOpen} onOpenChange={setBulkOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="border-indigo-300 text-indigo-700 hover:bg-indigo-50">
+                  <Upload className="w-4 h-4 mr-2" /> Bulk Names
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-lg">
+                <DialogHeader><DialogTitle>Bulk add member names</DialogTitle></DialogHeader>
+                <div className="space-y-4">
+                  <div className="rounded-lg border border-indigo-100 bg-indigo-50 p-3 text-sm text-indigo-900">
+                    Admin only. Phone numbers are not required for this import. Existing attendance, giving, and family records are not affected.
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="bulk-fellowship">Fellowship</Label>
+                    <Select value={bulkCellId || "none"} onValueChange={value => setBulkCellId(value === "none" ? "" : value)}>
+                      <SelectTrigger id="bulk-fellowship">
+                        <SelectValue placeholder="Choose a fellowship..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">No fellowship</SelectItem>
+                        {bulkFellowships.map(fellowship => (
+                          <SelectItem key={fellowship.id} value={String(fellowship.id)}>
+                            {fellowship.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-gray-500">All imported members will be added to the selected Cell.</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Names</Label>
+                    <Textarea
+                      value={bulkText}
+                      onChange={e => setBulkText(e.target.value)}
+                      placeholder={"One person per line:\nJohn Mensah\nMary, Owusu\nPeter\tAsare"}
+                      className="min-h-48 font-mono text-sm"
+                    />
+                    <p className="text-xs text-gray-500">Use one name per line. Commas and tabs are also accepted between first and last name. Up to 1,000 names.</p>
+                  </div>
+                  <Button className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
+                    disabled={bulkCreateMembers.isPending} onClick={submitBulkImport}>
+                    {bulkCreateMembers.isPending ? "Importing..." : "Import names"}
+                  </Button>
+                </div>
               </DialogContent>
             </Dialog>
           )}

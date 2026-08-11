@@ -46,6 +46,41 @@ function hashPassword(password: string): string {
   return crypto.createHash("sha256").update(password + "ce_kumasi_salt").digest("hex");
 }
 
+async function getGivingRowsByMembershipId(membershipId: string, ministryYearId?: number) {
+  const [memberRows, childRows, teenRows] = await Promise.all([
+    db.select({ id: membersTable.id }).from(membersTable)
+      .where(eq(membersTable.membershipId, membershipId)),
+    db.select({ id: childrenTable.id }).from(childrenTable)
+      .where(eq(childrenTable.membershipId, membershipId)),
+    db.select({ id: teensTable.id }).from(teensTable)
+      .where(eq(teensTable.membershipId, membershipId)),
+  ]);
+
+  const identityConditions: any[] = [];
+  const memberIds = memberRows.map((row) => row.id);
+  const childIds = childRows.map((row) => row.id);
+  const teenIds = teenRows.map((row) => row.id);
+  if (memberIds.length) identityConditions.push(memberIds.length === 1
+    ? eq(givingsTable.memberId, memberIds[0])
+    : inArray(givingsTable.memberId, memberIds));
+  if (childIds.length) identityConditions.push(childIds.length === 1
+    ? eq(givingsTable.childId, childIds[0])
+    : inArray(givingsTable.childId, childIds));
+  if (teenIds.length) identityConditions.push(teenIds.length === 1
+    ? eq(givingsTable.teenId, teenIds[0])
+    : inArray(givingsTable.teenId, teenIds));
+
+  const conditions: any[] = [
+    eq(givingsTable.isArchived, false),
+    identityConditions.length ? or(...identityConditions) : sql`false`,
+  ];
+  if (ministryYearId) conditions.push(eq(givingsTable.ministryYearId, ministryYearId));
+
+  return db.select().from(givingsTable)
+    .where(and(...conditions))
+    .orderBy(desc(givingsTable.date));
+}
+
 async function getActiveMinistryYear() {
   const today = new Date().toISOString().split("T")[0];
   const years = await db.select().from(ministryYearsTable)
@@ -506,6 +541,224 @@ router.post("/", async (req, res) => {
   res.status(201).json({ ...created[0], leadershipRoles: [] });
 });
 
+// Admin-only bulk name import. This intentionally creates member records with
+// no phone number; the regular member form still requires one.
+router.post("/bulk", requireRole(3), async (req, res) => {
+  const rawMembers = Array.isArray(req.body?.members) ? req.body.members : [];
+  const rawCellId = req.body?.cellId;
+  const cellId = rawCellId === null || rawCellId === undefined || rawCellId === ""
+    ? null
+    : Number(rawCellId);
+  if (!rawMembers.length) {
+    return res.status(400).json({ error: "Add at least one name to import." });
+  }
+  if (rawMembers.length > 1000) {
+    return res.status(400).json({ error: "You can import at most 1,000 names at a time." });
+  }
+  if (cellId !== null && (!Number.isInteger(cellId) || cellId <= 0)) {
+    return res.status(400).json({ error: "Select a valid fellowship." });
+  }
+  if (cellId !== null) {
+    const selectedCell = await db.select({ id: cellsTable.id })
+      .from(cellsTable)
+      .where(and(eq(cellsTable.id, cellId), eq(cellsTable.isArchived, false)))
+      .limit(1);
+    if (!selectedCell.length) {
+      return res.status(400).json({ error: "The selected fellowship is no longer available." });
+    }
+  }
+
+  const actor = (req as any).user;
+  const existing = await db.select({
+    firstName: membersTable.firstName,
+    lastName: membersTable.lastName,
+  }).from(membersTable).where(eq(membersTable.isArchived, false));
+  const existingNames = new Set(existing.map(m =>
+    `${m.firstName.trim().toLowerCase()}|${m.lastName.trim().toLowerCase()}`
+  ));
+  const seenInBatch = new Set<string>();
+  const created: any[] = [];
+  const skipped: Array<{ firstName: string; lastName: string; reason: string }> = [];
+
+  for (const raw of rawMembers) {
+    const firstName = String(raw?.firstName ?? "").trim();
+    const lastName = String(raw?.lastName ?? "").trim();
+    const nameKey = `${firstName.toLowerCase()}|${lastName.toLowerCase()}`;
+
+    if (!firstName || !lastName) {
+      skipped.push({ firstName, lastName, reason: "First and last name are required" });
+      continue;
+    }
+    if (seenInBatch.has(nameKey) || existingNames.has(nameKey)) {
+      skipped.push({ firstName, lastName, reason: "An active member with this name already exists" });
+      continue;
+    }
+
+    const membershipId = await generateMembershipId(firstName, lastName);
+    const pin = generatePin();
+    const [member] = await db.insert(membersTable).values({
+      membershipId,
+      firstName,
+      lastName,
+      gender: "unspecified",
+      phone1: null,
+      memberType: "member",
+      cellId,
+      pin,
+    }).returning();
+
+    await db.insert(usersTable).values({
+      username: membershipId,
+      passwordHash: hashPassword(pin),
+      roleLevel: 5,
+      memberId: member.id,
+    });
+    await db.insert(activityLogTable).values({
+      type: "bulk_member_import",
+      description: `Member ${firstName} ${lastName} was added by bulk import`,
+      memberId: member.id,
+      memberName: `${firstName} ${lastName}`,
+      performedByUserId: actor?.id ?? null,
+      performedByName: actor?.username ?? null,
+    });
+
+    created.push({
+      id: member.id,
+      firstName: member.firstName,
+      lastName: member.lastName,
+      membershipId: member.membershipId,
+    });
+    seenInBatch.add(nameKey);
+    existingNames.add(nameKey);
+  }
+
+  res.status(201).json({ created, skipped, totalCreated: created.length, totalSkipped: skipped.length });
+});
+
+// Move an adult member into a ministry register without changing historical
+// attendance, giving, family links, or the member's membership ID.
+router.post("/:id/send-to-ministry", requireRole(3), async (req, res) => {
+  const memberId = parseInt(req.params.id);
+  const destination = req.body?.destination;
+  if (destination !== "children" && destination !== "teens") {
+    return res.status(400).json({ error: "Destination must be children or teens." });
+  }
+
+  const memberRows = await db.select().from(membersTable)
+    .where(and(eq(membersTable.id, memberId), eq(membersTable.isArchived, false))).limit(1);
+  if (!memberRows.length) return res.status(404).json({ error: "Member not found." });
+  const member = memberRows[0];
+
+  const [existingChild, existingTeen] = await Promise.all([
+    db.select({ id: childrenTable.id }).from(childrenTable)
+      .where(and(eq(childrenTable.sourceMemberId, memberId), eq(childrenTable.isArchived, false))).limit(1),
+    db.select({ id: teensTable.id }).from(teensTable)
+      .where(and(eq(teensTable.sourceMemberId, memberId), eq(teensTable.isArchived, false))).limit(1),
+  ]);
+  if (existingChild.length || existingTeen.length) {
+    return res.status(409).json({ error: "This member has already been sent to a ministry register." });
+  }
+
+  const actor = (req as any).user;
+  const ministryName = destination === "children" ? "Children's Church" : "Teens Church";
+
+  // Membership IDs are shared identifiers across register transitions. If a
+  // prior transition left an archived row in this destination, reuse it
+  // instead of inserting a second row with the same unique membership ID.
+  const archivedDestination = destination === "children"
+    ? await db.select().from(childrenTable)
+      .where(eq(childrenTable.membershipId, member.membershipId))
+      .limit(1)
+    : await db.select().from(teensTable)
+      .where(eq(teensTable.membershipId, member.membershipId))
+      .limit(1);
+  if (archivedDestination.length && !archivedDestination[0].isArchived) {
+    return res.status(409).json({ error: `This membership ID is already active in ${ministryName}.` });
+  }
+
+  // Keep the source row as an archived historical anchor. This removes it
+  // from the active Members register while preserving every old record that
+  // references members.id (attendance, giving, and family relationships).
+  const result = await db.transaction(async (tx) => {
+    let created: any;
+    if (destination === "children") {
+      const childValues = {
+        membershipId: member.membershipId,
+        sourceMemberId: member.id,
+        firstName: member.firstName,
+        lastName: member.lastName,
+        gender: member.gender === "unspecified" ? null : member.gender,
+        dateOfBirth: member.dateOfBirth,
+        isArchived: false,
+        archiveReason: null,
+      };
+      if (archivedDestination.length) {
+        [created] = await tx.update(childrenTable)
+          .set(childValues)
+          .where(eq(childrenTable.id, archivedDestination[0].id))
+          .returning();
+      } else {
+        [created] = await tx.insert(childrenTable).values(childValues).returning();
+      }
+    } else {
+      const teenValues = {
+        membershipId: member.membershipId,
+        sourceMemberId: member.id,
+        pin: member.pin ?? "0000",
+        firstName: member.firstName,
+        lastName: member.lastName,
+        gender: member.gender === "unspecified" ? null : member.gender,
+        phone1: member.phone1,
+        phone2: member.phone2,
+        residentialAddress: member.residentialAddress,
+        dateJoined: member.dateJoined,
+        dateOfBirth: member.dateOfBirth,
+        isArchived: false,
+        archiveReason: null,
+      };
+      if (archivedDestination.length) {
+        [created] = await tx.update(teensTable)
+          .set(teenValues)
+          .where(eq(teensTable.id, archivedDestination[0].id))
+          .returning();
+      } else {
+        [created] = await tx.insert(teensTable).values(teenValues).returning();
+      }
+    }
+
+    await tx.update(membersTable)
+      .set({
+        isArchived: true,
+        archiveReason: `Moved to ${ministryName}`,
+        archivedAt: new Date(),
+        archivedBy: actor?.id ?? null,
+      })
+      .where(and(eq(membersTable.id, member.id), eq(membersTable.isArchived, false)));
+
+    await tx.insert(activityLogTable).values({
+      type: "member_sent_to_ministry",
+      description: `${member.firstName} ${member.lastName} was moved to ${ministryName}`,
+      memberId: member.id,
+      memberName: `${member.firstName} ${member.lastName}`,
+      performedByUserId: actor?.id ?? null,
+      performedByName: actor?.username ?? null,
+    });
+
+    return created;
+  });
+
+  res.status(201).json({
+    destination,
+    sourceMemberId: member.id,
+    ministryId: result.id,
+    membershipId: result.membershipId,
+    firstName: result.firstName,
+    lastName: result.lastName,
+    movedSourceMember: true,
+    preservedHistoricalRecords: true,
+  });
+});
+
 router.get("/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   const member = await getMemberWithRoles(id);
@@ -837,8 +1090,10 @@ router.get("/:id/givings", async (req, res) => {
   const offset = (pageNum - 1) * limitNum;
   const yearFilter = ministryYearId ? parseInt(ministryYearId) : null;
 
-  // Look up this member to find their historical teen/child links AND spouse
+  // The membership ID is the permanent identity. Register row IDs change when
+  // someone moves between Members, Teens, and Children's Church.
   const memberRow = await db.select({
+    membershipId: membersTable.membershipId,
     transferredFromTeenId: membersTable.transferredFromTeenId,
     spouseId: membersTable.spouseId,
     firstName: membersTable.firstName,
@@ -848,39 +1103,19 @@ router.get("/:id/givings", async (req, res) => {
   const transferredFromTeenId = memberRow[0]?.transferredFromTeenId ?? null;
   const spouseId = memberRow[0]?.spouseId ?? null;
   const memberInfo = memberRow[0];
+  if (!memberInfo) return res.status(404).json({ error: "Member not found" });
   const memberFmt = memberInfo
     ? (memberInfo.title ? `${memberInfo.title} ${memberInfo.firstName} ${memberInfo.lastName}` : `${memberInfo.firstName} ${memberInfo.lastName}`)
     : null;
-
-  // Optionally find the teen's former child ID
-  let transferredFromChildId: number | null = null;
-  if (transferredFromTeenId) {
-    const teenRow = await db.select({ transferredFromChildId: teensTable.transferredFromChildId })
-      .from(teensTable).where(eq(teensTable.id, transferredFromTeenId)).limit(1);
-    transferredFromChildId = teenRow[0]?.transferredFromChildId ?? null;
-  }
-
-  // Build conditions for each stage
-  const memberConditions: any[] = [eq(givingsTable.memberId, memberId), eq(givingsTable.isArchived, false)];
-  if (yearFilter) memberConditions.push(eq(givingsTable.ministryYearId, yearFilter));
-
-  const teenConditions: any[] = transferredFromTeenId
-    ? [eq(givingsTable.teenId, transferredFromTeenId), eq(givingsTable.isArchived, false), ...(yearFilter ? [eq(givingsTable.ministryYearId, yearFilter)] : [])]
-    : null as any;
-
-  const childConditions: any[] = transferredFromChildId
-    ? [eq(givingsTable.childId, transferredFromChildId), eq(givingsTable.isArchived, false), ...(yearFilter ? [eq(givingsTable.ministryYearId, yearFilter)] : [])]
-    : null as any;
 
   const spouseConditions: any[] | null = spouseId
     ? [eq(givingsTable.memberId, spouseId), eq(givingsTable.isArchived, false), ...(yearFilter ? [eq(givingsTable.ministryYearId, yearFilter)] : [])]
     : null;
 
-  // Fetch all stages in parallel (including spouse givings if married)
-  const [memberGivings, teenGivings, childGivings, spouseGivings, spouseInfoRows] = await Promise.all([
-    db.select().from(givingsTable).where(and(...memberConditions)),
-    teenConditions ? db.select().from(givingsTable).where(and(...teenConditions)) : Promise.resolve([]),
-    childConditions ? db.select().from(givingsTable).where(and(...childConditions)) : Promise.resolve([]),
+  // Fetch all register rows by membership ID. This also handles older records
+  // that still point to a previous member/teen/child row.
+  const [identityGivings, spouseGivings, spouseInfoRows] = await Promise.all([
+    getGivingRowsByMembershipId(memberInfo.membershipId, yearFilter ?? undefined),
     spouseConditions ? db.select().from(givingsTable).where(and(...spouseConditions)) : Promise.resolve([]),
     spouseId
       ? db.select({ firstName: membersTable.firstName, lastName: membersTable.lastName, title: membersTable.title })
@@ -895,10 +1130,12 @@ router.get("/:id/givings", async (req, res) => {
 
   // Merge and sort by date desc, then paginate
   const allGivings = [
-    ...memberGivings.map(g => ({ ...g, _stage: "member", paidByName: memberFmt })),
+    ...identityGivings.map(g => ({
+      ...g,
+      _stage: g.memberId ? "member" : g.teenId ? "teen" : "child",
+      paidByName: memberFmt,
+    })),
     ...(spouseGivings as any[]).map(g => ({ ...g, _stage: "spouse", paidByName: spouseFmt })),
-    ...teenGivings.map(g => ({ ...g, _stage: "teen", paidByName: null as string | null })),
-    ...childGivings.map(g => ({ ...g, _stage: "child", paidByName: null as string | null })),
   ].sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""));
 
   const total = allGivings.length;

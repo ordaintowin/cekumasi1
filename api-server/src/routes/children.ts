@@ -4,20 +4,370 @@ import {
   childrenTable,
   teensTable,
   membersTable,
+  usersTable,
   familiesTable,
   familyChildrenTable,
   serviceChildrenAttendanceTable,
   serviceTeensAttendanceTable,
+  attendanceRecordsTable,
   servicesTable,
   givingsTable,
   givingTypesTable,
   ministryYearsTable,
+  activityLogTable,
 } from "@workspace/db";
-import { eq, and, ilike, or, ne, sql, desc, inArray } from "drizzle-orm";
+import { eq, and, ilike, or, ne, sql, desc, inArray, isNull } from "drizzle-orm";
 import { authenticateToken } from "../middlewares/auth";
+import crypto from "crypto";
 
 const router = Router();
 router.use(authenticateToken);
+
+type RegisterType = "member" | "children" | "teens";
+
+function hashPassword(password: string): string {
+  return crypto.createHash("sha256").update(password + "ce_kumasi_salt").digest("hex");
+}
+
+type RegisterIds = {
+  memberIds: number[];
+  childIds: number[];
+  teenIds: number[];
+};
+
+async function getRegisterIdsByMembershipId(
+  membershipId: string,
+  executor: any = db,
+): Promise<RegisterIds> {
+  const [members, children, teens] = await Promise.all([
+    executor.select({ id: membersTable.id }).from(membersTable)
+      .where(eq(membersTable.membershipId, membershipId)),
+    executor.select({ id: childrenTable.id }).from(childrenTable)
+      .where(eq(childrenTable.membershipId, membershipId)),
+    executor.select({ id: teensTable.id }).from(teensTable)
+      .where(eq(teensTable.membershipId, membershipId)),
+  ]);
+  return {
+    memberIds: members.map((row: any) => row.id),
+    childIds: children.map((row: any) => row.id),
+    teenIds: teens.map((row: any) => row.id),
+  };
+}
+
+function anyId(column: any, ids: number[]): any {
+  return ids.length === 1 ? eq(column, ids[0]) : inArray(column, ids);
+}
+
+async function moveAttendance(
+  tx: any,
+  sourceType: RegisterType,
+  sourceId: number,
+  destinationType: RegisterType,
+  destinationId: number,
+  sourceCellId: number | null,
+  membershipId: string,
+) {
+  const ids = await getRegisterIdsByMembershipId(membershipId, tx);
+  const memberRows = ids.memberIds.length
+    ? await tx.select().from(attendanceRecordsTable).where(anyId(attendanceRecordsTable.memberId, ids.memberIds))
+    : [];
+  const childRows = ids.childIds.length
+    ? await tx.select().from(serviceChildrenAttendanceTable).where(anyId(serviceChildrenAttendanceTable.childId, ids.childIds))
+    : [];
+  const teenRows = ids.teenIds.length
+    ? await tx.select().from(serviceTeensAttendanceTable).where(anyId(serviceTeensAttendanceTable.teenId, ids.teenIds))
+    : [];
+
+  const destinationTable = destinationType === "member"
+    ? attendanceRecordsTable
+    : destinationType === "children" ? serviceChildrenAttendanceTable : serviceTeensAttendanceTable;
+  const destinationColumn = destinationType === "member"
+    ? attendanceRecordsTable.memberId
+    : destinationType === "children" ? serviceChildrenAttendanceTable.childId : serviceTeensAttendanceTable.teenId;
+  const destinationKey = destinationType === "member" ? "memberId" : destinationType === "children" ? "childId" : "teenId";
+  const rows = [
+    ...memberRows.map((row: any) => ({ serviceId: row.serviceId, registeredAt: row.checkInTime, cellId: row.cellId, method: row.method })),
+    ...childRows.map((row: any) => ({ serviceId: row.serviceId, registeredAt: row.registeredAt, cellId: sourceCellId, method: "ministry" })),
+    ...teenRows.map((row: any) => ({ serviceId: row.serviceId, registeredAt: row.registeredAt, cellId: sourceCellId, method: "ministry" })),
+  ];
+
+  for (const row of rows) {
+    const existing = await tx.select({ id: destinationTable.id }).from(destinationTable)
+      .where(and(eq(destinationTable.serviceId, row.serviceId), eq(destinationColumn, destinationId))).limit(1);
+    if (existing.length) continue;
+    if (destinationType === "member") {
+      await tx.insert(destinationTable).values({
+        serviceId: row.serviceId, memberId: destinationId,
+        cellId: row.cellId ?? sourceCellId, method: row.method ?? "ministry",
+        checkInTime: row.registeredAt,
+      });
+    } else {
+      await tx.insert(destinationTable).values({
+        serviceId: row.serviceId, [destinationKey]: destinationId,
+        registeredAt: row.registeredAt,
+      });
+    }
+  }
+
+  // The destination row is now the single current anchor. Historical check-in
+  // dates/counts are preserved, but old register-specific duplicates are removed.
+  const oldMemberIds = ids.memberIds.filter((id) => !(destinationType === "member" && id === destinationId));
+  const oldChildIds = ids.childIds.filter((id) => !(destinationType === "children" && id === destinationId));
+  const oldTeenIds = ids.teenIds.filter((id) => !(destinationType === "teens" && id === destinationId));
+  if (oldMemberIds.length) await tx.delete(attendanceRecordsTable).where(anyId(attendanceRecordsTable.memberId, oldMemberIds));
+  if (oldChildIds.length) await tx.delete(serviceChildrenAttendanceTable).where(anyId(serviceChildrenAttendanceTable.childId, oldChildIds));
+  if (oldTeenIds.length) await tx.delete(serviceTeensAttendanceTable).where(anyId(serviceTeensAttendanceTable.teenId, oldTeenIds));
+}
+
+async function moveGiving(tx: any, sourceType: RegisterType, sourceId: number, destinationType: RegisterType, destinationId: number, membershipId: string) {
+  const ids = await getRegisterIdsByMembershipId(membershipId, tx);
+  const sourceConditions: any[] = [];
+  if (ids.memberIds.length) sourceConditions.push(and(
+    anyId(givingsTable.memberId, ids.memberIds),
+    isNull(givingsTable.childId),
+    isNull(givingsTable.teenId),
+  ));
+  if (ids.childIds.length) sourceConditions.push(and(
+    anyId(givingsTable.childId, ids.childIds),
+    isNull(givingsTable.memberId),
+    isNull(givingsTable.teenId),
+  ));
+  if (ids.teenIds.length) sourceConditions.push(and(
+    anyId(givingsTable.teenId, ids.teenIds),
+    isNull(givingsTable.memberId),
+    isNull(givingsTable.childId),
+  ));
+  if (!sourceConditions.length) return;
+  const values: any = { memberId: null, childId: null, teenId: null };
+  values[destinationType === "member" ? "memberId" : destinationType === "children" ? "childId" : "teenId"] = destinationId;
+  await tx.update(givingsTable).set(values).where(or(...sourceConditions));
+}
+
+async function moveFamilyLinks(tx: any, sourceType: RegisterType, sourceId: number, destinationType: RegisterType, destinationId: number, membershipId: string) {
+  const ids = await getRegisterIdsByMembershipId(membershipId, tx);
+  const sourceConditions: any[] = [];
+  if (ids.memberIds.length) sourceConditions.push(and(
+    anyId(familyChildrenTable.memberId, ids.memberIds),
+    eq(familyChildrenTable.type, "member"),
+  ));
+  if (ids.childIds.length) sourceConditions.push(and(
+    anyId(familyChildrenTable.childId, ids.childIds),
+    eq(familyChildrenTable.type, "child"),
+  ));
+  if (ids.teenIds.length) sourceConditions.push(and(
+    anyId(familyChildrenTable.teenId, ids.teenIds),
+    eq(familyChildrenTable.type, "teen"),
+  ));
+  if (!sourceConditions.length) return;
+  const familyType = destinationType === "children" ? "child" : destinationType === "teens" ? "teen" : "member";
+  const values: any = {
+    type: familyType,
+    memberId: null,
+    childId: null,
+    teenId: null,
+  };
+  values[destinationType === "member" ? "memberId" : destinationType === "children" ? "childId" : "teenId"] = destinationId;
+  await tx.update(familyChildrenTable).set(values).where(or(...sourceConditions));
+
+  // A person may have been moved more than once. Keep one link per family
+  // after all historical register IDs have been consolidated.
+  const links = await tx.select().from(familyChildrenTable).where(
+    or(eq(familyChildrenTable.memberId, destinationType === "member" ? destinationId : -1),
+      eq(familyChildrenTable.childId, destinationType === "children" ? destinationId : -1),
+      eq(familyChildrenTable.teenId, destinationType === "teens" ? destinationId : -1))
+  );
+  const seenFamilies = new Set<number>();
+  for (const link of links) {
+    if (seenFamilies.has(link.familyId)) await tx.delete(familyChildrenTable).where(eq(familyChildrenTable.id, link.id));
+    else seenFamilies.add(link.familyId);
+  }
+}
+
+function registerLabel(type: RegisterType): string {
+  return type === "member" ? "Adult Members" : type === "children" ? "Children's Church" : "Teens Church";
+}
+
+// Move one person between the three registers while retaining their permanent
+// membership ID and moving stage-specific records to the new register row.
+router.post("/register-transfer", async (req, res) => {
+  const sourceType = req.body?.sourceType as RegisterType;
+  const destinationType = req.body?.destinationType as RegisterType;
+  const sourceId = Number(req.body?.sourceId);
+  const validTypes: RegisterType[] = ["member", "children", "teens"];
+
+  if (!validTypes.includes(sourceType) || !validTypes.includes(destinationType) || sourceType === destinationType) {
+    return res.status(400).json({ error: "Choose two different valid registers." });
+  }
+  if (!Number.isInteger(sourceId) || sourceId <= 0) {
+    return res.status(400).json({ error: "A valid person is required." });
+  }
+
+  const sourceRows = sourceType === "member"
+    ? await db.select().from(membersTable).where(and(eq(membersTable.id, sourceId), eq(membersTable.isArchived, false))).limit(1)
+    : sourceType === "children"
+      ? await db.select().from(childrenTable).where(and(eq(childrenTable.id, sourceId), eq(childrenTable.isArchived, false))).limit(1)
+      : await db.select().from(teensTable).where(and(eq(teensTable.id, sourceId), eq(teensTable.isArchived, false))).limit(1);
+  if (!sourceRows.length) return res.status(404).json({ error: `${registerLabel(sourceType)} record not found.` });
+
+  const source: any = sourceRows[0];
+  const membershipId = source.membershipId;
+  if (!membershipId) return res.status(400).json({ error: "This person does not have a membership ID and cannot be moved safely." });
+
+  const destinationRows = destinationType === "member"
+    ? await db.select().from(membersTable).where(eq(membersTable.membershipId, membershipId)).limit(1)
+    : destinationType === "children"
+      ? await db.select().from(childrenTable).where(eq(childrenTable.membershipId, membershipId)).limit(1)
+      : await db.select().from(teensTable).where(eq(teensTable.membershipId, membershipId)).limit(1);
+  const activeDestination = destinationRows.find((row: any) => !row.isArchived);
+  if (activeDestination) {
+    return res.status(409).json({ error: `${source.firstName} ${source.lastName} is already active in ${registerLabel(destinationType)}.` });
+  }
+
+  const actor = (req as any).user;
+  const result = await db.transaction(async (tx) => {
+    const sourceMemberId = sourceType === "member"
+      ? source.id
+      : source.sourceMemberId
+        ?? (sourceType === "teens" ? source.transferredFromChildId : null);
+
+    let destination: any;
+    const existingDestination: any = destinationRows[0] ?? null;
+    if (destinationType === "member") {
+      const memberValues: any = {
+        membershipId,
+        firstName: source.firstName,
+        lastName: source.lastName,
+        gender: source.gender ?? "unspecified",
+        phone1: source.phone1 ?? null,
+        phone2: source.phone2 ?? null,
+        email: source.email ?? null,
+        occupation: source.occupation ?? "",
+        residentialAddress: source.residentialAddress ?? "",
+        emergencyContact: source.emergencyContact ?? "",
+        dateOfBirth: source.dateOfBirth ?? null,
+        dateJoined: source.dateJoined ?? null,
+        foundationSchoolDate: source.foundationSchoolDate ?? null,
+        pin: source.pin ?? "0000",
+        memberType: "member",
+        isArchived: false,
+        archiveReason: null,
+        archivedAt: null,
+        archivedBy: null,
+        transferredFromTeenId: sourceType === "teens" ? source.id : source.transferredFromTeenId ?? null,
+      };
+      if (existingDestination) {
+        [destination] = await tx.update(membersTable).set(memberValues)
+          .where(eq(membersTable.id, existingDestination.id)).returning();
+      } else {
+        [destination] = await tx.insert(membersTable).values({
+          ...memberValues,
+          isBaptized: false,
+        }).returning();
+      }
+    } else if (destinationType === "children") {
+      const childValues: any = {
+        membershipId,
+        sourceMemberId: sourceMemberId ?? null,
+        firstName: source.firstName,
+        lastName: source.lastName,
+        gender: source.gender === "unspecified" ? null : source.gender ?? null,
+        dateOfBirth: source.dateOfBirth ?? null,
+        class: sourceType === "children" ? source.class ?? null : existingDestination?.class ?? null,
+        parentId: source.parentId ?? existingDestination?.parentId ?? null,
+        parentExternal: source.parentExternal ?? existingDestination?.parentExternal ?? null,
+        isArchived: false,
+        archiveReason: null,
+      };
+      if (existingDestination) {
+        [destination] = await tx.update(childrenTable).set(childValues)
+          .where(eq(childrenTable.id, existingDestination.id)).returning();
+      } else {
+        [destination] = await tx.insert(childrenTable).values(childValues).returning();
+      }
+    } else {
+      const teenValues: any = {
+        membershipId,
+        sourceMemberId: sourceMemberId ?? null,
+        transferredFromChildId: sourceType === "children" ? source.id : source.transferredFromChildId ?? null,
+        pin: source.pin ?? "0000",
+        firstName: source.firstName,
+        lastName: source.lastName,
+        gender: source.gender === "unspecified" ? null : source.gender ?? null,
+        phone1: source.phone1 ?? null,
+        phone2: source.phone2 ?? null,
+        residentialAddress: source.residentialAddress ?? null,
+        dateJoined: source.dateJoined ?? null,
+        dateOfBirth: source.dateOfBirth ?? null,
+        foundationSchoolCompleted: source.foundationSchoolCompleted ?? null,
+        foundationSchoolDate: source.foundationSchoolDate ?? null,
+        parentId: source.parentId ?? existingDestination?.parentId ?? null,
+        parentExternal: source.parentExternal ?? existingDestination?.parentExternal ?? null,
+        isArchived: false,
+        archiveReason: null,
+      };
+      if (existingDestination) {
+        [destination] = await tx.update(teensTable).set(teenValues)
+          .where(eq(teensTable.id, existingDestination.id)).returning();
+      } else {
+        [destination] = await tx.insert(teensTable).values(teenValues).returning();
+      }
+    }
+
+    const destinationMemberId = destinationType === "member" ? destination.id : sourceMemberId;
+    await moveAttendance(tx, sourceType, source.id, destinationType, destination.id, source.cellId ?? null, membershipId);
+    await moveGiving(tx, sourceType, source.id, destinationType, destination.id, membershipId);
+    await moveFamilyLinks(tx, sourceType, source.id, destinationType, destination.id, membershipId);
+
+    if (sourceType === "member" && destinationType !== "member") {
+      await tx.update(usersTable).set({ isActive: false }).where(eq(usersTable.memberId, source.id));
+    }
+    if (destinationType === "member") {
+      const memberUser = await tx.select({ id: usersTable.id }).from(usersTable)
+        .where(eq(usersTable.memberId, destination.id)).limit(1);
+      if (memberUser.length) {
+        await tx.update(usersTable).set({
+          isActive: true,
+          passwordHash: hashPassword(destination.pin ?? "0000"),
+        }).where(eq(usersTable.id, memberUser[0].id));
+      } else {
+        await tx.insert(usersTable).values({
+          username: membershipId,
+          passwordHash: hashPassword(destination.pin ?? "0000"),
+          roleLevel: 5,
+          memberId: destination.id,
+          isActive: true,
+        });
+      }
+    }
+
+    const sourceTable = sourceType === "member" ? membersTable : sourceType === "children" ? childrenTable : teensTable;
+    await tx.update(sourceTable).set({
+      isArchived: true,
+      archiveReason: `Moved to ${registerLabel(destinationType)}`,
+      ...(sourceType === "member" ? { archivedAt: new Date(), archivedBy: actor?.id ?? null } : {}),
+    }).where(and(eq(sourceTable.id, source.id), eq(sourceTable.isArchived, false)));
+
+    await tx.insert(activityLogTable).values({
+      type: "register_transfer",
+      description: `${source.firstName} ${source.lastName} was moved from ${registerLabel(sourceType)} to ${registerLabel(destinationType)}`,
+      memberId: destinationMemberId ?? sourceMemberId ?? null,
+      memberName: `${source.firstName} ${source.lastName}`,
+      performedByUserId: actor?.id ?? null,
+      performedByName: actor?.username ?? null,
+    });
+
+    return destination;
+  });
+
+  res.status(201).json({
+    sourceType,
+    destinationType,
+    membershipId: result.membershipId,
+    sourceId,
+    destinationId: result.id,
+    preservedHistoricalRecords: true,
+  });
+});
 
 async function generateMembershipId(firstName: string, lastName: string): Promise<string> {
   const initials = ((firstName[0] ?? "X") + (lastName[0] ?? "X")).toUpperCase();
@@ -840,33 +1190,86 @@ router.post("/teens/:id/promote", async (req, res) => {
   const membershipId = teen.membershipId ?? await generateUniversalId(teen.firstName, teen.lastName);
   const pin = teen.pin ?? "0000";
 
-  const created = await db.insert(membersTable).values({
-    membershipId,
-    firstName: teen.firstName,
-    lastName: teen.lastName,
-    gender,
-    phone1: teen.phone1 ?? "",
-    phone2: teen.phone2 ?? undefined,
-    residentialAddress: teen.residentialAddress ?? "",
-    dateJoined: teen.dateJoined ?? undefined,
-    dateOfBirth: teen.dateOfBirth ?? undefined,
-    foundationSchoolDate: teen.foundationSchoolDate ?? undefined,
-    isBaptized: false,
-    memberType: "member",
-    pin,
-    transferredFromTeenId: id,
-  }).returning();
+  // A member moved into Teens Church is archived, not deleted. Move that same
+  // row back when possible so its numeric ID remains the anchor for attendance,
+  // giving, family links, and any other historical member references.
+  const sourceMember = teen.sourceMemberId
+    ? await db.select().from(membersTable).where(eq(membersTable.id, teen.sourceMemberId)).limit(1)
+    : [];
+  const archivedMember = sourceMember.length
+    ? sourceMember
+    : await db.select().from(membersTable)
+      .where(and(eq(membersTable.membershipId, membershipId), eq(membersTable.isArchived, true)))
+      .limit(1);
+  const activeMember = await db.select({ id: membersTable.id })
+    .from(membersTable)
+    .where(and(eq(membersTable.membershipId, membershipId), eq(membersTable.isArchived, false)))
+    .limit(1);
+  if (activeMember.length) {
+    return res.status(409).json({ error: "A member with this membership ID is already active." });
+  }
 
-  await db.update(teensTable)
-    .set({ isArchived: true, archiveReason: "Promoted to Adult Members" })
-    .where(eq(teensTable.id, id));
+  const actor = (req as any).user;
+  const result = await db.transaction(async (tx) => {
+    let member: any;
+    const memberValues = {
+      membershipId,
+      firstName: teen.firstName,
+      lastName: teen.lastName,
+      gender,
+      phone1: teen.phone1 ?? "",
+      phone2: teen.phone2 ?? null,
+      residentialAddress: teen.residentialAddress ?? "",
+      dateJoined: teen.dateJoined ?? null,
+      dateOfBirth: teen.dateOfBirth ?? null,
+      foundationSchoolDate: teen.foundationSchoolDate ?? null,
+      pin,
+      isArchived: false,
+      archiveReason: null,
+      archivedAt: null,
+      archivedBy: null,
+      transferredFromTeenId: id,
+    };
 
-  // Migrate the family_children row teen→member so the family link is preserved
-  await db.update(familyChildrenTable)
-    .set({ type: "member", memberId: created[0].id, teenId: null })
-    .where(and(eq(familyChildrenTable.teenId, id), eq(familyChildrenTable.type, "teen")));
+    if (archivedMember.length) {
+      [member] = await tx.update(membersTable)
+        .set(memberValues)
+        .where(eq(membersTable.id, archivedMember[0].id))
+        .returning();
+    } else {
+      [member] = await tx.insert(membersTable).values({
+        ...memberValues,
+        isBaptized: false,
+        memberType: "member",
+      }).returning();
+    }
 
-  res.status(201).json(created[0]);
+    await tx.update(teensTable)
+      .set({ isArchived: true, archiveReason: "Promoted to Adult Members" })
+      .where(and(eq(teensTable.id, id), eq(teensTable.isArchived, false)));
+
+    // Migrate the family_children row teen→member so the family link is preserved.
+    await tx.update(familyChildrenTable)
+      .set({ type: "member", memberId: member.id, teenId: null })
+      .where(and(eq(familyChildrenTable.teenId, id), eq(familyChildrenTable.type, "teen")));
+
+    await tx.insert(activityLogTable).values({
+      type: "teen_promoted_to_member",
+      description: `${teen.firstName} ${teen.lastName} was moved from Teens Church to Adult Members`,
+      memberId: member.id,
+      memberName: `${teen.firstName} ${teen.lastName}`,
+      performedByUserId: actor?.id ?? null,
+      performedByName: actor?.username ?? null,
+    });
+
+    return member;
+  });
+
+  res.status(201).json({
+    ...result,
+    reusedArchivedMember: archivedMember.length > 0,
+    preservedHistoricalRecords: true,
+  });
 });
 
 router.delete("/teens/:id", async (req, res) => {

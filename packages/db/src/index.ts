@@ -32,7 +32,7 @@ export const membersTable = pgTable("members", {
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
   gender: text("gender").notNull(),
-  phone1: text("phone1").notNull(),
+  phone1: text("phone1"),
   phone2: text("phone2"),
   email: text("email"),
   occupation: text("occupation").notNull().default(""),
@@ -71,6 +71,7 @@ export const activityLogTable = pgTable("activity_log", {
   description: text("description").notNull(),
   memberId: integer("member_id"),
   memberName: text("member_name"),
+  performedByUserId: integer("performed_by_user_id"),
   performedByName: text("performed_by_name"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
@@ -160,6 +161,7 @@ export const departmentMembersTable = pgTable("department_members", {
 export const childrenTable = pgTable("children", {
   id: serial("id").primaryKey(),
   membershipId: text("membership_id").unique(),
+  sourceMemberId: integer("source_member_id"),
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
   gender: text("gender"),
@@ -174,6 +176,7 @@ export const childrenTable = pgTable("children", {
 export const teensTable = pgTable("teens", {
   id: serial("id").primaryKey(),
   membershipId: text("membership_id").unique(),
+  sourceMemberId: integer("source_member_id"),
   pin: text("pin").notNull().default("0000"),
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),

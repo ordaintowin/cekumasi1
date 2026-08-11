@@ -144,6 +144,39 @@ export function useCreateMember(options?: { mutation?: { onSuccess?: (data: any)
   });
 }
 
+export function useBulkCreateMembers(options?: { mutation?: { onSuccess?: (data: any) => void; onError?: (err: any) => void } }) {
+  return useMutation({
+    mutationFn: ({ members, cellId }: { members: Array<{ firstName: string; lastName: string }>; cellId?: number | null }) =>
+      apiFetch("/members/bulk", { method: "POST", body: JSON.stringify({ members, cellId }) }),
+    ...options?.mutation,
+  });
+}
+
+export function useSendMemberToMinistry(options?: { mutation?: { onSuccess?: (data: any) => void; onError?: (err: any) => void } }) {
+  return useMutation({
+    mutationFn: ({ id, destination }: { id: number; destination: "children" | "teens" }) =>
+      apiFetch("/register-transfer", {
+        method: "POST",
+        body: JSON.stringify({ sourceType: "member", sourceId: id, destinationType: destination }),
+      }),
+    ...options?.mutation,
+  });
+}
+
+export function useTransferRegister(options?: { mutation?: { onSuccess?: (data: any) => void; onError?: (err: any) => void } }) {
+  return useMutation({
+    mutationFn: ({ sourceType, sourceId, destinationType }: {
+      sourceType: "member" | "children" | "teens";
+      sourceId: number;
+      destinationType: "member" | "children" | "teens";
+    }) => apiFetch("/register-transfer", {
+      method: "POST",
+      body: JSON.stringify({ sourceType, sourceId, destinationType }),
+    }),
+    ...options?.mutation,
+  });
+}
+
 export function useUpdateMember(options?: { mutation?: { onSuccess?: (data: any) => void; onError?: (err: any) => void } }) {
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: any }) =>
@@ -562,7 +595,10 @@ export function useUpdateDepartmentMember(options?: { mutation?: { onSuccess?: (
 export function usePromoteTeenToMember(options?: { mutation?: { onSuccess?: (data: any) => void; onError?: (err: any) => void } }) {
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: { gender: string } }) =>
-      apiFetch(`/teens/${id}/promote`, { method: "POST", body: JSON.stringify(data) }),
+      apiFetch("/register-transfer", {
+        method: "POST",
+        body: JSON.stringify({ sourceType: "teens", sourceId: id, destinationType: "member" }),
+      }),
     ...options?.mutation,
   });
 }

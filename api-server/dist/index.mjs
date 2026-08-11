@@ -25,11 +25,11 @@ var __export = (target, all) => {
   for (var name in all)
     __defProp(target, name, { get: all[name], enumerable: true });
 };
-var __copyProps = (to, from, except2, desc2) => {
+var __copyProps = (to, from, except2, desc3) => {
   if (from && typeof from === "object" || typeof from === "function") {
     for (let key of __getOwnPropNames(from))
       if (!__hasOwnProp.call(to, key) && key !== except2)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc2 = __getOwnPropDesc(from, key)) || desc2.enumerable });
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc3 = __getOwnPropDesc(from, key)) || desc3.enumerable });
   }
   return to;
 };
@@ -1351,10 +1351,10 @@ var require_http_errors = __commonJS({
       return ServerError;
     }
     function nameFunc(func, name) {
-      var desc2 = Object.getOwnPropertyDescriptor(func, "name");
-      if (desc2 && desc2.configurable) {
-        desc2.value = name;
-        Object.defineProperty(func, "name", desc2);
+      var desc3 = Object.getOwnPropertyDescriptor(func, "name");
+      if (desc3 && desc3.configurable) {
+        desc3.value = name;
+        Object.defineProperty(func, "name", desc3);
       }
     }
     function populateConstructorExports(exports2, codes, HttpError) {
@@ -16926,14 +16926,14 @@ var require_get = __commonJS({
         throw e;
       }
     }
-    var desc2 = !!hasProtoAccessor && gOPD && gOPD(
+    var desc3 = !!hasProtoAccessor && gOPD && gOPD(
       Object.prototype,
       /** @type {keyof typeof Object.prototype} */
       "__proto__"
     );
     var $Object = Object;
     var $getPrototypeOf = $Object.getPrototypeOf;
-    module.exports = desc2 && typeof desc2.get === "function" ? callBind([desc2.get]) : typeof $getPrototypeOf === "function" ? (
+    module.exports = desc3 && typeof desc3.get === "function" ? callBind([desc3.get]) : typeof $getPrototypeOf === "function" ? (
       /** @type {import('./get')} */
       function getDunder(value) {
         return $getPrototypeOf(value == null ? value : $Object(value));
@@ -17283,10 +17283,10 @@ var require_get_intrinsic = __commonJS({
             return void undefined2;
           }
           if ($gOPD && i + 1 >= parts.length) {
-            var desc2 = $gOPD(value, part);
-            isOwn = !!desc2;
-            if (isOwn && "get" in desc2 && !("originalValue" in desc2.get)) {
-              value = desc2.get;
+            var desc3 = $gOPD(value, part);
+            isOwn = !!desc3;
+            if (isOwn && "get" in desc3 && !("originalValue" in desc3.get)) {
+              value = desc3.get;
             } else {
               value = value[part];
             }
@@ -18921,14 +18921,14 @@ var require_etag = __commonJS({
   "../node_modules/.pnpm/etag@1.8.1/node_modules/etag/index.js"(exports, module) {
     "use strict";
     module.exports = etag;
-    var crypto11 = __require("crypto");
+    var crypto12 = __require("crypto");
     var Stats = __require("fs").Stats;
     var toString = Object.prototype.toString;
     function entitytag(entity) {
       if (entity.length === 0) {
         return '"0-2jmj7l5rSw0yVb/vlWAYkK/YBwk"';
       }
-      var hash = crypto11.createHash("sha1").update(entity, "utf8").digest("base64").substring(0, 27);
+      var hash = crypto12.createHash("sha1").update(entity, "utf8").digest("base64").substring(0, 27);
       var len = typeof entity === "string" ? Buffer.byteLength(entity, "utf8") : entity.length;
       return '"' + len.toString(16) + "-" + hash + '"';
     }
@@ -22403,17 +22403,17 @@ var require_content_disposition = __commonJS({
 // ../node_modules/.pnpm/cookie-signature@1.2.2/node_modules/cookie-signature/index.js
 var require_cookie_signature = __commonJS({
   "../node_modules/.pnpm/cookie-signature@1.2.2/node_modules/cookie-signature/index.js"(exports) {
-    var crypto11 = __require("crypto");
+    var crypto12 = __require("crypto");
     exports.sign = function(val, secret) {
       if ("string" != typeof val) throw new TypeError("Cookie value must be provided as a string.");
       if (null == secret) throw new TypeError("Secret key must be provided.");
-      return val + "." + crypto11.createHmac("sha256", secret).update(val).digest("base64").replace(/\=+$/, "");
+      return val + "." + crypto12.createHmac("sha256", secret).update(val).digest("base64").replace(/\=+$/, "");
     };
     exports.unsign = function(input, secret) {
       if ("string" != typeof input) throw new TypeError("Signed cookie string must be provided.");
       if (null == secret) throw new TypeError("Secret key must be provided.");
       var tentativeValue = input.slice(0, input.lastIndexOf(".")), expectedInput = exports.sign(tentativeValue, secret), expectedBuffer = Buffer.from(expectedInput), inputBuffer = Buffer.from(input);
-      return expectedBuffer.length === inputBuffer.length && crypto11.timingSafeEqual(expectedBuffer, inputBuffer) ? tentativeValue : false;
+      return expectedBuffer.length === inputBuffer.length && crypto12.timingSafeEqual(expectedBuffer, inputBuffer) ? tentativeValue : false;
     };
   }
 });
@@ -25425,13 +25425,13 @@ var require_ipv4 = __commonJS({
     "use strict";
     var __createBinding = exports && exports.__createBinding || (Object.create ? (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
-      var desc2 = Object.getOwnPropertyDescriptor(m, k);
-      if (!desc2 || ("get" in desc2 ? !m.__esModule : desc2.writable || desc2.configurable)) {
-        desc2 = { enumerable: true, get: function() {
+      var desc3 = Object.getOwnPropertyDescriptor(m, k);
+      if (!desc3 || ("get" in desc3 ? !m.__esModule : desc3.writable || desc3.configurable)) {
+        desc3 = { enumerable: true, get: function() {
           return m[k];
         } };
       }
-      Object.defineProperty(o, k2, desc2);
+      Object.defineProperty(o, k2, desc3);
     }) : (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       o[k2] = m[k];
@@ -25991,13 +25991,13 @@ var require_regular_expressions = __commonJS({
     "use strict";
     var __createBinding = exports && exports.__createBinding || (Object.create ? (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
-      var desc2 = Object.getOwnPropertyDescriptor(m, k);
-      if (!desc2 || ("get" in desc2 ? !m.__esModule : desc2.writable || desc2.configurable)) {
-        desc2 = { enumerable: true, get: function() {
+      var desc3 = Object.getOwnPropertyDescriptor(m, k);
+      if (!desc3 || ("get" in desc3 ? !m.__esModule : desc3.writable || desc3.configurable)) {
+        desc3 = { enumerable: true, get: function() {
           return m[k];
         } };
       }
-      Object.defineProperty(o, k2, desc2);
+      Object.defineProperty(o, k2, desc3);
     }) : (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       o[k2] = m[k];
@@ -26083,13 +26083,13 @@ var require_ipv6 = __commonJS({
     "use strict";
     var __createBinding = exports && exports.__createBinding || (Object.create ? (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
-      var desc2 = Object.getOwnPropertyDescriptor(m, k);
-      if (!desc2 || ("get" in desc2 ? !m.__esModule : desc2.writable || desc2.configurable)) {
-        desc2 = { enumerable: true, get: function() {
+      var desc3 = Object.getOwnPropertyDescriptor(m, k);
+      if (!desc3 || ("get" in desc3 ? !m.__esModule : desc3.writable || desc3.configurable)) {
+        desc3 = { enumerable: true, get: function() {
           return m[k];
         } };
       }
-      Object.defineProperty(o, k2, desc2);
+      Object.defineProperty(o, k2, desc3);
     }) : (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       o[k2] = m[k];
@@ -27200,13 +27200,13 @@ var require_ip_address = __commonJS({
     "use strict";
     var __createBinding = exports && exports.__createBinding || (Object.create ? (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
-      var desc2 = Object.getOwnPropertyDescriptor(m, k);
-      if (!desc2 || ("get" in desc2 ? !m.__esModule : desc2.writable || desc2.configurable)) {
-        desc2 = { enumerable: true, get: function() {
+      var desc3 = Object.getOwnPropertyDescriptor(m, k);
+      if (!desc3 || ("get" in desc3 ? !m.__esModule : desc3.writable || desc3.configurable)) {
+        desc3 = { enumerable: true, get: function() {
           return m[k];
         } };
       }
-      Object.defineProperty(o, k2, desc2);
+      Object.defineProperty(o, k2, desc3);
     }) : (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       o[k2] = m[k];
@@ -27494,14 +27494,14 @@ var require_buffer_equal_constant_time = __commonJS({
 var require_jwa = __commonJS({
   "../node_modules/.pnpm/jwa@2.0.1/node_modules/jwa/index.js"(exports, module) {
     var Buffer4 = require_safe_buffer().Buffer;
-    var crypto11 = __require("crypto");
+    var crypto12 = __require("crypto");
     var formatEcdsa = require_ecdsa_sig_formatter();
     var util4 = __require("util");
     var MSG_INVALID_ALGORITHM = '"%s" is not a valid algorithm.\n  Supported algorithms are:\n  "HS256", "HS384", "HS512", "RS256", "RS384", "RS512", "PS256", "PS384", "PS512", "ES256", "ES384", "ES512" and "none".';
     var MSG_INVALID_SECRET = "secret must be a string or buffer";
     var MSG_INVALID_VERIFIER_KEY = "key must be a string or a buffer";
     var MSG_INVALID_SIGNER_KEY = "key must be a string, a buffer or an object";
-    var supportsKeyObjects = typeof crypto11.createPublicKey === "function";
+    var supportsKeyObjects = typeof crypto12.createPublicKey === "function";
     if (supportsKeyObjects) {
       MSG_INVALID_VERIFIER_KEY += " or a KeyObject";
       MSG_INVALID_SECRET += "or a KeyObject";
@@ -27591,17 +27591,17 @@ var require_jwa = __commonJS({
       return function sign3(thing, secret) {
         checkIsSecretKey(secret);
         thing = normalizeInput(thing);
-        var hmac2 = crypto11.createHmac("sha" + bits, secret);
+        var hmac2 = crypto12.createHmac("sha" + bits, secret);
         var sig = (hmac2.update(thing), hmac2.digest("base64"));
         return fromBase64(sig);
       };
     }
     var bufferEqual;
-    var timingSafeEqual = "timingSafeEqual" in crypto11 ? function timingSafeEqual2(a, b2) {
+    var timingSafeEqual = "timingSafeEqual" in crypto12 ? function timingSafeEqual2(a, b2) {
       if (a.byteLength !== b2.byteLength) {
         return false;
       }
-      return crypto11.timingSafeEqual(a, b2);
+      return crypto12.timingSafeEqual(a, b2);
     } : function timingSafeEqual2(a, b2) {
       if (!bufferEqual) {
         bufferEqual = require_buffer_equal_constant_time();
@@ -27618,7 +27618,7 @@ var require_jwa = __commonJS({
       return function sign3(thing, privateKey) {
         checkIsPrivateKey(privateKey);
         thing = normalizeInput(thing);
-        var signer = crypto11.createSign("RSA-SHA" + bits);
+        var signer = crypto12.createSign("RSA-SHA" + bits);
         var sig = (signer.update(thing), signer.sign(privateKey, "base64"));
         return fromBase64(sig);
       };
@@ -27628,7 +27628,7 @@ var require_jwa = __commonJS({
         checkIsPublicKey(publicKey);
         thing = normalizeInput(thing);
         signature = toBase64(signature);
-        var verifier = crypto11.createVerify("RSA-SHA" + bits);
+        var verifier = crypto12.createVerify("RSA-SHA" + bits);
         verifier.update(thing);
         return verifier.verify(publicKey, signature, "base64");
       };
@@ -27637,11 +27637,11 @@ var require_jwa = __commonJS({
       return function sign3(thing, privateKey) {
         checkIsPrivateKey(privateKey);
         thing = normalizeInput(thing);
-        var signer = crypto11.createSign("RSA-SHA" + bits);
+        var signer = crypto12.createSign("RSA-SHA" + bits);
         var sig = (signer.update(thing), signer.sign({
           key: privateKey,
-          padding: crypto11.constants.RSA_PKCS1_PSS_PADDING,
-          saltLength: crypto11.constants.RSA_PSS_SALTLEN_DIGEST
+          padding: crypto12.constants.RSA_PKCS1_PSS_PADDING,
+          saltLength: crypto12.constants.RSA_PSS_SALTLEN_DIGEST
         }, "base64"));
         return fromBase64(sig);
       };
@@ -27651,12 +27651,12 @@ var require_jwa = __commonJS({
         checkIsPublicKey(publicKey);
         thing = normalizeInput(thing);
         signature = toBase64(signature);
-        var verifier = crypto11.createVerify("RSA-SHA" + bits);
+        var verifier = crypto12.createVerify("RSA-SHA" + bits);
         verifier.update(thing);
         return verifier.verify({
           key: publicKey,
-          padding: crypto11.constants.RSA_PKCS1_PSS_PADDING,
-          saltLength: crypto11.constants.RSA_PSS_SALTLEN_DIGEST
+          padding: crypto12.constants.RSA_PKCS1_PSS_PADDING,
+          saltLength: crypto12.constants.RSA_PSS_SALTLEN_DIGEST
         }, signature, "base64");
       };
     }
@@ -35365,7 +35365,7 @@ var require_urlsafe_base64_helper = __commonJS({
 var require_vapid_helper = __commonJS({
   "../node_modules/.pnpm/web-push@3.6.7/node_modules/web-push/src/vapid-helper.js"(exports, module) {
     "use strict";
-    var crypto11 = __require("crypto");
+    var crypto12 = __require("crypto");
     var asn1 = require_asn1();
     var jws = require_jws();
     var { URL: URL2 } = __require("url");
@@ -35392,7 +35392,7 @@ var require_vapid_helper = __commonJS({
       });
     }
     function generateVAPIDKeys() {
-      const curve = crypto11.createECDH("prime256v1");
+      const curve = crypto12.createECDH("prime256v1");
       curve.generateKeys();
       let publicKeyBuffer = curve.getPublicKey();
       let privateKeyBuffer = curve.getPrivateKey();
@@ -35542,7 +35542,7 @@ var require_vapid_helper = __commonJS({
 var require_ece = __commonJS({
   "../node_modules/.pnpm/http_ece@1.2.0/node_modules/http_ece/ece.js"(exports, module) {
     "use strict";
-    var crypto11 = __require("crypto");
+    var crypto12 = __require("crypto");
     var AES_GCM = "aes-128-gcm";
     var PAD_SIZE = { "aes128gcm": 1, "aesgcm": 2 };
     var TAG_LENGTH = 16;
@@ -35569,7 +35569,7 @@ var require_ece = __commonJS({
       return b2;
     }
     function HMAC_hash(key, input) {
-      var hmac2 = crypto11.createHmac("sha256", key);
+      var hmac2 = crypto12.createHmac("sha256", key);
       hmac2.update(input);
       return hmac2.digest();
     }
@@ -35837,7 +35837,7 @@ var require_ece = __commonJS({
     function decryptRecord(key, counter, buffer2, header, last) {
       keylog("decrypt", buffer2);
       var nonce = generateNonce(key.nonce, counter);
-      var gcm = crypto11.createDecipheriv(AES_GCM, key.key, nonce);
+      var gcm = crypto12.createDecipheriv(AES_GCM, key.key, nonce);
       gcm.setAuthTag(buffer2.slice(buffer2.length - TAG_LENGTH));
       var data = gcm.update(buffer2.slice(0, buffer2.length - TAG_LENGTH));
       data = Buffer.concat([data, gcm.final()]);
@@ -35885,7 +35885,7 @@ var require_ece = __commonJS({
       keylog("encrypt", buffer2);
       pad = pad || 0;
       var nonce = generateNonce(key.nonce, counter);
-      var gcm = crypto11.createCipheriv(AES_GCM, key.key, nonce);
+      var gcm = crypto12.createCipheriv(AES_GCM, key.key, nonce);
       var ciphertext = [];
       var padSize = PAD_SIZE[header.version];
       var padding = Buffer.alloc(pad + padSize);
@@ -35928,7 +35928,7 @@ var require_ece = __commonJS({
       }
       var header = parseParams(params);
       if (!header.salt) {
-        header.salt = crypto11.randomBytes(KEY_LENGTH);
+        header.salt = crypto12.randomBytes(KEY_LENGTH);
       }
       var result;
       if (header.version === "aes128gcm") {
@@ -35993,7 +35993,7 @@ var require_ece = __commonJS({
 var require_encryption_helper = __commonJS({
   "../node_modules/.pnpm/web-push@3.6.7/node_modules/web-push/src/encryption-helper.js"(exports, module) {
     "use strict";
-    var crypto11 = __require("crypto");
+    var crypto12 = __require("crypto");
     var ece = require_ece();
     var encrypt = function(userPublicKey, userAuth, payload, contentEncoding) {
       if (!userPublicKey) {
@@ -36020,9 +36020,9 @@ var require_encryption_helper = __commonJS({
       if (typeof payload === "string" || payload instanceof String) {
         payload = Buffer.from(payload);
       }
-      const localCurve = crypto11.createECDH("prime256v1");
+      const localCurve = crypto12.createECDH("prime256v1");
       const localPublicKey = localCurve.generateKeys();
-      const salt = crypto11.randomBytes(16).toString("base64url");
+      const salt = crypto12.randomBytes(16).toString("base64url");
       const cipherText = ece.encrypt(payload, {
         version: contentEncoding,
         dh: userPublicKey,
@@ -36066,13 +36066,13 @@ var require_helpers2 = __commonJS({
     "use strict";
     var __createBinding = exports && exports.__createBinding || (Object.create ? (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
-      var desc2 = Object.getOwnPropertyDescriptor(m, k);
-      if (!desc2 || ("get" in desc2 ? !m.__esModule : desc2.writable || desc2.configurable)) {
-        desc2 = { enumerable: true, get: function() {
+      var desc3 = Object.getOwnPropertyDescriptor(m, k);
+      if (!desc3 || ("get" in desc3 ? !m.__esModule : desc3.writable || desc3.configurable)) {
+        desc3 = { enumerable: true, get: function() {
           return m[k];
         } };
       }
-      Object.defineProperty(o, k2, desc2);
+      Object.defineProperty(o, k2, desc3);
     }) : (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       o[k2] = m[k];
@@ -36136,13 +36136,13 @@ var require_dist3 = __commonJS({
     "use strict";
     var __createBinding = exports && exports.__createBinding || (Object.create ? (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
-      var desc2 = Object.getOwnPropertyDescriptor(m, k);
-      if (!desc2 || ("get" in desc2 ? !m.__esModule : desc2.writable || desc2.configurable)) {
-        desc2 = { enumerable: true, get: function() {
+      var desc3 = Object.getOwnPropertyDescriptor(m, k);
+      if (!desc3 || ("get" in desc3 ? !m.__esModule : desc3.writable || desc3.configurable)) {
+        desc3 = { enumerable: true, get: function() {
           return m[k];
         } };
       }
-      Object.defineProperty(o, k2, desc2);
+      Object.defineProperty(o, k2, desc3);
     }) : (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       o[k2] = m[k];
@@ -36388,13 +36388,13 @@ var require_dist4 = __commonJS({
     "use strict";
     var __createBinding = exports && exports.__createBinding || (Object.create ? (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
-      var desc2 = Object.getOwnPropertyDescriptor(m, k);
-      if (!desc2 || ("get" in desc2 ? !m.__esModule : desc2.writable || desc2.configurable)) {
-        desc2 = { enumerable: true, get: function() {
+      var desc3 = Object.getOwnPropertyDescriptor(m, k);
+      if (!desc3 || ("get" in desc3 ? !m.__esModule : desc3.writable || desc3.configurable)) {
+        desc3 = { enumerable: true, get: function() {
           return m[k];
         } };
       }
-      Object.defineProperty(o, k2, desc2);
+      Object.defineProperty(o, k2, desc3);
     }) : (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
       o[k2] = m[k];
@@ -47133,7 +47133,7 @@ function notIlike(column, value) {
 function asc(column) {
   return sql`${column} asc`;
 }
-function desc(column) {
+function desc2(column) {
   return sql`${column} desc`;
 }
 
@@ -47220,7 +47220,7 @@ function getOrderByOperators() {
   return {
     sql,
     asc,
-    desc
+    desc: desc2
   };
 }
 function extractTablesRelationalConfig(schema, configHelpers) {
@@ -50887,7 +50887,7 @@ var membersTable = pgTable("members", {
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
   gender: text("gender").notNull(),
-  phone1: text("phone1").notNull(),
+  phone1: text("phone1"),
   phone2: text("phone2"),
   email: text("email"),
   occupation: text("occupation").notNull().default(""),
@@ -50910,7 +50910,8 @@ var membersTable = pgTable("members", {
   archivedAt: timestamp("archived_at"),
   archivedBy: integer("archived_by"),
   createdAt: timestamp("created_at").notNull().default(sql`now()`),
-  transferredFromTeenId: integer("transferred_from_teen_id")
+  transferredFromTeenId: integer("transferred_from_teen_id"),
+  firstTimerId: integer("first_timer_id")
 });
 var leadershipRolesTable = pgTable("leadership_roles", {
   id: serial("id").primaryKey(),
@@ -50923,6 +50924,7 @@ var activityLogTable = pgTable("activity_log", {
   description: text("description").notNull(),
   memberId: integer("member_id"),
   memberName: text("member_name"),
+  performedByUserId: integer("performed_by_user_id"),
   performedByName: text("performed_by_name"),
   createdAt: timestamp("created_at").notNull().defaultNow()
 });
@@ -51003,6 +51005,7 @@ var departmentMembersTable = pgTable("department_members", {
 var childrenTable = pgTable("children", {
   id: serial("id").primaryKey(),
   membershipId: text("membership_id").unique(),
+  sourceMemberId: integer("source_member_id"),
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
   gender: text("gender"),
@@ -51016,6 +51019,7 @@ var childrenTable = pgTable("children", {
 var teensTable = pgTable("teens", {
   id: serial("id").primaryKey(),
   membershipId: text("membership_id").unique(),
+  sourceMemberId: integer("source_member_id"),
   pin: text("pin").notNull().default("0000"),
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
@@ -51999,6 +52003,26 @@ function generatePin2() {
 function hashPassword3(password) {
   return crypto5.createHash("sha256").update(password + "ce_kumasi_salt").digest("hex");
 }
+async function getGivingRowsByMembershipId(membershipId, ministryYearId) {
+  const [memberRows, childRows, teenRows] = await Promise.all([
+    db.select({ id: membersTable.id }).from(membersTable).where(eq(membersTable.membershipId, membershipId)),
+    db.select({ id: childrenTable.id }).from(childrenTable).where(eq(childrenTable.membershipId, membershipId)),
+    db.select({ id: teensTable.id }).from(teensTable).where(eq(teensTable.membershipId, membershipId))
+  ]);
+  const identityConditions = [];
+  const memberIds = memberRows.map((row) => row.id);
+  const childIds = childRows.map((row) => row.id);
+  const teenIds = teenRows.map((row) => row.id);
+  if (memberIds.length) identityConditions.push(memberIds.length === 1 ? eq(givingsTable.memberId, memberIds[0]) : inArray(givingsTable.memberId, memberIds));
+  if (childIds.length) identityConditions.push(childIds.length === 1 ? eq(givingsTable.childId, childIds[0]) : inArray(givingsTable.childId, childIds));
+  if (teenIds.length) identityConditions.push(teenIds.length === 1 ? eq(givingsTable.teenId, teenIds[0]) : inArray(givingsTable.teenId, teenIds));
+  const conditions = [
+    eq(givingsTable.isArchived, false),
+    identityConditions.length ? or(...identityConditions) : sql`false`
+  ];
+  if (ministryYearId) conditions.push(eq(givingsTable.ministryYearId, ministryYearId));
+  return db.select().from(givingsTable).where(and(...conditions)).orderBy(desc(givingsTable.date));
+}
 async function getActiveMinistryYear() {
   const today = (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
   const years = await db.select().from(ministryYearsTable).where(and(
@@ -52387,6 +52411,174 @@ router4.post("/", async (req, res) => {
   }
   res.status(201).json({ ...created[0], leadershipRoles: [] });
 });
+router4.post("/bulk", requireRole(3), async (req, res) => {
+  const rawMembers = Array.isArray(req.body?.members) ? req.body.members : [];
+  const rawCellId = req.body?.cellId;
+  const cellId = rawCellId === null || rawCellId === void 0 || rawCellId === "" ? null : Number(rawCellId);
+  if (!rawMembers.length) {
+    return res.status(400).json({ error: "Add at least one name to import." });
+  }
+  if (rawMembers.length > 1e3) {
+    return res.status(400).json({ error: "You can import at most 1,000 names at a time." });
+  }
+  if (cellId !== null && (!Number.isInteger(cellId) || cellId <= 0)) {
+    return res.status(400).json({ error: "Select a valid fellowship." });
+  }
+  if (cellId !== null) {
+    const selectedCell = await db.select({ id: cellsTable.id }).from(cellsTable).where(and(eq(cellsTable.id, cellId), eq(cellsTable.isArchived, false))).limit(1);
+    if (!selectedCell.length) {
+      return res.status(400).json({ error: "The selected fellowship is no longer available." });
+    }
+  }
+  const actor = req.user;
+  const existing = await db.select({
+    firstName: membersTable.firstName,
+    lastName: membersTable.lastName
+  }).from(membersTable).where(eq(membersTable.isArchived, false));
+  const existingNames = new Set(existing.map(
+    (m) => `${m.firstName.trim().toLowerCase()}|${m.lastName.trim().toLowerCase()}`
+  ));
+  const seenInBatch = /* @__PURE__ */ new Set();
+  const created = [];
+  const skipped = [];
+  for (const raw of rawMembers) {
+    const firstName = String(raw?.firstName ?? "").trim();
+    const lastName = String(raw?.lastName ?? "").trim();
+    const nameKey = `${firstName.toLowerCase()}|${lastName.toLowerCase()}`;
+    if (!firstName || !lastName) {
+      skipped.push({ firstName, lastName, reason: "First and last name are required" });
+      continue;
+    }
+    if (seenInBatch.has(nameKey) || existingNames.has(nameKey)) {
+      skipped.push({ firstName, lastName, reason: "An active member with this name already exists" });
+      continue;
+    }
+    const membershipId = await generateMembershipId2(firstName, lastName);
+    const pin = generatePin2();
+    const [member] = await db.insert(membersTable).values({
+      membershipId,
+      firstName,
+      lastName,
+      gender: "unspecified",
+      phone1: null,
+      memberType: "member",
+      cellId,
+      pin
+    }).returning();
+    await db.insert(usersTable).values({
+      username: membershipId,
+      passwordHash: hashPassword3(pin),
+      roleLevel: 5,
+      memberId: member.id
+    });
+    await db.insert(activityLogTable).values({
+      type: "bulk_member_import",
+      description: `Member ${firstName} ${lastName} was added by bulk import`,
+      memberId: member.id,
+      memberName: `${firstName} ${lastName}`,
+      performedByUserId: actor?.id ?? null,
+      performedByName: actor?.username ?? null
+    });
+    created.push({
+      id: member.id,
+      firstName: member.firstName,
+      lastName: member.lastName,
+      membershipId: member.membershipId
+    });
+    seenInBatch.add(nameKey);
+    existingNames.add(nameKey);
+  }
+  res.status(201).json({ created, skipped, totalCreated: created.length, totalSkipped: skipped.length });
+});
+router4.post("/:id/send-to-ministry", requireRole(3), async (req, res) => {
+  const memberId = parseInt(req.params.id);
+  const destination = req.body?.destination;
+  if (destination !== "children" && destination !== "teens") {
+    return res.status(400).json({ error: "Destination must be children or teens." });
+  }
+  const memberRows = await db.select().from(membersTable).where(and(eq(membersTable.id, memberId), eq(membersTable.isArchived, false))).limit(1);
+  if (!memberRows.length) return res.status(404).json({ error: "Member not found." });
+  const member = memberRows[0];
+  const [existingChild, existingTeen] = await Promise.all([
+    db.select({ id: childrenTable.id }).from(childrenTable).where(and(eq(childrenTable.sourceMemberId, memberId), eq(childrenTable.isArchived, false))).limit(1),
+    db.select({ id: teensTable.id }).from(teensTable).where(and(eq(teensTable.sourceMemberId, memberId), eq(teensTable.isArchived, false))).limit(1)
+  ]);
+  if (existingChild.length || existingTeen.length) {
+    return res.status(409).json({ error: "This member has already been sent to a ministry register." });
+  }
+  const actor = req.user;
+  const ministryName = destination === "children" ? "Children's Church" : "Teens Church";
+  const archivedDestination = destination === "children" ? await db.select().from(childrenTable).where(eq(childrenTable.membershipId, member.membershipId)).limit(1) : await db.select().from(teensTable).where(eq(teensTable.membershipId, member.membershipId)).limit(1);
+  if (archivedDestination.length && !archivedDestination[0].isArchived) {
+    return res.status(409).json({ error: `This membership ID is already active in ${ministryName}.` });
+  }
+  const result = await db.transaction(async (tx) => {
+    let created;
+    if (destination === "children") {
+      const childValues = {
+        membershipId: member.membershipId,
+        sourceMemberId: member.id,
+        firstName: member.firstName,
+        lastName: member.lastName,
+        gender: member.gender === "unspecified" ? null : member.gender,
+        dateOfBirth: member.dateOfBirth,
+        isArchived: false,
+        archiveReason: null
+      };
+      if (archivedDestination.length) {
+        [created] = await tx.update(childrenTable).set(childValues).where(eq(childrenTable.id, archivedDestination[0].id)).returning();
+      } else {
+        [created] = await tx.insert(childrenTable).values(childValues).returning();
+      }
+    } else {
+      const teenValues = {
+        membershipId: member.membershipId,
+        sourceMemberId: member.id,
+        pin: member.pin ?? "0000",
+        firstName: member.firstName,
+        lastName: member.lastName,
+        gender: member.gender === "unspecified" ? null : member.gender,
+        phone1: member.phone1,
+        phone2: member.phone2,
+        residentialAddress: member.residentialAddress,
+        dateJoined: member.dateJoined,
+        dateOfBirth: member.dateOfBirth,
+        isArchived: false,
+        archiveReason: null
+      };
+      if (archivedDestination.length) {
+        [created] = await tx.update(teensTable).set(teenValues).where(eq(teensTable.id, archivedDestination[0].id)).returning();
+      } else {
+        [created] = await tx.insert(teensTable).values(teenValues).returning();
+      }
+    }
+    await tx.update(membersTable).set({
+      isArchived: true,
+      archiveReason: `Moved to ${ministryName}`,
+      archivedAt: /* @__PURE__ */ new Date(),
+      archivedBy: actor?.id ?? null
+    }).where(and(eq(membersTable.id, member.id), eq(membersTable.isArchived, false)));
+    await tx.insert(activityLogTable).values({
+      type: "member_sent_to_ministry",
+      description: `${member.firstName} ${member.lastName} was moved to ${ministryName}`,
+      memberId: member.id,
+      memberName: `${member.firstName} ${member.lastName}`,
+      performedByUserId: actor?.id ?? null,
+      performedByName: actor?.username ?? null
+    });
+    return created;
+  });
+  res.status(201).json({
+    destination,
+    sourceMemberId: member.id,
+    ministryId: result.id,
+    membershipId: result.membershipId,
+    firstName: result.firstName,
+    lastName: result.lastName,
+    movedSourceMember: true,
+    preservedHistoricalRecords: true
+  });
+});
 router4.get("/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   const member = await getMemberWithRoles(id);
@@ -52616,6 +52808,7 @@ router4.get("/:id/givings", async (req, res) => {
   const offset = (pageNum - 1) * limitNum;
   const yearFilter = ministryYearId ? parseInt(ministryYearId) : null;
   const memberRow = await db.select({
+    membershipId: membersTable.membershipId,
     transferredFromTeenId: membersTable.transferredFromTeenId,
     spouseId: membersTable.spouseId,
     firstName: membersTable.firstName,
@@ -52625,31 +52818,23 @@ router4.get("/:id/givings", async (req, res) => {
   const transferredFromTeenId = memberRow[0]?.transferredFromTeenId ?? null;
   const spouseId = memberRow[0]?.spouseId ?? null;
   const memberInfo = memberRow[0];
+  if (!memberInfo) return res.status(404).json({ error: "Member not found" });
   const memberFmt = memberInfo ? memberInfo.title ? `${memberInfo.title} ${memberInfo.firstName} ${memberInfo.lastName}` : `${memberInfo.firstName} ${memberInfo.lastName}` : null;
-  let transferredFromChildId = null;
-  if (transferredFromTeenId) {
-    const teenRow = await db.select({ transferredFromChildId: teensTable.transferredFromChildId }).from(teensTable).where(eq(teensTable.id, transferredFromTeenId)).limit(1);
-    transferredFromChildId = teenRow[0]?.transferredFromChildId ?? null;
-  }
-  const memberConditions = [eq(givingsTable.memberId, memberId), eq(givingsTable.isArchived, false)];
-  if (yearFilter) memberConditions.push(eq(givingsTable.ministryYearId, yearFilter));
-  const teenConditions = transferredFromTeenId ? [eq(givingsTable.teenId, transferredFromTeenId), eq(givingsTable.isArchived, false), ...yearFilter ? [eq(givingsTable.ministryYearId, yearFilter)] : []] : null;
-  const childConditions = transferredFromChildId ? [eq(givingsTable.childId, transferredFromChildId), eq(givingsTable.isArchived, false), ...yearFilter ? [eq(givingsTable.ministryYearId, yearFilter)] : []] : null;
   const spouseConditions = spouseId ? [eq(givingsTable.memberId, spouseId), eq(givingsTable.isArchived, false), ...yearFilter ? [eq(givingsTable.ministryYearId, yearFilter)] : []] : null;
-  const [memberGivings, teenGivings, childGivings, spouseGivings, spouseInfoRows] = await Promise.all([
-    db.select().from(givingsTable).where(and(...memberConditions)),
-    teenConditions ? db.select().from(givingsTable).where(and(...teenConditions)) : Promise.resolve([]),
-    childConditions ? db.select().from(givingsTable).where(and(...childConditions)) : Promise.resolve([]),
+  const [identityGivings, spouseGivings, spouseInfoRows] = await Promise.all([
+    getGivingRowsByMembershipId(memberInfo.membershipId, yearFilter ?? void 0),
     spouseConditions ? db.select().from(givingsTable).where(and(...spouseConditions)) : Promise.resolve([]),
     spouseId ? db.select({ firstName: membersTable.firstName, lastName: membersTable.lastName, title: membersTable.title }).from(membersTable).where(eq(membersTable.id, spouseId)).limit(1) : Promise.resolve([])
   ]);
   const spouseInfo = spouseInfoRows[0];
   const spouseFmt = spouseInfo ? spouseInfo.title ? `${spouseInfo.title} ${spouseInfo.firstName} ${spouseInfo.lastName}` : `${spouseInfo.firstName} ${spouseInfo.lastName}` : null;
   const allGivings = [
-    ...memberGivings.map((g) => ({ ...g, _stage: "member", paidByName: memberFmt })),
-    ...spouseGivings.map((g) => ({ ...g, _stage: "spouse", paidByName: spouseFmt })),
-    ...teenGivings.map((g) => ({ ...g, _stage: "teen", paidByName: null })),
-    ...childGivings.map((g) => ({ ...g, _stage: "child", paidByName: null }))
+    ...identityGivings.map((g) => ({
+      ...g,
+      _stage: g.memberId ? "member" : g.teenId ? "teen" : "child",
+      paidByName: memberFmt
+    })),
+    ...spouseGivings.map((g) => ({ ...g, _stage: "spouse", paidByName: spouseFmt }))
   ].sort((a, b2) => (b2.date ?? "").localeCompare(a.date ?? ""));
   const total = allGivings.length;
   const yearTotal = allGivings.reduce((s, g) => s + parseFloat(String(g.amount)), 0);
@@ -53363,8 +53548,282 @@ var departments_default = router6;
 
 // src/routes/children.ts
 var import_express7 = __toESM(require_express2(), 1);
+import crypto7 from "crypto";
 var router7 = (0, import_express7.Router)();
 router7.use(authenticateToken);
+function hashPassword5(password) {
+  return crypto7.createHash("sha256").update(password + "ce_kumasi_salt").digest("hex");
+}
+async function getRegisterIdsByMembershipId(membershipId, executor = db) {
+  const [members, children, teens] = await Promise.all([
+    executor.select({ id: membersTable.id }).from(membersTable).where(eq(membersTable.membershipId, membershipId)),
+    executor.select({ id: childrenTable.id }).from(childrenTable).where(eq(childrenTable.membershipId, membershipId)),
+    executor.select({ id: teensTable.id }).from(teensTable).where(eq(teensTable.membershipId, membershipId))
+  ]);
+  return {
+    memberIds: members.map((row) => row.id),
+    childIds: children.map((row) => row.id),
+    teenIds: teens.map((row) => row.id)
+  };
+}
+function anyId(column, ids) {
+  return ids.length === 1 ? eq(column, ids[0]) : inArray(column, ids);
+}
+async function moveAttendance(tx, sourceType, sourceId, destinationType, destinationId, sourceCellId, membershipId) {
+  const ids = await getRegisterIdsByMembershipId(membershipId, tx);
+  const memberRows = ids.memberIds.length ? await tx.select().from(attendanceRecordsTable).where(anyId(attendanceRecordsTable.memberId, ids.memberIds)) : [];
+  const childRows = ids.childIds.length ? await tx.select().from(serviceChildrenAttendanceTable).where(anyId(serviceChildrenAttendanceTable.childId, ids.childIds)) : [];
+  const teenRows = ids.teenIds.length ? await tx.select().from(serviceTeensAttendanceTable).where(anyId(serviceTeensAttendanceTable.teenId, ids.teenIds)) : [];
+  const destinationTable = destinationType === "member" ? attendanceRecordsTable : destinationType === "children" ? serviceChildrenAttendanceTable : serviceTeensAttendanceTable;
+  const destinationColumn = destinationType === "member" ? attendanceRecordsTable.memberId : destinationType === "children" ? serviceChildrenAttendanceTable.childId : serviceTeensAttendanceTable.teenId;
+  const destinationKey = destinationType === "member" ? "memberId" : destinationType === "children" ? "childId" : "teenId";
+  const rows = [
+    ...memberRows.map((row) => ({ serviceId: row.serviceId, registeredAt: row.checkInTime, cellId: row.cellId, method: row.method })),
+    ...childRows.map((row) => ({ serviceId: row.serviceId, registeredAt: row.registeredAt, cellId: sourceCellId, method: "ministry" })),
+    ...teenRows.map((row) => ({ serviceId: row.serviceId, registeredAt: row.registeredAt, cellId: sourceCellId, method: "ministry" }))
+  ];
+  for (const row of rows) {
+    const existing = await tx.select({ id: destinationTable.id }).from(destinationTable).where(and(eq(destinationTable.serviceId, row.serviceId), eq(destinationColumn, destinationId))).limit(1);
+    if (existing.length) continue;
+    if (destinationType === "member") {
+      await tx.insert(destinationTable).values({
+        serviceId: row.serviceId,
+        memberId: destinationId,
+        cellId: row.cellId ?? sourceCellId,
+        method: row.method ?? "ministry",
+        checkInTime: row.registeredAt
+      });
+    } else {
+      await tx.insert(destinationTable).values({
+        serviceId: row.serviceId,
+        [destinationKey]: destinationId,
+        registeredAt: row.registeredAt
+      });
+    }
+  }
+  const oldMemberIds = ids.memberIds.filter((id) => !(destinationType === "member" && id === destinationId));
+  const oldChildIds = ids.childIds.filter((id) => !(destinationType === "children" && id === destinationId));
+  const oldTeenIds = ids.teenIds.filter((id) => !(destinationType === "teens" && id === destinationId));
+  if (oldMemberIds.length) await tx.delete(attendanceRecordsTable).where(anyId(attendanceRecordsTable.memberId, oldMemberIds));
+  if (oldChildIds.length) await tx.delete(serviceChildrenAttendanceTable).where(anyId(serviceChildrenAttendanceTable.childId, oldChildIds));
+  if (oldTeenIds.length) await tx.delete(serviceTeensAttendanceTable).where(anyId(serviceTeensAttendanceTable.teenId, oldTeenIds));
+}
+async function moveGiving(tx, sourceType, sourceId, destinationType, destinationId, membershipId) {
+  const ids = await getRegisterIdsByMembershipId(membershipId, tx);
+  const sourceConditions = [];
+  if (ids.memberIds.length) sourceConditions.push(and(
+    anyId(givingsTable.memberId, ids.memberIds),
+    isNull(givingsTable.childId),
+    isNull(givingsTable.teenId)
+  ));
+  if (ids.childIds.length) sourceConditions.push(and(
+    anyId(givingsTable.childId, ids.childIds),
+    isNull(givingsTable.memberId),
+    isNull(givingsTable.teenId)
+  ));
+  if (ids.teenIds.length) sourceConditions.push(and(
+    anyId(givingsTable.teenId, ids.teenIds),
+    isNull(givingsTable.memberId),
+    isNull(givingsTable.childId)
+  ));
+  if (!sourceConditions.length) return;
+  const values2 = { memberId: null, childId: null, teenId: null };
+  values2[destinationType === "member" ? "memberId" : destinationType === "children" ? "childId" : "teenId"] = destinationId;
+  await tx.update(givingsTable).set(values2).where(or(...sourceConditions));
+}
+async function moveFamilyLinks(tx, sourceType, sourceId, destinationType, destinationId, membershipId) {
+  const ids = await getRegisterIdsByMembershipId(membershipId, tx);
+  const sourceConditions = [];
+  if (ids.memberIds.length) sourceConditions.push(and(
+    anyId(familyChildrenTable.memberId, ids.memberIds),
+    eq(familyChildrenTable.type, "member")
+  ));
+  if (ids.childIds.length) sourceConditions.push(and(
+    anyId(familyChildrenTable.childId, ids.childIds),
+    eq(familyChildrenTable.type, "child")
+  ));
+  if (ids.teenIds.length) sourceConditions.push(and(
+    anyId(familyChildrenTable.teenId, ids.teenIds),
+    eq(familyChildrenTable.type, "teen")
+  ));
+  if (!sourceConditions.length) return;
+  const familyType = destinationType === "children" ? "child" : destinationType === "teens" ? "teen" : "member";
+  const values2 = {
+    type: familyType,
+    memberId: null,
+    childId: null,
+    teenId: null
+  };
+  values2[destinationType === "member" ? "memberId" : destinationType === "children" ? "childId" : "teenId"] = destinationId;
+  await tx.update(familyChildrenTable).set(values2).where(or(...sourceConditions));
+  const links = await tx.select().from(familyChildrenTable).where(
+    or(
+      eq(familyChildrenTable.memberId, destinationType === "member" ? destinationId : -1),
+      eq(familyChildrenTable.childId, destinationType === "children" ? destinationId : -1),
+      eq(familyChildrenTable.teenId, destinationType === "teens" ? destinationId : -1)
+    )
+  );
+  const seenFamilies = /* @__PURE__ */ new Set();
+  for (const link of links) {
+    if (seenFamilies.has(link.familyId)) await tx.delete(familyChildrenTable).where(eq(familyChildrenTable.id, link.id));
+    else seenFamilies.add(link.familyId);
+  }
+}
+function registerLabel(type) {
+  return type === "member" ? "Adult Members" : type === "children" ? "Children's Church" : "Teens Church";
+}
+router7.post("/register-transfer", async (req, res) => {
+  const sourceType = req.body?.sourceType;
+  const destinationType = req.body?.destinationType;
+  const sourceId = Number(req.body?.sourceId);
+  const validTypes = ["member", "children", "teens"];
+  if (!validTypes.includes(sourceType) || !validTypes.includes(destinationType) || sourceType === destinationType) {
+    return res.status(400).json({ error: "Choose two different valid registers." });
+  }
+  if (!Number.isInteger(sourceId) || sourceId <= 0) {
+    return res.status(400).json({ error: "A valid person is required." });
+  }
+  const sourceRows = sourceType === "member" ? await db.select().from(membersTable).where(and(eq(membersTable.id, sourceId), eq(membersTable.isArchived, false))).limit(1) : sourceType === "children" ? await db.select().from(childrenTable).where(and(eq(childrenTable.id, sourceId), eq(childrenTable.isArchived, false))).limit(1) : await db.select().from(teensTable).where(and(eq(teensTable.id, sourceId), eq(teensTable.isArchived, false))).limit(1);
+  if (!sourceRows.length) return res.status(404).json({ error: `${registerLabel(sourceType)} record not found.` });
+  const source = sourceRows[0];
+  const membershipId = source.membershipId;
+  if (!membershipId) return res.status(400).json({ error: "This person does not have a membership ID and cannot be moved safely." });
+  const destinationRows = destinationType === "member" ? await db.select().from(membersTable).where(eq(membersTable.membershipId, membershipId)).limit(1) : destinationType === "children" ? await db.select().from(childrenTable).where(eq(childrenTable.membershipId, membershipId)).limit(1) : await db.select().from(teensTable).where(eq(teensTable.membershipId, membershipId)).limit(1);
+  const activeDestination = destinationRows.find((row) => !row.isArchived);
+  if (activeDestination) {
+    return res.status(409).json({ error: `${source.firstName} ${source.lastName} is already active in ${registerLabel(destinationType)}.` });
+  }
+  const actor = req.user;
+  const result = await db.transaction(async (tx) => {
+    const sourceMemberId = sourceType === "member" ? source.id : source.sourceMemberId ?? (sourceType === "teens" ? source.transferredFromChildId : null);
+    let destination;
+    const existingDestination = destinationRows[0] ?? null;
+    if (destinationType === "member") {
+      const memberValues = {
+        membershipId,
+        firstName: source.firstName,
+        lastName: source.lastName,
+        gender: source.gender ?? "unspecified",
+        phone1: source.phone1 ?? null,
+        phone2: source.phone2 ?? null,
+        email: source.email ?? null,
+        occupation: source.occupation ?? "",
+        residentialAddress: source.residentialAddress ?? "",
+        emergencyContact: source.emergencyContact ?? "",
+        dateOfBirth: source.dateOfBirth ?? null,
+        dateJoined: source.dateJoined ?? null,
+        foundationSchoolDate: source.foundationSchoolDate ?? null,
+        pin: source.pin ?? "0000",
+        memberType: "member",
+        isArchived: false,
+        archiveReason: null,
+        archivedAt: null,
+        archivedBy: null,
+        transferredFromTeenId: sourceType === "teens" ? source.id : source.transferredFromTeenId ?? null
+      };
+      if (existingDestination) {
+        [destination] = await tx.update(membersTable).set(memberValues).where(eq(membersTable.id, existingDestination.id)).returning();
+      } else {
+        [destination] = await tx.insert(membersTable).values({
+          ...memberValues,
+          isBaptized: false
+        }).returning();
+      }
+    } else if (destinationType === "children") {
+      const childValues = {
+        membershipId,
+        sourceMemberId: sourceMemberId ?? null,
+        firstName: source.firstName,
+        lastName: source.lastName,
+        gender: source.gender === "unspecified" ? null : source.gender ?? null,
+        dateOfBirth: source.dateOfBirth ?? null,
+        class: sourceType === "children" ? source.class ?? null : existingDestination?.class ?? null,
+        parentId: source.parentId ?? existingDestination?.parentId ?? null,
+        parentExternal: source.parentExternal ?? existingDestination?.parentExternal ?? null,
+        isArchived: false,
+        archiveReason: null
+      };
+      if (existingDestination) {
+        [destination] = await tx.update(childrenTable).set(childValues).where(eq(childrenTable.id, existingDestination.id)).returning();
+      } else {
+        [destination] = await tx.insert(childrenTable).values(childValues).returning();
+      }
+    } else {
+      const teenValues = {
+        membershipId,
+        sourceMemberId: sourceMemberId ?? null,
+        transferredFromChildId: sourceType === "children" ? source.id : source.transferredFromChildId ?? null,
+        pin: source.pin ?? "0000",
+        firstName: source.firstName,
+        lastName: source.lastName,
+        gender: source.gender === "unspecified" ? null : source.gender ?? null,
+        phone1: source.phone1 ?? null,
+        phone2: source.phone2 ?? null,
+        residentialAddress: source.residentialAddress ?? null,
+        dateJoined: source.dateJoined ?? null,
+        dateOfBirth: source.dateOfBirth ?? null,
+        foundationSchoolCompleted: source.foundationSchoolCompleted ?? null,
+        foundationSchoolDate: source.foundationSchoolDate ?? null,
+        parentId: source.parentId ?? existingDestination?.parentId ?? null,
+        parentExternal: source.parentExternal ?? existingDestination?.parentExternal ?? null,
+        isArchived: false,
+        archiveReason: null
+      };
+      if (existingDestination) {
+        [destination] = await tx.update(teensTable).set(teenValues).where(eq(teensTable.id, existingDestination.id)).returning();
+      } else {
+        [destination] = await tx.insert(teensTable).values(teenValues).returning();
+      }
+    }
+    const destinationMemberId = destinationType === "member" ? destination.id : sourceMemberId;
+    await moveAttendance(tx, sourceType, source.id, destinationType, destination.id, source.cellId ?? null, membershipId);
+    await moveGiving(tx, sourceType, source.id, destinationType, destination.id, membershipId);
+    await moveFamilyLinks(tx, sourceType, source.id, destinationType, destination.id, membershipId);
+    if (sourceType === "member" && destinationType !== "member") {
+      await tx.update(usersTable).set({ isActive: false }).where(eq(usersTable.memberId, source.id));
+    }
+    if (destinationType === "member") {
+      const memberUser = await tx.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.memberId, destination.id)).limit(1);
+      if (memberUser.length) {
+        await tx.update(usersTable).set({
+          isActive: true,
+          passwordHash: hashPassword5(destination.pin ?? "0000")
+        }).where(eq(usersTable.id, memberUser[0].id));
+      } else {
+        await tx.insert(usersTable).values({
+          username: membershipId,
+          passwordHash: hashPassword5(destination.pin ?? "0000"),
+          roleLevel: 5,
+          memberId: destination.id,
+          isActive: true
+        });
+      }
+    }
+    const sourceTable = sourceType === "member" ? membersTable : sourceType === "children" ? childrenTable : teensTable;
+    await tx.update(sourceTable).set({
+      isArchived: true,
+      archiveReason: `Moved to ${registerLabel(destinationType)}`,
+      ...sourceType === "member" ? { archivedAt: /* @__PURE__ */ new Date(), archivedBy: actor?.id ?? null } : {}
+    }).where(and(eq(sourceTable.id, source.id), eq(sourceTable.isArchived, false)));
+    await tx.insert(activityLogTable).values({
+      type: "register_transfer",
+      description: `${source.firstName} ${source.lastName} was moved from ${registerLabel(sourceType)} to ${registerLabel(destinationType)}`,
+      memberId: destinationMemberId ?? sourceMemberId ?? null,
+      memberName: `${source.firstName} ${source.lastName}`,
+      performedByUserId: actor?.id ?? null,
+      performedByName: actor?.username ?? null
+    });
+    return destination;
+  });
+  res.status(201).json({
+    sourceType,
+    destinationType,
+    membershipId: result.membershipId,
+    sourceId,
+    destinationId: result.id,
+    preservedHistoricalRecords: true
+  });
+});
 async function generateUniversalId2(firstName, lastName) {
   const initials = ((firstName[0] ?? "X") + (lastName[0] ?? "X")).toUpperCase();
   const prefix = `CEKSI-${initials}`;
@@ -53606,7 +54065,7 @@ router7.get("/children/:id/parent-summary", async (req, res) => {
     const id = parseInt(req.params.id);
     const child = await db.select().from(childrenTable).where(eq(childrenTable.id, id)).limit(1);
     if (!child.length) return res.status(404).json({ error: "Child not found" });
-    const attendanceRows = await db.select({ serviceId: serviceChildrenAttendanceTable.serviceId, registeredAt: serviceChildrenAttendanceTable.registeredAt }).from(serviceChildrenAttendanceTable).where(eq(serviceChildrenAttendanceTable.childId, id)).orderBy(desc(serviceChildrenAttendanceTable.registeredAt)).limit(20);
+    const attendanceRows = await db.select({ serviceId: serviceChildrenAttendanceTable.serviceId, registeredAt: serviceChildrenAttendanceTable.registeredAt }).from(serviceChildrenAttendanceTable).where(eq(serviceChildrenAttendanceTable.childId, id)).orderBy(desc2(serviceChildrenAttendanceTable.registeredAt)).limit(20);
     const serviceIds = [...new Set(attendanceRows.map((r) => r.serviceId))];
     let servicesMap = {};
     if (serviceIds.length) {
@@ -53622,7 +54081,7 @@ router7.get("/children/:id/parent-summary", async (req, res) => {
       serviceName: servicesMap[r.serviceId]?.name ?? null,
       serviceType: servicesMap[r.serviceId]?.type ?? null
     }));
-    const givingRows = await db.select().from(givingsTable).where(and(eq(givingsTable.childId, id), eq(givingsTable.isArchived, false))).orderBy(desc(givingsTable.date)).limit(20);
+    const givingRows = await db.select().from(givingsTable).where(and(eq(givingsTable.childId, id), eq(givingsTable.isArchived, false))).orderBy(desc2(givingsTable.date)).limit(20);
     const allGivingTypes = await db.select({ id: givingTypesTable.id, name: givingTypesTable.name }).from(givingTypesTable);
     const typesMap = {};
     allGivingTypes.forEach((gt2) => {
@@ -53645,7 +54104,7 @@ router7.get("/teens/:id/parent-summary", async (req, res) => {
     const id = parseInt(req.params.id);
     const teen = await db.select().from(teensTable).where(eq(teensTable.id, id)).limit(1);
     if (!teen.length) return res.status(404).json({ error: "Teen not found" });
-    const attendanceRows = await db.select({ serviceId: serviceTeensAttendanceTable.serviceId, registeredAt: serviceTeensAttendanceTable.registeredAt }).from(serviceTeensAttendanceTable).where(eq(serviceTeensAttendanceTable.teenId, id)).orderBy(desc(serviceTeensAttendanceTable.registeredAt)).limit(20);
+    const attendanceRows = await db.select({ serviceId: serviceTeensAttendanceTable.serviceId, registeredAt: serviceTeensAttendanceTable.registeredAt }).from(serviceTeensAttendanceTable).where(eq(serviceTeensAttendanceTable.teenId, id)).orderBy(desc2(serviceTeensAttendanceTable.registeredAt)).limit(20);
     const serviceIds = [...new Set(attendanceRows.map((r) => r.serviceId))];
     let servicesMap = {};
     if (serviceIds.length) {
@@ -53663,10 +54122,10 @@ router7.get("/teens/:id/parent-summary", async (req, res) => {
     }));
     const openYears = await db.select({ id: ministryYearsTable.id }).from(ministryYearsTable).where(eq(ministryYearsTable.isClosed, false));
     const openYearIds = openYears.map((y) => y.id);
-    const teenGivingRows = openYearIds.length ? await db.select().from(givingsTable).where(and(eq(givingsTable.teenId, id), eq(givingsTable.isArchived, false), inArray(givingsTable.ministryYearId, openYearIds))).orderBy(desc(givingsTable.date)).limit(50) : [];
+    const teenGivingRows = openYearIds.length ? await db.select().from(givingsTable).where(and(eq(givingsTable.teenId, id), eq(givingsTable.isArchived, false), inArray(givingsTable.ministryYearId, openYearIds))).orderBy(desc2(givingsTable.date)).limit(50) : [];
     let childGivingRows = [];
     if (teen[0].transferredFromChildId) {
-      childGivingRows = openYearIds.length ? await db.select().from(givingsTable).where(and(eq(givingsTable.childId, teen[0].transferredFromChildId), eq(givingsTable.isArchived, false), inArray(givingsTable.ministryYearId, openYearIds))).orderBy(desc(givingsTable.date)).limit(50) : [];
+      childGivingRows = openYearIds.length ? await db.select().from(givingsTable).where(and(eq(givingsTable.childId, teen[0].transferredFromChildId), eq(givingsTable.isArchived, false), inArray(givingsTable.ministryYearId, openYearIds))).orderBy(desc2(givingsTable.date)).limit(50) : [];
     }
     const allGivingRows = [...teenGivingRows, ...childGivingRows].sort((a, b2) => (b2.date ?? "").localeCompare(a.date ?? "")).slice(0, 50);
     const allGivingTypes = await db.select({ id: givingTypesTable.id, name: givingTypesTable.name }).from(givingTypesTable);
@@ -53708,7 +54167,7 @@ router7.get("/teens/:id/attendance-history", async (req, res) => {
     const baseWhereA = and(eq(serviceTeensAttendanceTable.teenId, teenId), serviceIdFilter);
     const [cntA] = await db.select({ cnt: sql`count(*)` }).from(serviceTeensAttendanceTable).where(baseWhereA);
     const totalA = Number(cntA?.cnt ?? 0);
-    const rowsA = await db.select({ serviceId: serviceTeensAttendanceTable.serviceId, registeredAt: serviceTeensAttendanceTable.registeredAt }).from(serviceTeensAttendanceTable).where(baseWhereA).orderBy(desc(serviceTeensAttendanceTable.registeredAt)).limit(limit).offset(offset);
+    const rowsA = await db.select({ serviceId: serviceTeensAttendanceTable.serviceId, registeredAt: serviceTeensAttendanceTable.registeredAt }).from(serviceTeensAttendanceTable).where(baseWhereA).orderBy(desc2(serviceTeensAttendanceTable.registeredAt)).limit(limit).offset(offset);
     const uniqueSvcIds = [...new Set(rowsA.map((r) => r.serviceId))];
     const svcsMap = {};
     if (uniqueSvcIds.length) {
@@ -53743,7 +54202,7 @@ router7.get("/teens/:id/givings-history", async (req, res) => {
     const baseWhereG = and(eq(givingsTable.teenId, teenId), eq(givingsTable.isArchived, false), ...yearFilter ? [yearFilter] : []);
     const [cntG] = await db.select({ cnt: sql`count(*)` }).from(givingsTable).where(baseWhereG);
     const totalG = Number(cntG?.cnt ?? 0);
-    const rowsG = await db.select().from(givingsTable).where(baseWhereG).orderBy(desc(givingsTable.date)).limit(limit).offset(offset);
+    const rowsG = await db.select().from(givingsTable).where(baseWhereG).orderBy(desc2(givingsTable.date)).limit(limit).offset(offset);
     const allTypes = await db.select({ id: givingTypesTable.id, name: givingTypesTable.name }).from(givingTypesTable);
     const typesMap = {};
     allTypes.forEach((gt2) => {
@@ -53936,25 +54395,59 @@ router7.post("/teens/:id/promote", async (req, res) => {
   const teen = teens[0];
   const membershipId = teen.membershipId ?? await generateUniversalId2(teen.firstName, teen.lastName);
   const pin = teen.pin ?? "0000";
-  const created = await db.insert(membersTable).values({
-    membershipId,
-    firstName: teen.firstName,
-    lastName: teen.lastName,
-    gender,
-    phone1: teen.phone1 ?? "",
-    phone2: teen.phone2 ?? void 0,
-    residentialAddress: teen.residentialAddress ?? "",
-    dateJoined: teen.dateJoined ?? void 0,
-    dateOfBirth: teen.dateOfBirth ?? void 0,
-    foundationSchoolDate: teen.foundationSchoolDate ?? void 0,
-    isBaptized: false,
-    memberType: "member",
-    pin,
-    transferredFromTeenId: id
-  }).returning();
-  await db.update(teensTable).set({ isArchived: true, archiveReason: "Promoted to Adult Members" }).where(eq(teensTable.id, id));
-  await db.update(familyChildrenTable).set({ type: "member", memberId: created[0].id, teenId: null }).where(and(eq(familyChildrenTable.teenId, id), eq(familyChildrenTable.type, "teen")));
-  res.status(201).json(created[0]);
+  const sourceMember = teen.sourceMemberId ? await db.select().from(membersTable).where(eq(membersTable.id, teen.sourceMemberId)).limit(1) : [];
+  const archivedMember = sourceMember.length ? sourceMember : await db.select().from(membersTable).where(and(eq(membersTable.membershipId, membershipId), eq(membersTable.isArchived, true))).limit(1);
+  const activeMember = await db.select({ id: membersTable.id }).from(membersTable).where(and(eq(membersTable.membershipId, membershipId), eq(membersTable.isArchived, false))).limit(1);
+  if (activeMember.length) {
+    return res.status(409).json({ error: "A member with this membership ID is already active." });
+  }
+  const actor = req.user;
+  const result = await db.transaction(async (tx) => {
+    let member;
+    const memberValues = {
+      membershipId,
+      firstName: teen.firstName,
+      lastName: teen.lastName,
+      gender,
+      phone1: teen.phone1 ?? "",
+      phone2: teen.phone2 ?? null,
+      residentialAddress: teen.residentialAddress ?? "",
+      dateJoined: teen.dateJoined ?? null,
+      dateOfBirth: teen.dateOfBirth ?? null,
+      foundationSchoolDate: teen.foundationSchoolDate ?? null,
+      pin,
+      isArchived: false,
+      archiveReason: null,
+      archivedAt: null,
+      archivedBy: null,
+      transferredFromTeenId: id
+    };
+    if (archivedMember.length) {
+      [member] = await tx.update(membersTable).set(memberValues).where(eq(membersTable.id, archivedMember[0].id)).returning();
+    } else {
+      [member] = await tx.insert(membersTable).values({
+        ...memberValues,
+        isBaptized: false,
+        memberType: "member"
+      }).returning();
+    }
+    await tx.update(teensTable).set({ isArchived: true, archiveReason: "Promoted to Adult Members" }).where(and(eq(teensTable.id, id), eq(teensTable.isArchived, false)));
+    await tx.update(familyChildrenTable).set({ type: "member", memberId: member.id, teenId: null }).where(and(eq(familyChildrenTable.teenId, id), eq(familyChildrenTable.type, "teen")));
+    await tx.insert(activityLogTable).values({
+      type: "teen_promoted_to_member",
+      description: `${teen.firstName} ${teen.lastName} was moved from Teens Church to Adult Members`,
+      memberId: member.id,
+      memberName: `${teen.firstName} ${teen.lastName}`,
+      performedByUserId: actor?.id ?? null,
+      performedByName: actor?.username ?? null
+    });
+    return member;
+  });
+  res.status(201).json({
+    ...result,
+    reusedArchivedMember: archivedMember.length > 0,
+    preservedHistoricalRecords: true
+  });
 });
 router7.delete("/teens/:id", async (req, res) => {
   const id = parseInt(req.params.id);
@@ -54286,19 +54779,42 @@ var families_default = router8;
 var import_express9 = __toESM(require_express2(), 1);
 var router9 = (0, import_express9.Router)();
 router9.use(authenticateToken);
-async function generateMembershipId3(firstName, lastName, type = "member") {
+async function generateMembershipId3(firstName, lastName, _type = "member", executor = db) {
   const initials = ((firstName[0] ?? "X") + (lastName[0] ?? "X")).toUpperCase();
-  const prefix = type === "visitor" ? `VST-${initials}` : `CEKSI-${initials}`;
-  const existing = await db.select({ membershipId: membersTable.membershipId }).from(membersTable).where(ilike(membersTable.membershipId, `${prefix}%`));
+  const prefix = `CEKSI-${initials}`;
+  const [memberIds, teenIds, childIds] = await Promise.all([
+    executor.select({ membershipId: membersTable.membershipId }).from(membersTable).where(ilike(membersTable.membershipId, `${prefix}%`)),
+    executor.select({ membershipId: teensTable.membershipId }).from(teensTable).where(ilike(teensTable.membershipId, `${prefix}%`)),
+    executor.select({ membershipId: childrenTable.membershipId }).from(childrenTable).where(ilike(childrenTable.membershipId, `${prefix}%`))
+  ]);
   let max = 0;
-  for (const row of existing) {
+  for (const row of [...memberIds, ...teenIds, ...childIds]) {
+    if (!row.membershipId) continue;
     const num = parseInt(row.membershipId.slice(prefix.length), 10);
     if (!isNaN(num) && num > max) max = num;
   }
   return `${prefix}${String(max + 1).padStart(3, "0")}`;
 }
+var MEMBERSHIP_ID_LOCK_KEY = 746321;
+async function lockMembershipIdGeneration(tx) {
+  await tx.execute(sql`SELECT pg_advisory_xact_lock(${MEMBERSHIP_ID_LOCK_KEY})`);
+}
 function fmt5(m) {
   return m.title ? `${m.title} ${m.firstName} ${m.lastName}` : `${m.firstName} ${m.lastName}`;
+}
+async function ensureFirstTimerServiceEnded(firstTimer) {
+  const service = await db.select({ status: servicesTable.status }).from(servicesTable).where(eq(servicesTable.id, firstTimer.serviceId)).limit(1);
+  if (!service.length) {
+    return { ok: false, status: 404, error: "Associated service not found" };
+  }
+  if (service[0].status === "open") {
+    return {
+      ok: false,
+      status: 409,
+      error: "This first timer can only be converted after the associated service has ended"
+    };
+  }
+  return { ok: true };
 }
 router9.get("/services", async (req, res) => {
   const { page = "1", limit = "25" } = req.query;
@@ -54882,7 +55398,14 @@ router9.get("/first-timers", async (req, res) => {
       const t = await db.select().from(teensTable).where(eq(teensTable.id, ft.invitedByTeenId)).limit(1);
       if (t.length) invitedByName = `${t[0].firstName} ${t[0].lastName} (Teens)`;
     }
-    return { ...ft, serviceName: svc.length ? svc[0].name : "Unknown", serviceDate: svc.length ? svc[0].date : null, invitedByName, invitedByFellowship };
+    return {
+      ...ft,
+      serviceName: svc.length ? svc[0].name : "Unknown",
+      serviceDate: svc.length ? svc[0].date : null,
+      serviceStatus: svc.length ? svc[0].status : null,
+      invitedByName,
+      invitedByFellowship
+    };
   }));
   res.json({ data: enriched, total: Number(total[0].count), page: pageNum, limit: limitNum });
 });
@@ -54890,7 +55413,7 @@ router9.get("/first-timers/voided", async (req, res) => {
   const { search } = req.query;
   let conditions = [eq(firstTimersTable.isRegistrationError, true)];
   if (search) conditions.push(or(ilike(firstTimersTable.firstName, `%${search}%`), ilike(firstTimersTable.lastName, `%${search}%`)));
-  const fts = await db.select().from(firstTimersTable).where(and(...conditions)).orderBy(desc(firstTimersTable.archivedAt)).limit(100);
+  const fts = await db.select().from(firstTimersTable).where(and(...conditions)).orderBy(desc2(firstTimersTable.archivedAt)).limit(100);
   const allCells = await db.select().from(cellsTable).where(eq(cellsTable.isArchived, false));
   const cellNameMap = new Map(allCells.map((c) => [c.id, c.name]));
   const enriched = await Promise.all(fts.map(async (ft) => {
@@ -55078,16 +55601,24 @@ router9.post("/first-timers/:id/send-to-teens", async (req, res) => {
   const id = parseInt(req.params.id);
   const ft = await db.select().from(firstTimersTable).where(eq(firstTimersTable.id, id)).limit(1);
   if (!ft.length) return res.status(404).json({ error: "First timer not found" });
-  const teen = await db.insert(teensTable).values({
-    firstName: ft[0].firstName,
-    lastName: ft[0].lastName,
-    gender: ft[0].gender ?? void 0,
-    phone1: ft[0].contact ?? void 0,
-    residentialAddress: ft[0].residence ?? void 0,
-    dateJoined: (/* @__PURE__ */ new Date()).toISOString().split("T")[0]
-  }).returning();
-  await db.update(firstTimersTable).set({ isArchived: true, archiveReason: "Sent to Teens Church" }).where(eq(firstTimersTable.id, id));
-  res.json(teen[0]);
+  const serviceCheck = await ensureFirstTimerServiceEnded(ft[0]);
+  if (!serviceCheck.ok) return res.status(serviceCheck.status).json({ error: serviceCheck.error });
+  const teen = await db.transaction(async (tx) => {
+    await lockMembershipIdGeneration(tx);
+    const membershipId = await generateMembershipId3(ft[0].firstName, ft[0].lastName, "member", tx);
+    const created = await tx.insert(teensTable).values({
+      membershipId,
+      firstName: ft[0].firstName,
+      lastName: ft[0].lastName,
+      gender: ft[0].gender ?? void 0,
+      phone1: ft[0].contact ?? void 0,
+      residentialAddress: ft[0].residence ?? void 0,
+      dateJoined: (/* @__PURE__ */ new Date()).toISOString().split("T")[0]
+    }).returning();
+    await tx.update(firstTimersTable).set({ isArchived: true, archiveReason: "Sent to Teens Church" }).where(eq(firstTimersTable.id, id));
+    return created[0];
+  });
+  res.json(teen);
 });
 router9.post("/first-timers/:id/send-to-children", async (req, res) => {
   const id = parseInt(req.params.id);
@@ -55095,14 +55626,22 @@ router9.post("/first-timers/:id/send-to-children", async (req, res) => {
   if (!childClass) return res.status(400).json({ error: "Class required" });
   const ft = await db.select().from(firstTimersTable).where(eq(firstTimersTable.id, id)).limit(1);
   if (!ft.length) return res.status(404).json({ error: "First timer not found" });
-  const child = await db.insert(childrenTable).values({
-    firstName: ft[0].firstName,
-    lastName: ft[0].lastName,
-    gender: ft[0].gender ?? void 0,
-    class: childClass
-  }).returning();
-  await db.update(firstTimersTable).set({ isArchived: true, archiveReason: "Sent to Children's Church" }).where(eq(firstTimersTable.id, id));
-  res.json(child[0]);
+  const serviceCheck = await ensureFirstTimerServiceEnded(ft[0]);
+  if (!serviceCheck.ok) return res.status(serviceCheck.status).json({ error: serviceCheck.error });
+  const child = await db.transaction(async (tx) => {
+    await lockMembershipIdGeneration(tx);
+    const membershipId = await generateMembershipId3(ft[0].firstName, ft[0].lastName, "member", tx);
+    const created = await tx.insert(childrenTable).values({
+      membershipId,
+      firstName: ft[0].firstName,
+      lastName: ft[0].lastName,
+      gender: ft[0].gender ?? void 0,
+      class: childClass
+    }).returning();
+    await tx.update(firstTimersTable).set({ isArchived: true, archiveReason: "Sent to Children's Church" }).where(eq(firstTimersTable.id, id));
+    return created[0];
+  });
+  res.json(child);
 });
 router9.post("/first-timers/:id/convert", async (req, res) => {
   const id = parseInt(req.params.id);
@@ -55110,6 +55649,8 @@ router9.post("/first-timers/:id/convert", async (req, res) => {
   if (!cellId) return res.status(400).json({ error: "Cell ID required" });
   const ft = await db.select().from(firstTimersTable).where(eq(firstTimersTable.id, id)).limit(1);
   if (!ft.length) return res.status(404).json({ error: "First timer not found" });
+  const serviceCheck = await ensureFirstTimerServiceEnded(ft[0]);
+  if (!serviceCheck.ok) return res.status(serviceCheck.status).json({ error: serviceCheck.error });
   if (!force) {
     const ftPhone = ft[0].contact?.trim();
     if (ftPhone) {
@@ -55156,6 +55697,8 @@ router9.post("/first-timers/:id/convert-to-visitor", async (req, res) => {
   const id = parseInt(req.params.id);
   const ft = await db.select().from(firstTimersTable).where(eq(firstTimersTable.id, id)).limit(1);
   if (!ft.length) return res.status(404).json({ error: "First timer not found" });
+  const serviceCheck = await ensureFirstTimerServiceEnded(ft[0]);
+  if (!serviceCheck.ok) return res.status(serviceCheck.status).json({ error: serviceCheck.error });
   const pin = String(Math.floor(1e3 + Math.random() * 9e3));
   const membershipId = await generateMembershipId3(ft[0].firstName, ft[0].lastName, "visitor");
   const member = await db.insert(membersTable).values({
@@ -55169,7 +55712,8 @@ router9.post("/first-timers/:id/convert-to-visitor", async (req, res) => {
     pin,
     emergencyContact: "",
     occupation: "",
-    residentialAddress: ft[0].residence || ""
+    residentialAddress: ft[0].residence || "",
+    firstTimerId: id
   }).returning();
   await db.update(firstTimersTable).set({ isArchived: true, archiveReason: "Converted to visitor" }).where(eq(firstTimersTable.id, id));
   await db.update(givingsTable).set({ memberId: member[0].id, firstTimerId: null }).where(eq(givingsTable.firstTimerId, id));
@@ -55561,13 +56105,29 @@ router9.get("/reports/first-timers-status", async (req, res) => {
     phone1: membersTable.phone1,
     firstName: membersTable.firstName,
     lastName: membersTable.lastName,
-    cellId: membersTable.cellId
+    cellId: membersTable.cellId,
+    memberType: membersTable.memberType,
+    isArchived: membersTable.isArchived,
+    firstTimerId: membersTable.firstTimerId
   }).from(membersTable);
   const allTeens = await db.select({ id: teensTable.id, phone1: teensTable.phone1, firstName: teensTable.firstName, lastName: teensTable.lastName }).from(teensTable).where(eq(teensTable.isArchived, false));
   const allCells = await db.select({ id: cellsTable.id, name: cellsTable.name }).from(cellsTable);
   const cellMap = new Map(allCells.map((c) => [c.id, c.name]));
   const allServicesForStatus = await db.select({ id: servicesTable.id, name: servicesTable.name, date: servicesTable.date }).from(servicesTable);
   const svcMapForStatus = new Map(allServicesForStatus.map((s) => [s.id, s]));
+  const findMemberForFirstTimer = (ft) => {
+    const linked = allMembers.find((mm) => mm.firstTimerId === ft.id);
+    if (linked) return linked;
+    const contact = ft.contact?.trim();
+    if (contact && contact !== "N/A") {
+      const byPhone = allMembers.find((mm) => mm.phone1 === contact);
+      if (byPhone) return byPhone;
+    }
+    const sameName = allMembers.filter(
+      (mm) => mm.firstName.toLowerCase() === ft.firstName.toLowerCase() && mm.lastName.toLowerCase() === ft.lastName.toLowerCase()
+    );
+    return sameName.length === 1 ? sameName[0] : null;
+  };
   const enriched = await Promise.all(fts.map(async (ft) => {
     const returningVisits = await db.select({ id: firstTimersTable.id, serviceId: firstTimersTable.serviceId }).from(firstTimersTable).where(and(
       eq(firstTimersTable.isReturning, true),
@@ -55602,9 +56162,16 @@ router9.get("/reports/first-timers-status", async (req, res) => {
         convertedTo = "child";
         movedToDetail = "Children's Church";
       } else if (archiveReason.toLowerCase().includes("visitor")) {
-        status = "Added as Visitor";
-        convertedTo = "visitor";
-        movedToDetail = "Visitor";
+        const visitorRecord = findMemberForFirstTimer(ft);
+        if (visitorRecord?.memberType === "member") {
+          status = "Added as Member";
+          convertedTo = "member";
+          const cellName = visitorRecord.cellId ? cellMap.get(visitorRecord.cellId) : null;
+          movedToDetail = cellName ? `Member \u2192 ${cellName}` : "Member";
+        } else {
+          status = "Active First-Timer";
+          movedToDetail = "Visitor \xB7 Still Coming";
+        }
       } else {
         status = "Removed";
         movedToDetail = null;
@@ -55612,10 +56179,15 @@ router9.get("/reports/first-timers-status", async (req, res) => {
     } else if (!ft.isArchived && ft.contact) {
       const matchingMember = allMembers.find((mm) => mm.phone1 === ft.contact && !mm.isArchived);
       if (matchingMember) {
-        status = "Added as Member";
-        convertedTo = "member";
-        const cellName = matchingMember.cellId ? cellMap.get(matchingMember.cellId) : null;
-        movedToDetail = cellName ? `Member \u2192 ${cellName}` : "Member";
+        if (matchingMember.memberType === "member") {
+          status = "Added as Member";
+          convertedTo = "member";
+          const cellName = matchingMember.cellId ? cellMap.get(matchingMember.cellId) : null;
+          movedToDetail = cellName ? `Member \u2192 ${cellName}` : "Member";
+        } else {
+          status = "Active First-Timer";
+          movedToDetail = "Visitor \xB7 Still Coming";
+        }
       } else {
         const matchingTeen = allTeens.find((t) => t.phone1 === ft.contact);
         if (matchingTeen) {
@@ -55650,7 +56222,6 @@ router9.get("/reports/first-timers-status", async (req, res) => {
       createdAt: ft.createdAt
     };
   }));
-  const allFtsForStats = await db.select({ isArchived: firstTimersTable.isArchived, archiveReason: firstTimersTable.archiveReason }).from(firstTimersTable).where(and(...conditions.filter((c) => c !== conditions[conditions.length - 1] || !startDate && !endDate)));
   const statsConditions = [eq(firstTimersTable.isReturning, false), eq(firstTimersTable.isRegistrationError, false)];
   if (startDate || endDate) {
     const serviceConditions2 = [];
@@ -55665,21 +56236,34 @@ router9.get("/reports/first-timers-status", async (req, res) => {
       ilike(firstTimersTable.lastName, `%${search}%`)
     ));
   }
-  const [memberCount, teensCount, childrenCount, visitorCount, activeCount] = await Promise.all([
-    db.select({ count: sql`count(*)` }).from(firstTimersTable).where(and(...statsConditions, eq(firstTimersTable.isArchived, true), ilike(firstTimersTable.archiveReason ?? sql`''`, "%member%"))),
-    db.select({ count: sql`count(*)` }).from(firstTimersTable).where(and(...statsConditions, eq(firstTimersTable.isArchived, true), ilike(firstTimersTable.archiveReason ?? sql`''`, "%teen%"))),
-    db.select({ count: sql`count(*)` }).from(firstTimersTable).where(and(...statsConditions, eq(firstTimersTable.isArchived, true), ilike(firstTimersTable.archiveReason ?? sql`''`, "%children%"))),
-    db.select({ count: sql`count(*)` }).from(firstTimersTable).where(and(...statsConditions, eq(firstTimersTable.isArchived, true), ilike(firstTimersTable.archiveReason ?? sql`''`, "%visitor%"))),
-    db.select({ count: sql`count(*)` }).from(firstTimersTable).where(and(...statsConditions, eq(firstTimersTable.isArchived, false)))
-  ]);
-  const mc = Number(memberCount[0].count);
-  const tc = Number(teensCount[0].count);
-  const cc = Number(childrenCount[0].count);
-  const vc = Number(visitorCount[0].count);
-  const sc = Number(activeCount[0].count);
+  const allFtsForStats = await db.select().from(firstTimersTable).where(and(...statsConditions));
+  let mc = 0;
+  let tc = 0;
+  let cc = 0;
+  let vc = 0;
+  let sc = 0;
+  let removedCount = 0;
+  for (const ft of allFtsForStats) {
+    const reason = (ft.archiveReason ?? "").toLowerCase();
+    const linkedMember = findMemberForFirstTimer(ft);
+    const isEstablishedMember = reason.includes("member") || reason.includes("visitor") && linkedMember?.memberType === "member" || !ft.isArchived && linkedMember?.memberType === "member";
+    if (isEstablishedMember) {
+      mc++;
+    } else if (reason.includes("teen")) {
+      tc++;
+    } else if (reason.includes("children")) {
+      cc++;
+    } else if (reason.includes("visitor")) {
+      vc++;
+      sc++;
+    } else if (!ft.isArchived) {
+      sc++;
+    } else {
+      removedCount++;
+    }
+  }
   const establishedCount = mc + tc + cc;
   const grandTotal = Number(totalRows[0].count);
-  const rc = grandTotal - sc - establishedCount - vc;
   res.json({
     data: enriched,
     total: grandTotal,
@@ -55688,7 +56272,7 @@ router9.get("/reports/first-timers-status", async (req, res) => {
     asTeens: tc,
     asChildren: cc,
     asVisitor: vc,
-    removed: Math.max(0, rc),
+    removed: removedCount,
     stillActive: sc,
     page: pageNum,
     limit: limitNum
@@ -56028,12 +56612,12 @@ router10.get("/giving-search", async (req, res) => {
     results.push(...rows.map((r) => ({ id: r.id, firstName: r.first_name, lastName: r.last_name, membershipId: r.membership_id, personType: "member" })));
   }
   if (!type || type === "teen") {
-    const rows = await db.execute(sql`SELECT id, first_name, last_name FROM teens WHERE is_archived = false AND (first_name ILIKE ${term} OR last_name ILIKE ${term} OR (first_name || ' ' || last_name) ILIKE ${term}) LIMIT ${lim}`);
-    results.push(...rows.map((r) => ({ id: r.id, firstName: r.first_name, lastName: r.last_name, membershipId: null, personType: "teen" })));
+    const rows = await db.execute(sql`SELECT id, first_name, last_name, membership_id FROM teens WHERE is_archived = false AND (first_name ILIKE ${term} OR last_name ILIKE ${term} OR (first_name || ' ' || last_name) ILIKE ${term}) LIMIT ${lim}`);
+    results.push(...rows.map((r) => ({ id: r.id, firstName: r.first_name, lastName: r.last_name, membershipId: r.membership_id, personType: "teen" })));
   }
   if (!type || type === "child") {
-    const rows = await db.execute(sql`SELECT id, first_name, last_name FROM children WHERE is_archived = false AND (first_name ILIKE ${term} OR last_name ILIKE ${term} OR (first_name || ' ' || last_name) ILIKE ${term}) LIMIT ${lim}`);
-    results.push(...rows.map((r) => ({ id: r.id, firstName: r.first_name, lastName: r.last_name, membershipId: null, personType: "child" })));
+    const rows = await db.execute(sql`SELECT id, first_name, last_name, membership_id FROM children WHERE is_archived = false AND (first_name ILIKE ${term} OR last_name ILIKE ${term} OR (first_name || ' ' || last_name) ILIKE ${term}) LIMIT ${lim}`);
+    results.push(...rows.map((r) => ({ id: r.id, firstName: r.first_name, lastName: r.last_name, membershipId: r.membership_id, personType: "child" })));
   }
   if (!type || type === "first_timer") {
     const rows = await db.execute(sql`SELECT id, first_name, last_name FROM first_timers WHERE is_archived = false AND (first_name ILIKE ${term} OR last_name ILIKE ${term} OR (first_name || ' ' || last_name) ILIKE ${term}) LIMIT ${lim}`);
@@ -56303,11 +56887,11 @@ var archives_default = router11;
 
 // src/routes/admin.ts
 var import_express12 = __toESM(require_express2(), 1);
-import crypto7 from "crypto";
+import crypto8 from "crypto";
 var router12 = (0, import_express12.Router)();
 router12.use(authenticateToken);
-function hashPassword5(password) {
-  return crypto7.createHash("sha256").update(password + "ce_kumasi_salt").digest("hex");
+function hashPassword6(password) {
+  return crypto8.createHash("sha256").update(password + "ce_kumasi_salt").digest("hex");
 }
 router12.get("/users", requireRole(1), async (req, res) => {
   const users = await db.select().from(usersTable).where(ne(usersTable.roleLevel, 5));
@@ -56326,7 +56910,7 @@ router12.post("/users", requireRole(1), async (req, res) => {
   if (!username || !password || !roleLevel || !memberId) return res.status(400).json({ error: "All fields required" });
   const existing = await db.select().from(usersTable).where(eq(usersTable.username, username)).limit(1);
   if (existing.length) return res.status(409).json({ error: "Username already exists" });
-  const created = await db.insert(usersTable).values({ username, passwordHash: hashPassword5(password), roleLevel, roleSubtype, memberId }).returning();
+  const created = await db.insert(usersTable).values({ username, passwordHash: hashPassword6(password), roleLevel, roleSubtype, memberId }).returning();
   const m = await db.select().from(membersTable).where(eq(membersTable.id, memberId)).limit(1);
   res.status(201).json({ id: created[0].id, username: created[0].username, roleLevel: created[0].roleLevel, roleSubtype: created[0].roleSubtype, memberId, memberName: m.length ? `${m[0].firstName} ${m[0].lastName}` : "" });
 });
@@ -56334,7 +56918,7 @@ router12.patch("/users/:id", requireRole(1), async (req, res) => {
   const id = parseInt(req.params.id);
   const { password, roleLevel, roleSubtype, isActive } = req.body;
   const update = {};
-  if (password) update.passwordHash = hashPassword5(password);
+  if (password) update.passwordHash = hashPassword6(password);
   if (roleLevel !== void 0) update.roleLevel = roleLevel;
   if (roleSubtype !== void 0) update.roleSubtype = roleSubtype;
   if (isActive !== void 0) update.isActive = isActive;
@@ -56361,7 +56945,7 @@ router12.get("/activity-log", requireRole(1), async (req, res) => {
     ) : void 0;
     const [totalResult, items] = await Promise.all([
       whereClause ? db.select({ count: count() }).from(activityLogTable).where(whereClause) : db.select({ count: count() }).from(activityLogTable),
-      whereClause ? db.select().from(activityLogTable).where(whereClause).orderBy(desc(activityLogTable.createdAt)).limit(pageSize).offset(offset) : db.select().from(activityLogTable).orderBy(desc(activityLogTable.createdAt)).limit(pageSize).offset(offset)
+      whereClause ? db.select().from(activityLogTable).where(whereClause).orderBy(desc2(activityLogTable.createdAt)).limit(pageSize).offset(offset) : db.select().from(activityLogTable).orderBy(desc2(activityLogTable.createdAt)).limit(pageSize).offset(offset)
     ]);
     res.json({ items, total: Number(totalResult[0]?.count ?? 0), page, pageSize });
   } catch (err) {
@@ -56559,7 +57143,7 @@ function subscribeMeeting(meetingId, fn) {
 }
 
 // src/routes/online.ts
-import crypto8 from "crypto";
+import crypto9 from "crypto";
 var router14 = (0, import_express14.Router)();
 function getYoutubeId(url) {
   const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/);
@@ -56579,7 +57163,7 @@ function extractYoutubeId(raw) {
   return ytId ?? raw.trim().slice(0, 20);
 }
 router14.get("/videos", async (_req, res) => {
-  const videos = await db.select().from(videosTable).orderBy(desc(videosTable.createdAt));
+  const videos = await db.select().from(videosTable).orderBy(desc2(videosTable.createdAt));
   res.json(videos);
 });
 router14.get("/videos/:id", async (req, res) => {
@@ -56874,7 +57458,7 @@ router14.get("/notifications/pending-requests", authenticateToken, async (req, r
   const user = req.user;
   const isEligible = user && (user.roleLevel === 1 || user.roleLevel === 3 && user.roleSubtype === "media");
   if (!isEligible) return res.status(403).json({ error: "Forbidden" });
-  const pending = await db.select().from(videoAccessRequestsTable).where(eq(videoAccessRequestsTable.status, "pending")).orderBy(desc(videoAccessRequestsTable.id));
+  const pending = await db.select().from(videoAccessRequestsTable).where(eq(videoAccessRequestsTable.status, "pending")).orderBy(desc2(videoAccessRequestsTable.id));
   if (!pending.length) return res.json([]);
   const memberIds = [...new Set(pending.map((r) => r.memberId))];
   const videoIds = [...new Set(pending.map((r) => r.videoId))];
@@ -56941,7 +57525,7 @@ router14.get("/notifications/meeting-join-requests", authenticateToken, async (r
   }
 });
 router14.get("/online-meetings", async (_req, res) => {
-  const meetings = await db.select().from(onlineMeetingsTable).where(isNull(onlineMeetingsTable.endedAt)).orderBy(desc(onlineMeetingsTable.createdAt));
+  const meetings = await db.select().from(onlineMeetingsTable).where(isNull(onlineMeetingsTable.endedAt)).orderBy(desc2(onlineMeetingsTable.createdAt));
   res.json(meetings);
 });
 router14.get("/online-meetings/active", async (_req, res) => {
@@ -56951,7 +57535,7 @@ router14.get("/online-meetings/active", async (_req, res) => {
 router14.post("/online-meetings", authenticateToken, requireRole(3), async (req, res) => {
   const { title, description, scheduledAt, meetingType, restrictedGroups } = req.body;
   if (!title) return res.status(400).json({ error: "title is required" });
-  const roomCode = `cek1-${crypto8.randomBytes(4).toString("hex")}`;
+  const roomCode = `cek1-${crypto9.randomBytes(4).toString("hex")}`;
   const adminUser = req.user;
   const [created] = await db.insert(onlineMeetingsTable).values({
     title,
@@ -57253,7 +57837,7 @@ router14.get("/meetings/:id/participants-report", authenticateToken, requireRole
 });
 router14.get("/reports/online-services", authenticateToken, requireRole(1), async (_req, res) => {
   try {
-    const videos = await db.select().from(videosTable).where(sql`(${videosTable.isLive} = true OR ${videosTable.liveEnded} = true)`).orderBy(desc(videosTable.liveStartedAt));
+    const videos = await db.select().from(videosTable).where(sql`(${videosTable.isLive} = true OR ${videosTable.liveEnded} = true)`).orderBy(desc2(videosTable.liveStartedAt));
     if (!videos.length) return res.json([]);
     const videoIds = videos.map((v) => v.id);
     const sessionCounts = await db.select({
@@ -59973,9 +60557,9 @@ import * as util2 from "node:util";
 var is_key_object_default = (obj) => util2.types.isKeyObject(obj);
 
 // ../node_modules/.pnpm/jose@5.10.0/node_modules/jose/dist/node/esm/runtime/webcrypto.js
-import * as crypto9 from "node:crypto";
+import * as crypto10 from "node:crypto";
 import * as util3 from "node:util";
-var webcrypto2 = crypto9.webcrypto;
+var webcrypto2 = crypto10.webcrypto;
 var webcrypto_default = webcrypto2;
 var isCryptoKey = (key) => util3.types.isCryptoKey(key);
 
@@ -60472,7 +61056,7 @@ function keyForCrypto(alg, key) {
 }
 
 // ../node_modules/.pnpm/jose@5.10.0/node_modules/jose/dist/node/esm/runtime/sign.js
-import * as crypto10 from "node:crypto";
+import * as crypto11 from "node:crypto";
 import { promisify } from "node:util";
 
 // ../node_modules/.pnpm/jose@5.10.0/node_modules/jose/dist/node/esm/runtime/hmac_digest.js
@@ -60515,11 +61099,11 @@ function getSignVerifyKey(alg, key, usage) {
 }
 
 // ../node_modules/.pnpm/jose@5.10.0/node_modules/jose/dist/node/esm/runtime/sign.js
-var oneShotSign = promisify(crypto10.sign);
+var oneShotSign = promisify(crypto11.sign);
 var sign2 = async (alg, key, data) => {
   const k = getSignVerifyKey(alg, key, "sign");
   if (alg.startsWith("HS")) {
-    const hmac2 = crypto10.createHmac(hmacDigest(alg), k);
+    const hmac2 = crypto11.createHmac(hmacDigest(alg), k);
     hmac2.update(data);
     return hmac2.digest();
   }
@@ -61174,7 +61758,7 @@ router15.post("/:id/message", optionalAuth, async (req, res) => {
         eq(meetingParticipantsTable.meetingId, meetingId),
         eq(meetingParticipantsTable.peerId, peerId)
       )
-    ).orderBy(desc(meetingParticipantsTable.joinedAt)).limit(1);
+    ).orderBy(desc2(meetingParticipantsTable.joinedAt)).limit(1);
     if (!participant) return res.status(403).json({ error: "Not in meeting" });
     const [created] = await db.insert(meetingMessagesTable).values({
       meetingId,
@@ -61481,7 +62065,7 @@ router15.post("/:id/livekit-token", optionalAuth, async (req, res) => {
         eq(meetingParticipantsTable.peerId, peerId),
         isNull(meetingParticipantsTable.leftAt)
       )
-    ).orderBy(desc(meetingParticipantsTable.joinedAt)).limit(1);
+    ).orderBy(desc2(meetingParticipantsTable.joinedAt)).limit(1);
     if (!participant) {
       return res.status(403).json({ error: "Join the meeting first before requesting a media token" });
     }
@@ -61670,7 +62254,7 @@ router16.get("/home/feed", authenticateToken, async (req, res) => {
         )
       ), []),
       // Latest video
-      safeQuery(() => db.select().from(videosTable).orderBy(desc(videosTable.createdAt)).limit(1), []),
+      safeQuery(() => db.select().from(videosTable).orderBy(desc2(videosTable.createdAt)).limit(1), []),
       // Announcements
       safeQuery(() => db.select().from(announcementsTable).where(
         and(
@@ -61684,7 +62268,7 @@ router16.get("/home/feed", authenticateToken, async (req, res) => {
             gte(announcementsTable.expiresAt, today)
           )
         )
-      ).orderBy(desc(announcementsTable.createdAt)).limit(10), []),
+      ).orderBy(desc2(announcementsTable.createdAt)).limit(10), []),
       // Live meetings
       safeQuery(() => db.select({
         id: onlineMeetingsTable.id,
@@ -61821,7 +62405,7 @@ async function getVisibleRows(memberId) {
         gte(announcementsTable.expiresAt, now)
       )
     )
-  ).orderBy(desc(announcementsTable.createdAt)).limit(50);
+  ).orderBy(desc2(announcementsTable.createdAt)).limit(50);
 }
 router17.get("/", async (req, res) => {
   const user = req.user;
@@ -61876,7 +62460,7 @@ router17.post("/", requireRole(1), async (req, res) => {
         eq(announcementsTable.isActive, true),
         isNull(announcementsTable.targetMemberId)
       )
-    ).orderBy(desc(announcementsTable.createdAt));
+    ).orderBy(desc2(announcementsTable.createdAt));
     if (activeGlobal.length > MAX_ACTIVE_ANNOUNCEMENTS) {
       const toDeactivate = activeGlobal.slice(MAX_ACTIVE_ANNOUNCEMENTS).map((r) => r.id);
       for (const id of toDeactivate) {
@@ -61923,7 +62507,7 @@ router18.post("/", async (req, res) => {
   res.status(201).json(created);
 });
 router18.get("/", requireRole(1), async (req, res) => {
-  const rows = await db.select().from(prayerRequestsTable).orderBy(desc(prayerRequestsTable.createdAt)).limit(100);
+  const rows = await db.select().from(prayerRequestsTable).orderBy(desc2(prayerRequestsTable.createdAt)).limit(100);
   res.json(rows);
 });
 router18.patch("/:id/prayed", requireRole(1), async (req, res) => {
@@ -62011,7 +62595,8 @@ async function ensureTables() {
         member_type TEXT NOT NULL DEFAULT 'member', cell_id INTEGER, spouse_id INTEGER,
         profile_photo TEXT, pin TEXT NOT NULL DEFAULT '0000',
         is_archived BOOLEAN NOT NULL DEFAULT FALSE, archive_reason TEXT,
-        archived_at TIMESTAMPTZ, archived_by INTEGER, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())` },
+         archived_at TIMESTAMPTZ, archived_by INTEGER, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+         first_timer_id INTEGER)` },
     { name: "leadership_roles", sql: `CREATE TABLE IF NOT EXISTS leadership_roles (
         id SERIAL PRIMARY KEY, member_id INTEGER NOT NULL, role TEXT NOT NULL)` },
     { name: "activity_log", sql: `CREATE TABLE IF NOT EXISTS activity_log (
@@ -62189,11 +62774,18 @@ async function ensureTables() {
     `ALTER TABLE activity_log ADD COLUMN IF NOT EXISTS performed_by_name TEXT`,
     `ALTER TABLE children ALTER COLUMN class DROP NOT NULL`,
     `ALTER TABLE children ADD COLUMN IF NOT EXISTS membership_id TEXT`,
+    `ALTER TABLE children ADD COLUMN IF NOT EXISTS source_member_id INTEGER`,
     `CREATE UNIQUE INDEX IF NOT EXISTS children_membership_id_key ON children(membership_id) WHERE membership_id IS NOT NULL`,
     `ALTER TABLE teens ADD COLUMN IF NOT EXISTS membership_id TEXT`,
+    `ALTER TABLE teens ADD COLUMN IF NOT EXISTS source_member_id INTEGER`,
     `CREATE UNIQUE INDEX IF NOT EXISTS teens_membership_id_key ON teens(membership_id) WHERE membership_id IS NOT NULL`,
     `ALTER TABLE teens ADD COLUMN IF NOT EXISTS pin TEXT NOT NULL DEFAULT '0000'`,
-    `ALTER TABLE members ADD COLUMN IF NOT EXISTS transferred_from_teen_id INTEGER`
+    `ALTER TABLE members ALTER COLUMN phone1 DROP NOT NULL`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS children_source_member_id_key ON children(source_member_id) WHERE source_member_id IS NOT NULL AND is_archived = false`,
+    `CREATE UNIQUE INDEX IF NOT EXISTS teens_source_member_id_key ON teens(source_member_id) WHERE source_member_id IS NOT NULL AND is_archived = false`,
+    `ALTER TABLE members ADD COLUMN IF NOT EXISTS transferred_from_teen_id INTEGER`,
+    `ALTER TABLE members ADD COLUMN IF NOT EXISTS first_timer_id INTEGER`,
+    `CREATE INDEX IF NOT EXISTS idx_members_first_timer_id ON members(first_timer_id)`
   ];
   for (const m of columnMigrations) {
     try {
