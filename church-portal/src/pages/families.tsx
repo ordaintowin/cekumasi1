@@ -259,10 +259,10 @@ function FamilyForm({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!father || !mother) return;
+    if (!father && !mother) return;
     onSubmit({
-      fatherId: father.id,
-      motherId: mother.id,
+      fatherId: father?.id ?? null,
+      motherId: mother?.id ?? null,
       childIds: children.map(c => c.id),
       teenIds: teens.map(t => t.id),
       memberChildIds: memberChildren.map(m => m.id),
@@ -272,7 +272,7 @@ function FamilyForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4 py-2">
       <MemberSearch
-        label="Father (Male Member)"
+        label="Father (Male Member, optional)"
         gender="male"
         selected={father}
         onSelect={setFather}
@@ -280,7 +280,7 @@ function FamilyForm({
         placeholder="Search male member..."
       />
       <MemberSearch
-        label="Mother (Female Member)"
+        label="Mother (Female Member, optional)"
         gender="female"
         selected={mother}
         onSelect={setMother}
@@ -308,9 +308,14 @@ function FamilyForm({
         onAdd={m => setMemberChildren(prev => [...prev, m])}
         onRemove={id => setMemberChildren(prev => prev.filter(m => m.id !== id))}
       />
+      {!father && !mother && (
+        <p className="text-xs text-amber-600">
+          Select at least one parent to create the family.
+        </p>
+      )}
       <div className="flex gap-2 pt-1">
         <Button type="button" variant="outline" className="flex-1" onClick={onClose}>Cancel</Button>
-        <Button type="submit" className="flex-1 bg-purple-700 text-white" disabled={isPending || !father || !mother}>
+        <Button type="submit" className="flex-1 bg-purple-700 text-white" disabled={isPending || (!father && !mother)}>
           {isPending ? "Saving..." : "Save Family"}
         </Button>
       </div>
