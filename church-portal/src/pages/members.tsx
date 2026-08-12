@@ -1518,7 +1518,7 @@ export default function Members() {
                   <Upload className="w-4 h-4 mr-2" /> Bulk Names
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-lg">
+              <DialogContent className="w-[calc(100vw-1rem)] max-w-lg max-h-[calc(100vh-2rem)] overflow-y-auto p-4 sm:p-6">
                 <DialogHeader><DialogTitle>Bulk add member names</DialogTitle></DialogHeader>
                 <div className="space-y-4">
                   <div className="rounded-lg border border-indigo-100 bg-indigo-50 p-3 text-sm text-indigo-900">
@@ -1530,7 +1530,7 @@ export default function Members() {
                       <SelectTrigger id="bulk-fellowship">
                         <SelectValue placeholder="Choose a fellowship..." />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="max-h-64 w-[var(--radix-select-trigger-width)] max-w-[calc(100vw-2rem)]">
                         <SelectItem value="none">No fellowship</SelectItem>
                         {bulkFellowships.map(fellowship => (
                           <SelectItem key={fellowship.id} value={String(fellowship.id)}>
