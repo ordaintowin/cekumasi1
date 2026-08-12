@@ -233,49 +233,45 @@ router.post("/", async (req, res) => {
     memberChildIds = [],
   } = req.body;
 
-  if (!fatherId) return res.status(400).json({ error: "Father is required" });
-  if (!motherId) return res.status(400).json({ error: "Mother is required" });
-  if (parseInt(fatherId) === parseInt(motherId))
+  const fatherIdNum = fatherId ? parseInt(String(fatherId), 10) : null;
+  const motherIdNum = motherId ? parseInt(String(motherId), 10) : null;
+
+  if (!fatherIdNum && !motherIdNum)
+    return res.status(400).json({ error: "At least one parent is required" });
+  if (fatherIdNum && motherIdNum && fatherIdNum === motherIdNum)
     return res
       .status(400)
       .json({ error: "Father and Mother must be different people" });
 
   const memberChildIdNums = memberChildIds.map(Number);
   if (
-    memberChildIdNums.includes(parseInt(fatherId)) ||
-    memberChildIdNums.includes(parseInt(motherId))
+    (fatherIdNum && memberChildIdNums.includes(fatherIdNum)) ||
+    (motherIdNum && memberChildIdNums.includes(motherIdNum))
   )
     return res
       .status(400)
       .json({ error: "Father or Mother cannot also be listed as a child" });
 
-  const father = await db
-    .select()
-    .from(membersTable)
-    .where(eq(membersTable.id, parseInt(fatherId)))
-    .limit(1);
-  if (!father.length) return res.status(404).json({ error: "Father not found" });
-  if (father[0].gender !== "male")
+  const [father, mother] = await Promise.all([
+    fatherIdNum
+      ? db.select().from(membersTable).where(eq(membersTable.id, fatherIdNum)).limit(1)
+      : Promise.resolve([]),
+    motherIdNum
+      ? db.select().from(membersTable).where(eq(membersTable.id, motherIdNum)).limit(1)
+      : Promise.resolve([]),
+  ]);
+  if (fatherIdNum && !father.length) return res.status(404).json({ error: "Father not found" });
+  if (father.length && father[0].gender !== "male")
     return res.status(400).json({ error: "Father must be a male member" });
-
-  const mother = await db
-    .select()
-    .from(membersTable)
-    .where(eq(membersTable.id, parseInt(motherId)))
-    .limit(1);
-  if (!mother.length) return res.status(404).json({ error: "Mother not found" });
-  if (mother[0].gender !== "female")
+  if (motherIdNum && !mother.length) return res.status(404).json({ error: "Mother not found" });
+  if (mother.length && mother[0].gender !== "female")
     return res.status(400).json({ error: "Mother must be a female member" });
 
-  if (await isMemberInAnyFamily(parseInt(fatherId)))
-    return res
-      .status(409)
-      .json({ error: `${father[0].firstName} ${father[0].lastName} is already in another family` });
+  if (fatherIdNum && await isMemberInAnyFamily(fatherIdNum))
+    return res.status(409).json({ error: `${father[0].firstName} ${father[0].lastName} is already in another family` });
 
-  if (await isMemberInAnyFamily(parseInt(motherId)))
-    return res
-      .status(409)
-      .json({ error: `${mother[0].firstName} ${mother[0].lastName} is already in another family` });
+  if (motherIdNum && await isMemberInAnyFamily(motherIdNum))
+    return res.status(409).json({ error: `${mother[0].firstName} ${mother[0].lastName} is already in another family` });
 
   for (const cId of childIds.map(Number)) {
     const existing = await db
@@ -312,7 +308,7 @@ router.post("/", async (req, res) => {
 
   const created = await db
     .insert(familiesTable)
-    .values({ headId: parseInt(fatherId), spouseId: parseInt(motherId) })
+    .values({ headId: fatherIdNum, spouseId: motherIdNum })
     .returning();
   const famId = created[0].id;
 
@@ -330,8 +326,10 @@ router.post("/", async (req, res) => {
       .values({ familyId: famId, memberId: mId, type: "member" });
 
   // Sync spouseId on both members so member records stay accurate
-  await db.update(membersTable).set({ spouseId: parseInt(motherId), maritalStatus: "married" }).where(eq(membersTable.id, parseInt(fatherId)));
-  await db.update(membersTable).set({ spouseId: parseInt(fatherId), maritalStatus: "married" }).where(eq(membersTable.id, parseInt(motherId)));
+  if (fatherIdNum && motherIdNum) {
+    await db.update(membersTable).set({ spouseId: motherIdNum, maritalStatus: "married" }).where(eq(membersTable.id, fatherIdNum));
+    await db.update(membersTable).set({ spouseId: fatherIdNum, maritalStatus: "married" }).where(eq(membersTable.id, motherIdNum));
+  }
 
   res.status(201).json(await getFamilyDetail(created[0]));
 });
