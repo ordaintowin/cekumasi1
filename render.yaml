@@ -24,7 +24,9 @@ services:
 
 databases:
   - name: church-db
-    plan: free
+    # Keep this aligned with the existing Render database. Render does not
+    # allow a Blueprint sync to downgrade Basic-256mb to Free.
+    plan: basic-256mb
     region: oregon
     databaseName: church_portal
     user: church_admin
