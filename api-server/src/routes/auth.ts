@@ -8,8 +8,12 @@ import { authenticateToken } from "../middlewares/auth";
 
 const router = Router();
 
-const JWT_SECRET = process.env.SESSION_SECRET;
-if (!JWT_SECRET) throw new Error("SESSION_SECRET environment variable must be set");
+// SESSION_SECRET is the canonical name. Keep JWT_SECRET as a temporary
+// compatibility fallback for existing deployments during Blueprint sync.
+const JWT_SECRET = process.env.SESSION_SECRET ?? process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error("SESSION_SECRET environment variable must be set");
+}
 
 function hashPassword(password: string): string {
   return crypto.createHash("sha256").update(password + "ce_kumasi_salt").digest("hex");

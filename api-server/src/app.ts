@@ -20,6 +20,11 @@ app.set("trust proxy", 1);
 
 // Ensure all tables exist on every startup (CREATE TABLE IF NOT EXISTS — safe to run repeatedly)
 async function ensureTables() {
+  // Fail startup when the configured DATABASE_URL cannot be reached. Without
+  // this check, Render can mark the service healthy while every login query
+  // is failing in the background.
+  await db.execute(sql`SELECT 1`);
+
   const steps: Array<{ name: string; sql: string }> = [
     { name: "users", sql: `CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY, username TEXT NOT NULL UNIQUE,
@@ -233,7 +238,9 @@ async function ensureTables() {
     try { await db.execute(sql.raw(m)); } catch { }
   }
 }
-ensureTables();
+// The deploy hook creates the schema and seed user. This runtime check keeps
+// restarts safe while ensuring the server does not accept requests first.
+export const databaseReady = ensureTables();
 
 // ── Middleware ────────────────────────────────────────────────────────────────
 
@@ -265,8 +272,12 @@ app.use(cors({
   credentials: true,
 }));
 
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ limit: "10mb", extended: true }));
+// Overlay images are intentionally allowed to be larger than normal API
+// payloads. Keep that exception scoped so routine requests cannot allocate
+// a 10 MB parser buffer under load.
+app.use("/api/online/videos", express.json({ limit: "10mb" }));
+app.use(express.json({ limit: "2mb" }));
+app.use(express.urlencoded({ limit: "1mb", extended: true }));
 
 // Real-time conference polling paths that must never be rate-limited
 function isConferencePoll(path: string): boolean {
@@ -304,8 +315,14 @@ app.use("/api/auth/login", authLimiter);
 app.use("/api", apiLimiter);
 
 // ── Health check (used by Railway, Fly.io, load balancers) ────────────────────
-app.get("/health", (_req, res) => {
-  res.json({ status: "ok", ts: Date.now() });
+app.get("/health", async (_req, res) => {
+  try {
+    await db.execute(sql`SELECT 1`);
+    res.json({ status: "ok", ts: Date.now() });
+  } catch (err) {
+    logger.error({ err }, "Health check database query failed");
+    res.status(503).json({ status: "degraded", ts: Date.now() });
+  }
 });
 
 // ── Routes ────────────────────────────────────────────────────────────────────

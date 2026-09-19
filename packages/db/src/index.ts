@@ -8,9 +8,12 @@ import { sql } from "drizzle-orm";
 
 const connectionString = process.env.DATABASE_URL!;
 const client = postgres(connectionString, {
-  max: 40,              // was 5 — supports 500 concurrent users
-  idle_timeout: 30,     // keep idle connections a bit longer to avoid reconnect cost
-  max_lifetime: 1800,   // 30 min — prevent stale connections
+  // Render's Starter instance and managed Postgres do not need one
+  // connection per request. A bounded pool avoids connection and memory
+  // spikes when polling or meeting traffic increases.
+  max: 10,
+  idle_timeout: 10,
+  max_lifetime: 600,
   connect_timeout: 10,
 });
 export const db = drizzle(client);

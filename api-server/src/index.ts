@@ -1,4 +1,4 @@
-import app from "./app";
+import app, { databaseReady } from "./app";
 import { logger } from "./lib/logger";
 import { closeDb } from "@workspace/db";
 
@@ -15,6 +15,8 @@ const port = Number(rawPort);
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
+
+await databaseReady;
 
 const server = app.listen(port, (err) => {
   if (err) {

@@ -50862,12 +50862,12 @@ function drizzle(...params) {
 // ../packages/db/src/index.ts
 var connectionString = process.env.DATABASE_URL;
 var client = src_default(connectionString, {
-  max: 40,
-  // was 5 — supports 500 concurrent users
-  idle_timeout: 30,
-  // keep idle connections a bit longer to avoid reconnect cost
-  max_lifetime: 1800,
-  // 30 min — prevent stale connections
+  // Render's Starter instance and managed Postgres do not need one
+  // connection per request. A bounded pool avoids connection and memory
+  // spikes when polling or meeting traffic increases.
+  max: 10,
+  idle_timeout: 10,
+  max_lifetime: 600,
   connect_timeout: 10
 });
 var db = drizzle(client);
@@ -51248,8 +51248,10 @@ import crypto3 from "crypto";
 
 // src/middlewares/auth.ts
 var import_jsonwebtoken = __toESM(require_jsonwebtoken(), 1);
-var JWT_SECRET = process.env.SESSION_SECRET;
-if (!JWT_SECRET) throw new Error("SESSION_SECRET environment variable must be set");
+var JWT_SECRET = process.env.SESSION_SECRET ?? process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error("SESSION_SECRET environment variable must be set");
+}
 async function authenticateToken(req, res, next) {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
@@ -51304,8 +51306,10 @@ function optionalAuth(req, res, next) {
 
 // src/routes/auth.ts
 var router2 = (0, import_express2.Router)();
-var JWT_SECRET2 = process.env.SESSION_SECRET;
-if (!JWT_SECRET2) throw new Error("SESSION_SECRET environment variable must be set");
+var JWT_SECRET2 = process.env.SESSION_SECRET ?? process.env.JWT_SECRET;
+if (!JWT_SECRET2) {
+  throw new Error("SESSION_SECRET environment variable must be set");
+}
 function hashPassword(password) {
   return crypto3.createHash("sha256").update(password + "ce_kumasi_salt").digest("hex");
 }
@@ -54618,24 +54622,28 @@ router8.post("/", async (req, res) => {
     teenIds = [],
     memberChildIds = []
   } = req.body;
-  if (!fatherId) return res.status(400).json({ error: "Father is required" });
-  if (!motherId) return res.status(400).json({ error: "Mother is required" });
-  if (parseInt(fatherId) === parseInt(motherId))
+  const fatherIdNum = fatherId ? parseInt(String(fatherId), 10) : null;
+  const motherIdNum = motherId ? parseInt(String(motherId), 10) : null;
+  if (!fatherIdNum && !motherIdNum)
+    return res.status(400).json({ error: "At least one parent is required" });
+  if (fatherIdNum && motherIdNum && fatherIdNum === motherIdNum)
     return res.status(400).json({ error: "Father and Mother must be different people" });
   const memberChildIdNums = memberChildIds.map(Number);
-  if (memberChildIdNums.includes(parseInt(fatherId)) || memberChildIdNums.includes(parseInt(motherId)))
+  if (fatherIdNum && memberChildIdNums.includes(fatherIdNum) || motherIdNum && memberChildIdNums.includes(motherIdNum))
     return res.status(400).json({ error: "Father or Mother cannot also be listed as a child" });
-  const father = await db.select().from(membersTable).where(eq(membersTable.id, parseInt(fatherId))).limit(1);
-  if (!father.length) return res.status(404).json({ error: "Father not found" });
-  if (father[0].gender !== "male")
+  const [father, mother] = await Promise.all([
+    fatherIdNum ? db.select().from(membersTable).where(eq(membersTable.id, fatherIdNum)).limit(1) : Promise.resolve([]),
+    motherIdNum ? db.select().from(membersTable).where(eq(membersTable.id, motherIdNum)).limit(1) : Promise.resolve([])
+  ]);
+  if (fatherIdNum && !father.length) return res.status(404).json({ error: "Father not found" });
+  if (father.length && father[0].gender !== "male")
     return res.status(400).json({ error: "Father must be a male member" });
-  const mother = await db.select().from(membersTable).where(eq(membersTable.id, parseInt(motherId))).limit(1);
-  if (!mother.length) return res.status(404).json({ error: "Mother not found" });
-  if (mother[0].gender !== "female")
+  if (motherIdNum && !mother.length) return res.status(404).json({ error: "Mother not found" });
+  if (mother.length && mother[0].gender !== "female")
     return res.status(400).json({ error: "Mother must be a female member" });
-  if (await isMemberInAnyFamily(parseInt(fatherId)))
+  if (fatherIdNum && await isMemberInAnyFamily(fatherIdNum))
     return res.status(409).json({ error: `${father[0].firstName} ${father[0].lastName} is already in another family` });
-  if (await isMemberInAnyFamily(parseInt(motherId)))
+  if (motherIdNum && await isMemberInAnyFamily(motherIdNum))
     return res.status(409).json({ error: `${mother[0].firstName} ${mother[0].lastName} is already in another family` });
   for (const cId of childIds.map(Number)) {
     const existing = await db.select().from(familyChildrenTable).where(
@@ -54655,7 +54663,7 @@ router8.post("/", async (req, res) => {
     if (await isMemberInAnyFamily(mId))
       return res.status(409).json({ error: "One or more member-children are already in another family" });
   }
-  const created = await db.insert(familiesTable).values({ headId: parseInt(fatherId), spouseId: parseInt(motherId) }).returning();
+  const created = await db.insert(familiesTable).values({ headId: fatherIdNum, spouseId: motherIdNum }).returning();
   const famId = created[0].id;
   for (const cId of childIds.map(Number))
     await db.insert(familyChildrenTable).values({ familyId: famId, childId: cId, type: "child" });
@@ -54663,8 +54671,10 @@ router8.post("/", async (req, res) => {
     await db.insert(familyChildrenTable).values({ familyId: famId, teenId: tId, type: "teen" });
   for (const mId of memberChildIdNums)
     await db.insert(familyChildrenTable).values({ familyId: famId, memberId: mId, type: "member" });
-  await db.update(membersTable).set({ spouseId: parseInt(motherId), maritalStatus: "married" }).where(eq(membersTable.id, parseInt(fatherId)));
-  await db.update(membersTable).set({ spouseId: parseInt(fatherId), maritalStatus: "married" }).where(eq(membersTable.id, parseInt(motherId)));
+  if (fatherIdNum && motherIdNum) {
+    await db.update(membersTable).set({ spouseId: motherIdNum, maritalStatus: "married" }).where(eq(membersTable.id, fatherIdNum));
+    await db.update(membersTable).set({ spouseId: fatherIdNum, maritalStatus: "married" }).where(eq(membersTable.id, motherIdNum));
+  }
   res.status(201).json(await getFamilyDetail(created[0]));
 });
 router8.patch("/:id", async (req, res) => {
@@ -57864,6 +57874,7 @@ router14.get("/reports/online-services", authenticateToken, requireRole(1), asyn
   }
 });
 var overlayStore = /* @__PURE__ */ new Map();
+var MAX_OVERLAY_VIDEOS = 10;
 router14.get("/videos/:id/overlay", async (req, res) => {
   const videoId = parseInt(req.params.id);
   const state = overlayStore.get(videoId) ?? { images: [], active: false, updatedAt: 0 };
@@ -57884,6 +57895,10 @@ router14.post("/videos/:id/overlay", authenticateToken, requireRole(3), async (r
     }
   }
   const state = { images, active: active ?? true, updatedAt: Date.now() };
+  if (!overlayStore.has(videoId) && overlayStore.size >= MAX_OVERLAY_VIDEOS) {
+    const oldestVideoId = overlayStore.keys().next().value;
+    if (typeof oldestVideoId === "number") overlayStore.delete(oldestVideoId);
+  }
   overlayStore.set(videoId, state);
   res.json({ ok: true, updatedAt: state.updatedAt });
 });
@@ -62580,6 +62595,7 @@ var __dirname = path.dirname(fileURLToPath(import.meta.url));
 var app = (0, import_express21.default)();
 app.set("trust proxy", 1);
 async function ensureTables() {
+  await db.execute(sql`SELECT 1`);
   const steps = [
     { name: "users", sql: `CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY, username TEXT NOT NULL UNIQUE,
@@ -62794,7 +62810,7 @@ async function ensureTables() {
     }
   }
 }
-ensureTables();
+var databaseReady = ensureTables();
 app.use((0, import_compression.default)({
   filter: (req, res) => {
     if (req.headers.accept?.includes("text/event-stream")) return false;
@@ -62819,8 +62835,9 @@ app.use((0, import_cors.default)({
   origin: process.env.CORS_ORIGIN || true,
   credentials: true
 }));
-app.use(import_express21.default.json({ limit: "10mb" }));
-app.use(import_express21.default.urlencoded({ limit: "10mb", extended: true }));
+app.use("/api/online/videos", import_express21.default.json({ limit: "10mb" }));
+app.use(import_express21.default.json({ limit: "2mb" }));
+app.use(import_express21.default.urlencoded({ limit: "1mb", extended: true }));
 function isConferencePoll(path2) {
   return /^\/conference\/\d+\/(signals|participants|messages|ping|stream)/.test(path2) || /^\/meetings\/\d+\/join-requests/.test(path2) || /^\/online-meetings/.test(path2);
 }
@@ -62845,8 +62862,14 @@ var authLimiter = rate_limit_default({
 });
 app.use("/api/auth/login", authLimiter);
 app.use("/api", apiLimiter);
-app.get("/health", (_req, res) => {
-  res.json({ status: "ok", ts: Date.now() });
+app.get("/health", async (_req, res) => {
+  try {
+    await db.execute(sql`SELECT 1`);
+    res.json({ status: "ok", ts: Date.now() });
+  } catch (err) {
+    logger.error({ err }, "Health check database query failed");
+    res.status(503).json({ status: "degraded", ts: Date.now() });
+  }
 });
 app.use("/api", routes_default);
 var frontendDist = path.resolve(__dirname, "../../church-portal/dist/public");
@@ -62881,6 +62904,7 @@ var port = Number(rawPort);
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
+await databaseReady;
 var server = app_default.listen(port, (err) => {
   if (err) {
     logger.error({ err }, "Error listening on port");
