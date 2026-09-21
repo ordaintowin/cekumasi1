@@ -1303,6 +1303,7 @@ router.get("/reports/members-attendance", async (req, res) => {
       id: m.id,
       firstName: m.firstName,
       lastName: m.lastName,
+      phoneNumber: m.phone1,
       cellLabel,
       attendance,
       attended,
@@ -2051,7 +2052,14 @@ router.get("/reports/ct-attendance", async (req, res) => {
   const serviceIds = services.map(s => s.id);
 
   // Use Drizzle ORM joins (postgres-js driver returns rows directly, not result.rows)
-  type AttendRow = { serviceId: number; entityId: number; name: string; gender: string | null };
+  type AttendRow = {
+    serviceId: number;
+    entityId: number;
+    name: string;
+    gender: string | null;
+    parentId: number | null;
+    parentExternal: string | null;
+  };
 
   let attendRows: AttendRow[] = [];
   if (group === "children") {
@@ -2062,6 +2070,8 @@ router.get("/reports/ct-attendance", async (req, res) => {
         firstName: childrenTable.firstName,
         lastName: childrenTable.lastName,
         gender: childrenTable.gender,
+        parentId: childrenTable.parentId,
+        parentExternal: childrenTable.parentExternal,
       })
       .from(serviceChildrenAttendanceTable)
       .innerJoin(childrenTable, eq(serviceChildrenAttendanceTable.childId, childrenTable.id))
@@ -2071,6 +2081,8 @@ router.get("/reports/ct-attendance", async (req, res) => {
       entityId: r.entityId,
       name: `${r.firstName} ${r.lastName}`,
       gender: r.gender ?? null,
+      parentId: r.parentId ?? null,
+      parentExternal: r.parentExternal ?? null,
     }));
   } else {
     const rows = await db
@@ -2080,6 +2092,8 @@ router.get("/reports/ct-attendance", async (req, res) => {
         firstName: teensTable.firstName,
         lastName: teensTable.lastName,
         gender: teensTable.gender,
+        parentId: teensTable.parentId,
+        parentExternal: teensTable.parentExternal,
       })
       .from(serviceTeensAttendanceTable)
       .innerJoin(teensTable, eq(serviceTeensAttendanceTable.teenId, teensTable.id))
@@ -2089,14 +2103,47 @@ router.get("/reports/ct-attendance", async (req, res) => {
       entityId: r.entityId,
       name: `${r.firstName} ${r.lastName}`,
       gender: r.gender ?? null,
+      parentId: r.parentId ?? null,
+      parentExternal: r.parentExternal ?? null,
     }));
   }
 
+  const parentIds = [...new Set(
+    attendRows
+      .map(row => row.parentId)
+      .filter((id): id is number => id !== null && id !== undefined),
+  )];
+  const parentRows = parentIds.length
+    ? await db.select({
+        id: membersTable.id,
+        firstName: membersTable.firstName,
+        lastName: membersTable.lastName,
+      }).from(membersTable).where(inArray(membersTable.id, parentIds))
+    : [];
+  const parentMap = new Map(parentRows.map(parent => [
+    parent.id,
+    `${parent.firstName} ${parent.lastName}`,
+  ]));
+
   // Build a map keyed by entity ID so the same person across services is grouped correctly
-  const entityMap = new Map<number, { name: string; gender: string | null; attendance: Record<number, boolean>; attended: number; total: number }>();
+  const entityMap = new Map<number, {
+    name: string;
+    gender: string | null;
+    parent: string | null;
+    attendance: Record<number, boolean>;
+    attended: number;
+    total: number;
+  }>();
   for (const row of attendRows) {
     if (!entityMap.has(row.entityId)) {
-      entityMap.set(row.entityId, { name: row.name, gender: row.gender, attendance: {}, attended: 0, total: services.length });
+      entityMap.set(row.entityId, {
+        name: row.name,
+        gender: row.gender,
+        parent: (row.parentId ? parentMap.get(row.parentId) : null) ?? row.parentExternal ?? null,
+        attendance: {},
+        attended: 0,
+        total: services.length,
+      });
     }
     const entry = entityMap.get(row.entityId)!;
     entry.attendance[row.serviceId] = true;

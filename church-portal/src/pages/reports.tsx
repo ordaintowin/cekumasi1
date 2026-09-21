@@ -9,6 +9,7 @@ import {
   useListMinistryYears, getListMinistryYearsQueryKey,
 } from "@workspace/api-client-react";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -43,6 +44,8 @@ function ChildrenTeensAttendanceTable({ month, group }: { month: string; group: 
   const token = typeof localStorage !== "undefined" ? localStorage.getItem("token") : null;
   const [data, setData] = React.useState<any>(null);
   const [loading, setLoading] = React.useState(false);
+  const [exporting, setExporting] = React.useState(false);
+  const { toast } = useToast();
 
   React.useEffect(() => {
     setLoading(true);
@@ -56,6 +59,46 @@ function ChildrenTeensAttendanceTable({ month, group }: { month: string; group: 
 
   const services = data?.services ?? [];
   const members = data?.members ?? [];
+
+  async function exportToExcel() {
+    if (!services.length) return;
+    setExporting(true);
+    try {
+      const groupLabel = group === "children" ? "Children's Church" : "Teens Church";
+      const headers = [
+        "Name",
+        "Fellowship",
+        "Parents",
+        ...services.map((svc: any) => {
+          const date = svc.date
+            ? new Date(svc.date).toLocaleDateString("en-GH", { day: "numeric", month: "short" })
+            : "";
+          return date ? `${svc.name} (${date})` : svc.name;
+        }),
+      ];
+      const rows = members.map((member: any) => [
+        member.name ?? "",
+        groupLabel,
+        member.parent ?? "",
+        ...services.map((svc: any) => member.attendance?.[svc.id] ? "P" : "A"),
+      ]);
+
+      await downloadAoaAsExcel(
+        [headers, ...rows],
+        group === "children" ? "Children Attendance" : "Teens Attendance",
+        `${group}-attendance-${month}.xlsx`,
+      );
+      toast({ title: "Excel downloaded", description: `${members.length} ${group} exported for ${month}.` });
+    } catch (error: any) {
+      toast({
+        title: "Export failed",
+        description: error?.message || "Could not create the Excel file.",
+        variant: "destructive",
+      });
+    } finally {
+      setExporting(false);
+    }
+  }
 
   if (loading) {
     return (
@@ -78,8 +121,14 @@ function ChildrenTeensAttendanceTable({ month, group }: { month: string; group: 
 
   return (
     <div className="space-y-3">
-      <div className="text-sm text-gray-500">
-        {members.length} {group === "children" ? "children" : "teens"} &bull; {services.length} service{services.length !== 1 ? "s" : ""} in {month}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="text-sm text-gray-500">
+          {members.length} {group === "children" ? "children" : "teens"} &bull; {services.length} service{services.length !== 1 ? "s" : ""} in {month}
+        </div>
+        <Button size="sm" variant="outline" onClick={exportToExcel} disabled={exporting} className="gap-1.5">
+          {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileSpreadsheet className="w-3.5 h-3.5" />}
+          {exporting ? "Preparing..." : "Download Excel"}
+        </Button>
       </div>
       <div className="overflow-x-auto border rounded-lg bg-white">
         <Table>
@@ -208,6 +257,9 @@ function MemberAttendanceReport({
   });
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [exporting, setExporting] = useState(false);
+  const { toast } = useToast();
+  const token = typeof localStorage !== "undefined" ? localStorage.getItem("token") : null;
 
   const { data: hierarchyData } = useGetFellowshipHierarchy({ query: { queryKey: getGetFellowshipHierarchyQueryKey() } });
 
@@ -242,6 +294,84 @@ function MemberAttendanceReport({
 
   const isLocked      = !!(lockedCellId || lockedSeniorCellId || lockedPcfId);
   const isChildrenOrTeens = fellowship === "children" || fellowship === "teens";
+
+  async function exportToExcel() {
+    setExporting(true);
+    try {
+      if (isChildrenOrTeens) {
+        toast({
+          title: "Please wait",
+          description: "The children/teens attendance table is still loading.",
+        });
+        return;
+      }
+
+      const exportLimit = 50;
+      const exportMembers: any[] = [];
+      let exportPage = 1;
+      let exportTotalPages = 1;
+      let exportServices = services;
+
+      while (exportPage <= exportTotalPages) {
+        const query = new URLSearchParams();
+        query.set("month", month);
+        query.set("page", String(exportPage));
+        query.set("limit", String(exportLimit));
+        if (cellId !== undefined) query.set("cellId", String(lockedCellId ?? cellId));
+        if (scId !== undefined) query.set("seniorCellId", String(lockedSeniorCellId ?? scId));
+        if (pcfId !== undefined) query.set("pcfId", String(lockedPcfId ?? pcfId));
+        if (isNoFellowship) query.set("noFellowship", "true");
+        if (search) query.set("search", search);
+
+        const response = await fetch(`/api/reports/members-attendance?${query.toString()}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({}));
+          throw new Error(error.error || `Request failed: ${response.status}`);
+        }
+
+        const result = await response.json();
+        exportMembers.push(...(result.members ?? []));
+        exportServices = result.services ?? exportServices;
+        exportTotalPages = Math.max(1, Math.ceil(Number(result.total ?? 0) / exportLimit));
+        exportPage += 1;
+      }
+
+      const headers = [
+        "Name",
+        "Fellowship",
+        "Phone Number",
+        ...exportServices.map((svc: any) => {
+          const date = svc.date
+            ? new Date(svc.date).toLocaleDateString("en-GH", { day: "numeric", month: "short" })
+            : "";
+          return date ? `${svc.name} (${date})` : svc.name;
+        }),
+      ];
+      const rows = exportMembers.map((member: any) => [
+        `${member.firstName ?? ""} ${member.lastName ?? ""}`.trim(),
+        member.cellLabel ?? "",
+        member.phoneNumber ?? "",
+        ...exportServices.map((svc: any) => member.attendance?.[svc.id] ? "P" : "A"),
+      ]);
+
+      await downloadAoaAsExcel(
+        [headers, ...rows],
+        "Member Attendance",
+        `member-attendance-${month}-${fellowship}.xlsx`,
+      );
+      toast({ title: "Excel downloaded", description: `${exportMembers.length} members exported for ${month}.` });
+    } catch (error: any) {
+      toast({
+        title: "Export failed",
+        description: error?.message || "Could not create the Excel file.",
+        variant: "destructive",
+      });
+    } finally {
+      setExporting(false);
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -309,6 +439,10 @@ function MemberAttendanceReport({
             </div>
           </div>
         )}
+        <Button size="sm" variant="outline" onClick={exportToExcel} disabled={exporting || isChildrenOrTeens} className="gap-1.5">
+          {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FileSpreadsheet className="w-3.5 h-3.5" />}
+          {exporting ? "Preparing..." : "Download Excel"}
+        </Button>
       </div>
 
       {isChildrenOrTeens && (
