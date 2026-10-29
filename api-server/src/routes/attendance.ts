@@ -454,7 +454,13 @@ router.get("/services/:id/attendance", async (req, res) => {
   }
 
   // Active (non-archived) members only for the live roster display
-  const allMembers = await db.select().from(membersTable).where(and(eq(membersTable.isArchived, false), eq(membersTable.memberType, "member")));
+  const allMembers = await db.select({
+    id: membersTable.id,
+    firstName: membersTable.firstName,
+    lastName: membersTable.lastName,
+    title: membersTable.title,
+    cellId: membersTable.cellId,
+  }).from(membersTable).where(and(eq(membersTable.isArchived, false), eq(membersTable.memberType, "member")));
   const memberMap = new Map(allMembers.map(m => [m.id, m]));
 
   // Fetch first-timers for this service — include archived ones (they still attended);
@@ -491,7 +497,6 @@ router.get("/services/:id/attendance", async (req, res) => {
         const members = cellMembers.map(m => ({
           memberId: m.id,
           memberName: fmt(m),
-          profilePhoto: m.profilePhoto,
           checkedIn: checkedInIds.has(m.id),
           checkInTime: checkinMap.get(m.id)?.checkInTime?.toISOString() || null,
           isLeader: m.id === cell.leaderId,
@@ -502,7 +507,7 @@ router.get("/services/:id/attendance", async (req, res) => {
         for (const m of cellMembers.filter(m => checkedInIds.has(m.id))) {
           const ci = checkinMap.get(m.id);
           attendeeList.push({
-            type: "member", memberId: m.id, name: fmt(m), profilePhoto: m.profilePhoto,
+            type: "member", memberId: m.id, name: fmt(m),
             fellowship: cell.name, scName: sc.name, pcfName: pcf.name,
             checkInTime: ci?.checkInTime?.toISOString() || null,
           });
@@ -525,7 +530,7 @@ router.get("/services/:id/attendance", async (req, res) => {
     const cellMembers = allMembers.filter(m => m.cellId === cell.id);
     const snapshotCheckedIn = checkinsByCellId.get(cell.id) ?? 0;
     const members = cellMembers.map(m => ({
-      memberId: m.id, memberName: fmt(m), profilePhoto: m.profilePhoto,
+      memberId: m.id, memberName: fmt(m),
       checkedIn: checkedInIds.has(m.id),
       checkInTime: checkinMap.get(m.id)?.checkInTime?.toISOString() || null,
       isLeader: m.id === cell.leaderId,
@@ -534,7 +539,7 @@ router.get("/services/:id/attendance", async (req, res) => {
     for (const m of cellMembers.filter(m => checkedInIds.has(m.id))) {
       const ci = checkinMap.get(m.id);
       attendeeList.push({
-        type: "member", memberId: m.id, name: fmt(m), profilePhoto: m.profilePhoto,
+        type: "member", memberId: m.id, name: fmt(m),
         fellowship: cell.name, scName: null, pcfName: null,
         checkInTime: ci?.checkInTime?.toISOString() || null,
       });
@@ -558,7 +563,7 @@ router.get("/services/:id/attendance", async (req, res) => {
       scCheckedIn += snapshotCheckedIn;
       scTotal += cellMembers.length;
       const members = cellMembers.map(m => ({
-        memberId: m.id, memberName: fmt(m), profilePhoto: m.profilePhoto,
+        memberId: m.id, memberName: fmt(m),
         checkedIn: checkedInIds.has(m.id),
         checkInTime: checkinMap.get(m.id)?.checkInTime?.toISOString() || null,
         isLeader: m.id === cell.leaderId,
@@ -567,7 +572,7 @@ router.get("/services/:id/attendance", async (req, res) => {
       for (const m of cellMembers.filter(m => checkedInIds.has(m.id))) {
         const ci = checkinMap.get(m.id);
         attendeeList.push({
-          type: "member", memberId: m.id, name: fmt(m), profilePhoto: m.profilePhoto,
+          type: "member", memberId: m.id, name: fmt(m),
           fellowship: cell.name, scName: sc.name, pcfName: null,
           checkInTime: ci?.checkInTime?.toISOString() || null,
         });
@@ -583,7 +588,6 @@ router.get("/services/:id/attendance", async (req, res) => {
   const noFellowshipMemberNodes = noFellowshipMembers.map(m => ({
     memberId: m.id,
     memberName: fmt(m),
-    profilePhoto: m.profilePhoto,
     checkedIn: checkedInIds.has(m.id),
     checkInTime: checkinMap.get(m.id)?.checkInTime?.toISOString() || null,
   }));
@@ -593,7 +597,6 @@ router.get("/services/:id/attendance", async (req, res) => {
       type: "member",
       memberId: m.id,
       name: fmt(m),
-      profilePhoto: m.profilePhoto,
       fellowship: "No Fellowship",
       scName: null,
       pcfName: null,
@@ -695,7 +698,12 @@ router.get("/services/:id/attendance", async (req, res) => {
   }
 
   // Add visitor-type members who checked in (no fellowship, counted under "No Fellowship")
-  const visitorMembers = await db.select().from(membersTable)
+  const visitorMembers = await db.select({
+    id: membersTable.id,
+    firstName: membersTable.firstName,
+    lastName: membersTable.lastName,
+    title: membersTable.title,
+  }).from(membersTable)
     .where(and(eq(membersTable.isArchived, false), eq(membersTable.memberType, "visitor")));
   for (const v of visitorMembers) {
     if (checkedInIds.has(v.id)) {
@@ -704,7 +712,6 @@ router.get("/services/:id/attendance", async (req, res) => {
         type: "visitor",
         memberId: v.id,
         name: fmt(v),
-        profilePhoto: v.profilePhoto,
         fellowship: null, scName: null, pcfName: null,
         checkInTime: ci?.checkInTime?.toISOString() || null,
       });
@@ -1303,7 +1310,6 @@ router.get("/reports/members-attendance", async (req, res) => {
       id: m.id,
       firstName: m.firstName,
       lastName: m.lastName,
-      phoneNumber: m.phone1,
       cellLabel,
       attendance,
       attended,
@@ -2052,14 +2058,7 @@ router.get("/reports/ct-attendance", async (req, res) => {
   const serviceIds = services.map(s => s.id);
 
   // Use Drizzle ORM joins (postgres-js driver returns rows directly, not result.rows)
-  type AttendRow = {
-    serviceId: number;
-    entityId: number;
-    name: string;
-    gender: string | null;
-    parentId: number | null;
-    parentExternal: string | null;
-  };
+  type AttendRow = { serviceId: number; entityId: number; name: string; gender: string | null };
 
   let attendRows: AttendRow[] = [];
   if (group === "children") {
@@ -2070,8 +2069,6 @@ router.get("/reports/ct-attendance", async (req, res) => {
         firstName: childrenTable.firstName,
         lastName: childrenTable.lastName,
         gender: childrenTable.gender,
-        parentId: childrenTable.parentId,
-        parentExternal: childrenTable.parentExternal,
       })
       .from(serviceChildrenAttendanceTable)
       .innerJoin(childrenTable, eq(serviceChildrenAttendanceTable.childId, childrenTable.id))
@@ -2081,8 +2078,6 @@ router.get("/reports/ct-attendance", async (req, res) => {
       entityId: r.entityId,
       name: `${r.firstName} ${r.lastName}`,
       gender: r.gender ?? null,
-      parentId: r.parentId ?? null,
-      parentExternal: r.parentExternal ?? null,
     }));
   } else {
     const rows = await db
@@ -2092,8 +2087,6 @@ router.get("/reports/ct-attendance", async (req, res) => {
         firstName: teensTable.firstName,
         lastName: teensTable.lastName,
         gender: teensTable.gender,
-        parentId: teensTable.parentId,
-        parentExternal: teensTable.parentExternal,
       })
       .from(serviceTeensAttendanceTable)
       .innerJoin(teensTable, eq(serviceTeensAttendanceTable.teenId, teensTable.id))
@@ -2103,47 +2096,14 @@ router.get("/reports/ct-attendance", async (req, res) => {
       entityId: r.entityId,
       name: `${r.firstName} ${r.lastName}`,
       gender: r.gender ?? null,
-      parentId: r.parentId ?? null,
-      parentExternal: r.parentExternal ?? null,
     }));
   }
 
-  const parentIds = [...new Set(
-    attendRows
-      .map(row => row.parentId)
-      .filter((id): id is number => id !== null && id !== undefined),
-  )];
-  const parentRows = parentIds.length
-    ? await db.select({
-        id: membersTable.id,
-        firstName: membersTable.firstName,
-        lastName: membersTable.lastName,
-      }).from(membersTable).where(inArray(membersTable.id, parentIds))
-    : [];
-  const parentMap = new Map(parentRows.map(parent => [
-    parent.id,
-    `${parent.firstName} ${parent.lastName}`,
-  ]));
-
   // Build a map keyed by entity ID so the same person across services is grouped correctly
-  const entityMap = new Map<number, {
-    name: string;
-    gender: string | null;
-    parent: string | null;
-    attendance: Record<number, boolean>;
-    attended: number;
-    total: number;
-  }>();
+  const entityMap = new Map<number, { name: string; gender: string | null; attendance: Record<number, boolean>; attended: number; total: number }>();
   for (const row of attendRows) {
     if (!entityMap.has(row.entityId)) {
-      entityMap.set(row.entityId, {
-        name: row.name,
-        gender: row.gender,
-        parent: (row.parentId ? parentMap.get(row.parentId) : null) ?? row.parentExternal ?? null,
-        attendance: {},
-        attended: 0,
-        total: services.length,
-      });
+      entityMap.set(row.entityId, { name: row.name, gender: row.gender, attendance: {}, attended: 0, total: services.length });
     }
     const entry = entityMap.get(row.entityId)!;
     entry.attendance[row.serviceId] = true;

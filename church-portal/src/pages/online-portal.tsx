@@ -1406,14 +1406,25 @@ export default function OnlinePortal() {
       return;
     }
     const videoId = selectedVideo.id;
+    let etag: string | null = null;
+    let requestInFlight = false;
     const fetchOverlay = async () => {
+      if (requestInFlight) return;
+      requestInFlight = true;
       try {
         const token = localStorage.getItem("token");
+        const headers: Record<string, string> = { Authorization: `Bearer ${token}` };
+        if (etag) headers["If-None-Match"] = etag;
         const res = await fetch(`/api/videos/${videoId}/overlay`, {
-          headers: { Authorization: `Bearer ${token}` },
+          headers,
         });
-        if (res.ok) setOverlayState(await res.json());
+        if (res.status === 304) return;
+        if (res.ok) {
+          etag = res.headers.get("ETag");
+          setOverlayState(await res.json());
+        }
       } catch { /* ignore */ }
+      finally { requestInFlight = false; }
     };
     fetchOverlay();
     overlayPollRef.current = setInterval(fetchOverlay, 3_000);

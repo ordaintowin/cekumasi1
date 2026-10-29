@@ -108,6 +108,7 @@ router.post("/videos/:id/end-live", authenticateToken, requireRole(3), async (re
 router.delete("/videos/:id", authenticateToken, requireRole(3), async (req, res) => {
   const id = parseInt(req.params.id);
   await db.delete(videosTable).where(eq(videosTable.id, id));
+  overlayStore.delete(id);
   res.json({ success: true });
 });
 
@@ -874,12 +875,15 @@ interface OverlayState {
 
 // In-memory store (keyed by videoId). Cleared when live ends.
 const overlayStore = new Map<number, OverlayState>();
-const MAX_OVERLAY_VIDEOS = 10;
 
 // GET — current overlay (called by all viewers ~every 3 s, no auth so EventSource works too)
 router.get("/videos/:id/overlay", async (req, res) => {
   const videoId = parseInt(req.params.id);
   const state = overlayStore.get(videoId) ?? { images: [], active: false, updatedAt: 0 };
+  const etag = `"overlay-${state.updatedAt}"`;
+  res.setHeader("Cache-Control", "private, no-cache");
+  res.setHeader("ETag", etag);
+  if (req.headers["if-none-match"] === etag) return res.status(304).end();
   res.json(state);
 });
 
@@ -901,10 +905,6 @@ router.post("/videos/:id/overlay", authenticateToken, requireRole(3), async (req
   }
 
   const state: OverlayState = { images, active: active ?? true, updatedAt: Date.now() };
-  if (!overlayStore.has(videoId) && overlayStore.size >= MAX_OVERLAY_VIDEOS) {
-    const oldestVideoId = overlayStore.keys().next().value;
-    if (typeof oldestVideoId === "number") overlayStore.delete(oldestVideoId);
-  }
   overlayStore.set(videoId, state);
   res.json({ ok: true, updatedAt: state.updatedAt });
 });
