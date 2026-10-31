@@ -4,12 +4,8 @@ import { usersTable, teensTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import jwt from "jsonwebtoken";
 
-// SESSION_SECRET is the canonical name. Keep JWT_SECRET as a temporary
-// compatibility fallback for existing deployments during Blueprint sync.
-const JWT_SECRET = process.env.SESSION_SECRET ?? process.env.JWT_SECRET;
-if (!JWT_SECRET) {
-  throw new Error("SESSION_SECRET environment variable must be set");
-}
+const JWT_SECRET = process.env.SESSION_SECRET;
+if (!JWT_SECRET) throw new Error("SESSION_SECRET environment variable must be set");
 
 export async function authenticateToken(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers["authorization"];

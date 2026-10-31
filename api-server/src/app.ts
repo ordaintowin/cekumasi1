@@ -20,20 +20,25 @@ app.set("trust proxy", 1);
 
 // Ensure all tables exist on every startup (CREATE TABLE IF NOT EXISTS — safe to run repeatedly)
 async function ensureTables() {
-  // Fail startup when the configured DATABASE_URL cannot be reached. Without
-  // this check, Render can mark the service healthy while every login query
-  // is failing in the background.
-  await db.execute(sql`SELECT 1`);
-
   const steps: Array<{ name: string; sql: string }> = [
     { name: "users", sql: `CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY, username TEXT NOT NULL UNIQUE,
         password_hash TEXT NOT NULL, role_level INTEGER NOT NULL DEFAULT 5,
         role_subtype TEXT, member_id INTEGER, is_active BOOLEAN NOT NULL DEFAULT TRUE)` },
+    { name: "password_reset_tokens", sql: `CREATE TABLE IF NOT EXISTS password_reset_tokens (
+        id SERIAL PRIMARY KEY, token_hash TEXT NOT NULL UNIQUE,
+        purpose TEXT NOT NULL, target_type TEXT NOT NULL, target_id INTEGER NOT NULL,
+        expires_at TIMESTAMPTZ NOT NULL, used_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())` },
+    { name: "email_verification_tokens", sql: `CREATE TABLE IF NOT EXISTS email_verification_tokens (
+        id SERIAL PRIMARY KEY, token_hash TEXT NOT NULL UNIQUE, member_id INTEGER NOT NULL,
+        email TEXT NOT NULL, expires_at TIMESTAMPTZ NOT NULL, used_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())` },
     { name: "members", sql: `CREATE TABLE IF NOT EXISTS members (
         id SERIAL PRIMARY KEY, membership_id TEXT NOT NULL UNIQUE,
         first_name TEXT NOT NULL, last_name TEXT NOT NULL, gender TEXT NOT NULL,
-        phone1 TEXT NOT NULL, phone2 TEXT, email TEXT, occupation TEXT NOT NULL DEFAULT '',
+        phone1 TEXT NOT NULL, phone2 TEXT, email TEXT, email_verified BOOLEAN NOT NULL DEFAULT FALSE,
+        occupation TEXT NOT NULL DEFAULT '',
         residential_address TEXT NOT NULL DEFAULT '', emergency_contact TEXT NOT NULL DEFAULT '',
         date_of_birth TEXT, marital_status TEXT, date_joined TEXT, foundation_school_date TEXT,
         wedding_date TEXT, is_baptized BOOLEAN NOT NULL DEFAULT FALSE, title TEXT,
@@ -232,15 +237,14 @@ async function ensureTables() {
     `CREATE UNIQUE INDEX IF NOT EXISTS teens_source_member_id_key ON teens(source_member_id) WHERE source_member_id IS NOT NULL AND is_archived = false`,
     `ALTER TABLE members ADD COLUMN IF NOT EXISTS transferred_from_teen_id INTEGER`,
     `ALTER TABLE members ADD COLUMN IF NOT EXISTS first_timer_id INTEGER`,
+    `ALTER TABLE members ADD COLUMN IF NOT EXISTS email_verified BOOLEAN NOT NULL DEFAULT FALSE`,
     `CREATE INDEX IF NOT EXISTS idx_members_first_timer_id ON members(first_timer_id)`,
   ];
   for (const m of columnMigrations) {
     try { await db.execute(sql.raw(m)); } catch { }
   }
 }
-// The deploy hook creates the schema and seed user. This runtime check keeps
-// restarts safe while ensuring the server does not accept requests first.
-export const databaseReady = ensureTables();
+ensureTables();
 
 // ── Middleware ────────────────────────────────────────────────────────────────
 
@@ -272,12 +276,8 @@ app.use(cors({
   credentials: true,
 }));
 
-// Overlay images are intentionally allowed to be larger than normal API
-// payloads. Keep that exception scoped so routine requests cannot allocate
-// a 10 MB parser buffer under load.
-app.use("/api/online/videos", express.json({ limit: "10mb" }));
-app.use(express.json({ limit: "2mb" }));
-app.use(express.urlencoded({ limit: "1mb", extended: true }));
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
 // Real-time conference polling paths that must never be rate-limited
 function isConferencePoll(path: string): boolean {
@@ -311,18 +311,29 @@ const authLimiter = rateLimit({
   message: { error: "Too many login attempts, please try again later." },
 });
 
+const passwordResetRequestLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many reset requests. Please wait before trying again." },
+});
+const passwordResetCompleteLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many reset attempts. Please request a new link later." },
+});
+
 app.use("/api/auth/login", authLimiter);
+app.use("/api/auth/password-reset/request", passwordResetRequestLimiter);
+app.use("/api/auth/password-reset/complete", passwordResetCompleteLimiter);
 app.use("/api", apiLimiter);
 
 // ── Health check (used by Railway, Fly.io, load balancers) ────────────────────
-app.get("/health", async (_req, res) => {
-  try {
-    await db.execute(sql`SELECT 1`);
-    res.json({ status: "ok", ts: Date.now() });
-  } catch (err) {
-    logger.error({ err }, "Health check database query failed");
-    res.status(503).json({ status: "degraded", ts: Date.now() });
-  }
+app.get("/health", (_req, res) => {
+  res.json({ status: "ok", ts: Date.now() });
 });
 
 // ── Routes ────────────────────────────────────────────────────────────────────

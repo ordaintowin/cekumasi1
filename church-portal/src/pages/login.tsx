@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, MessageCircle, MessageSquare } from "lucide-react";
+import { Loader2, MessageCircle, MessageSquare, Phone } from "lucide-react";
 
 export default function Login() {
   const { login } = useAuth();
@@ -24,7 +24,11 @@ export default function Login() {
   const [memberId, setMemberId] = useState("");
   const [pin, setPin] = useState("");
   const [forgotOpen, setForgotOpen] = useState(false);
-  const [forgotName, setForgotName] = useState("");
+  const [forgotMode, setForgotMode] = useState<"password" | "pin">("password");
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotMembershipId, setForgotMembershipId] = useState("");
+  const [forgotStatus, setForgotStatus] = useState<"idle" | "sending" | "sent" | "support" | "error">("idle");
+  const [forgotError, setForgotError] = useState("");
 
   const loginMutation = useLogin({
     mutation: {
@@ -65,6 +69,50 @@ export default function Login() {
   const handleMemberLogin = (e: React.FormEvent) => {
     e.preventDefault();
     loginMutation.mutate({ data: { username: memberId, password: pin, loginType: "member_pin" } });
+  };
+
+  const openForgotDialog = (mode: "password" | "pin") => {
+    setForgotMode(mode);
+    setForgotEmail("");
+    setForgotMembershipId(mode === "pin" ? memberId : "");
+    setForgotStatus("idle");
+    setForgotError("");
+    setForgotOpen(true);
+  };
+
+  const closeForgotDialog = () => {
+    setForgotOpen(false);
+    setForgotEmail("");
+    setForgotMembershipId("");
+    setForgotStatus("idle");
+    setForgotError("");
+  };
+
+  const handleForgotRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotStatus("sending");
+    setForgotError("");
+    try {
+      const response = await fetch("/api/auth/password-reset/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: forgotEmail,
+          mode: forgotMode,
+          membershipId: forgotMode === "pin" ? forgotMembershipId : undefined,
+        }),
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setForgotError(body?.error || "We couldn't send the reset email. Please contact the admin.");
+        setForgotStatus("error");
+        return;
+      }
+      setForgotStatus(body?.supportRequired ? "support" : "sent");
+    } catch {
+      setForgotError("We couldn't send the reset email. Please contact the admin.");
+      setForgotStatus("error");
+    }
   };
 
   return (
@@ -132,7 +180,7 @@ export default function Login() {
                     Sign In
                   </Button>
                   <div className="text-center">
-                    <button type="button" onClick={() => setForgotOpen(true)} className="text-xs text-purple-500 hover:text-purple-700 underline">
+                    <button type="button" onClick={() => openForgotDialog("password")} className="text-xs text-purple-500 hover:text-purple-700 underline">
                       Forgot password?
                     </button>
                   </div>
@@ -174,7 +222,7 @@ export default function Login() {
                     Access Portal
                   </Button>
                   <div className="text-center">
-                    <button type="button" onClick={() => setForgotOpen(true)} className="text-xs text-purple-500 hover:text-purple-700 underline">
+                    <button type="button" onClick={() => openForgotDialog("pin")} className="text-xs text-purple-500 hover:text-purple-700 underline">
                       Forgot PIN?
                     </button>
                   </div>
@@ -189,60 +237,103 @@ export default function Login() {
         </p>
       </div>
 
-      <Dialog open={forgotOpen} onOpenChange={(open) => { setForgotOpen(open); if (!open) setForgotName(""); }}>
+      <Dialog open={forgotOpen} onOpenChange={(open) => { if (!open) closeForgotDialog(); else setForgotOpen(true); }}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Forgot Password / PIN?</DialogTitle>
+            <DialogTitle>{forgotMode === "pin" ? "Reset your member PIN" : "Reset your password"}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 text-sm text-gray-600">
-            <p>To reset your password or PIN, please enter your full name below and tap a button to send a message.</p>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="forgot-name" className="text-xs font-medium text-gray-700">Your Full Name</Label>
-              <Input
-                id="forgot-name"
-                placeholder="e.g. Kofi Mensah"
-                value={forgotName}
-                onChange={(e) => setForgotName(e.target.value)}
-                className="text-sm"
-              />
+          {forgotStatus === "sent" || forgotStatus === "support" ? (
+            <div className="space-y-4 text-sm text-gray-600">
+              <p className={`rounded-lg p-3 ${forgotStatus === "support" ? "bg-amber-50 text-amber-900" : "bg-green-50 text-green-800"}`}>
+                {forgotStatus === "support"
+                  ? "This email address is not verified, so we did not send a reset link. Contact the admin to confirm your email address and recover your account."
+                  : "If this email matches an account, a one-time reset link is on its way. Check your inbox and your spam or junk folder. The link expires in 30 minutes."}
+              </p>
+              <div className="space-y-2 border-t pt-3">
+                <p className="font-medium text-gray-800">Didn&apos;t receive the email? Contact the admin:</p>
+                <a
+                  href={`https://wa.me/233261827900?text=${encodeURIComponent("Hello, I need help resetting my church portal login.")}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center justify-center gap-2 rounded-md bg-green-600 px-3 py-2.5 text-sm font-medium text-white hover:bg-green-700"
+                >
+                  <MessageCircle className="w-4 h-4" /> WhatsApp +233 26 182 7900
+                </a>
+                <a
+                  href="tel:+233553722482"
+                  className="flex items-center justify-center gap-2 rounded-md border border-purple-300 px-3 py-2.5 text-sm font-medium text-purple-700 hover:bg-purple-50"
+                >
+                  <Phone className="w-4 h-4" /> Call +233 55 372 2482
+                </a>
+                <a
+                  href={`sms:+233553722482?body=${encodeURIComponent("Hello, I need help resetting my church portal login.")}`}
+                  className="flex items-center justify-center gap-2 rounded-md border border-purple-200 px-3 py-2.5 text-sm font-medium text-purple-700 hover:bg-purple-50"
+                >
+                  <MessageSquare className="w-4 h-4" /> SMS +233 55 372 2482
+                </a>
+              </div>
+              <Button type="button" variant="outline" className="w-full" onClick={closeForgotDialog}>Close</Button>
             </div>
-
-            <div className="space-y-2 pt-1">
-              <Button
-                className="w-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-2"
-                disabled={!forgotName.trim()}
-                onClick={() => {
-                  const msg = encodeURIComponent(`Greetings Esteemed, my name is ${forgotName.trim()}, I have forgotten my login details on the church portal. Kindly assist me, thank You.`);
-                  window.open(`https://wa.me/233261827900?text=${msg}`, "_blank");
-                }}
-              >
-                <MessageCircle className="w-4 h-4" />
-                Send via WhatsApp
+          ) : (
+            <form onSubmit={handleForgotRequest} className="space-y-4 text-sm text-gray-600">
+              <p>Enter the email address saved on your account. We&apos;ll send a secure, one-time reset link.</p>
+              <div className="space-y-1.5">
+                <Label htmlFor="forgot-email" className="text-xs font-medium text-gray-700">Registered email address</Label>
+                <Input
+                  id="forgot-email"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="you@example.com"
+                  value={forgotEmail}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                  className="text-sm"
+                  required
+                />
+              </div>
+              {forgotMode === "pin" && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="forgot-membership-id" className="text-xs font-medium text-gray-700">Membership ID (optional)</Label>
+                  <Input
+                    id="forgot-membership-id"
+                    placeholder="e.g. CEKSI-XXXXX"
+                    value={forgotMembershipId}
+                    onChange={(e) => setForgotMembershipId(e.target.value)}
+                    className="text-sm"
+                    maxLength={50}
+                  />
+                  <p className="text-xs text-gray-500">For a teen PIN reset, use the teen&apos;s membership ID and the parent&apos;s registered email.</p>
+                </div>
+              )}
+              {forgotError && <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">{forgotError}</p>}
+              <Button type="submit" className="w-full bg-purple-700 hover:bg-purple-800 text-white" disabled={forgotStatus === "sending"}>
+                {forgotStatus === "sending" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {forgotStatus === "sending" ? "Sending..." : "Email me a reset link"}
               </Button>
-
-              <Button
-                variant="outline"
-                className="w-full border-purple-300 text-purple-700 hover:bg-purple-50 flex items-center justify-center gap-2"
-                disabled={!forgotName.trim()}
-                onClick={() => {
-                  const msg = encodeURIComponent(`Greetings Esteemed, my name is ${forgotName.trim()}, I have forgotten my login details on the church portal. Kindly assist me, thank You.`);
-                  window.open(`sms:+233553722482?body=${msg}`, "_blank");
-                }}
-              >
-                <MessageSquare className="w-4 h-4" />
-                Send via SMS (no WhatsApp)
-              </Button>
-            </div>
-
-            <button
-              type="button"
-              className="w-full text-xs text-gray-400 hover:text-gray-600 pt-1"
-              onClick={() => { setForgotOpen(false); setForgotName(""); }}
-            >
-              Cancel
-            </button>
-          </div>
+              <div className="border-t pt-3">
+                <p className="mb-2 text-xs text-gray-600">Didn&apos;t receive an email or can&apos;t use email? Contact the admin:</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <a
+                    href={`https://wa.me/233261827900?text=${encodeURIComponent("Hello, I need help resetting my church portal login.")}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center justify-center gap-1 rounded-md bg-green-600 px-2 py-2 text-xs font-medium text-white hover:bg-green-700"
+                  >
+                    <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
+                  </a>
+                  <a
+                    href="tel:+233553722482"
+                    className="flex items-center justify-center gap-1 rounded-md border border-purple-300 px-2 py-2 text-xs font-medium text-purple-700 hover:bg-purple-50"
+                  >
+                    <Phone className="h-3.5 w-3.5" /> Call admin
+                  </a>
+                </div>
+                <p className="mt-1 text-center text-xs text-gray-500">WhatsApp +233 26 182 7900 · Phone/SMS +233 55 372 2482</p>
+              </div>
+              <button type="button" className="w-full pt-1 text-xs text-gray-400 hover:text-gray-600" onClick={closeForgotDialog}>
+                Cancel
+              </button>
+            </form>
+          )}
         </DialogContent>
       </Dialog>
     </div>

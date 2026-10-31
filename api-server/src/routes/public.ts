@@ -8,6 +8,7 @@ import {
 } from "@workspace/db";
 import { eq, and, ilike, or, ne, sql, inArray } from "drizzle-orm";
 import crypto from "crypto";
+import { sendMemberEmailVerification } from "../lib/email-verification";
 
 const router = Router();
 
@@ -266,6 +267,10 @@ router.post("/public/register/member", async (req, res) => {
     if (!firstName || !lastName || !gender || !phone1) {
       return res.status(400).json({ error: "First name, last name, gender and phone are required." });
     }
+    const normalizedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
+    if (normalizedEmail && (normalizedEmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail))) {
+      return res.status(400).json({ error: "Enter a valid email address." });
+    }
 
     const resolvedType = (memberType === "visitor" ? "visitor" : "member") as "member" | "visitor";
     const selectedSpouseId = rawSpouseId ? parseInt(String(rawSpouseId), 10) : null;
@@ -311,7 +316,8 @@ router.post("/public/register/member", async (req, res) => {
       membershipId,
       firstName, lastName, gender, phone1,
       phone2: phone2 || null,
-      email: email || null,
+      email: normalizedEmail || null,
+      emailVerified: false,
       occupation: occupation || "",
       residentialAddress: residentialAddress || "",
       emergencyContact: emergencyContact || "",
@@ -378,7 +384,21 @@ router.post("/public/register/member", async (req, res) => {
       memberId: newMemberId,
     });
 
-    res.status(201).json({ membershipId, pin, name: `${firstName} ${lastName}` });
+    let emailVerificationSent = false;
+    if (normalizedEmail) {
+      try {
+        emailVerificationSent = (await sendMemberEmailVerification(newMemberId, normalizedEmail)) === "sent";
+      } catch (err) {
+        console.warn("Registration email verification could not be sent:", err instanceof Error ? err.message : "unknown error");
+      }
+    }
+    res.status(201).json({
+      membershipId,
+      pin,
+      name: `${firstName} ${lastName}`,
+      emailVerificationRequired: Boolean(normalizedEmail),
+      emailVerificationSent,
+    });
   } catch (err: any) {
     res.status(500).json({ error: err?.message ?? "Registration failed" });
   }

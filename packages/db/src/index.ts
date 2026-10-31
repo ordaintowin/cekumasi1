@@ -8,12 +8,9 @@ import { sql } from "drizzle-orm";
 
 const connectionString = process.env.DATABASE_URL!;
 const client = postgres(connectionString, {
-  // Render's Starter instance and managed Postgres do not need one
-  // connection per request. A bounded pool avoids connection and memory
-  // spikes when polling or meeting traffic increases.
-  max: 10,
-  idle_timeout: 10,
-  max_lifetime: 600,
+  max: 40,              // was 5 — supports 500 concurrent users
+  idle_timeout: 30,     // keep idle connections a bit longer to avoid reconnect cost
+  max_lifetime: 1800,   // 30 min — prevent stale connections
   connect_timeout: 10,
 });
 export const db = drizzle(client);
@@ -29,6 +26,27 @@ export const usersTable = pgTable("users", {
   isActive: boolean("is_active").notNull().default(true),
 });
 
+export const passwordResetTokensTable = pgTable("password_reset_tokens", {
+  id: serial("id").primaryKey(),
+  tokenHash: text("token_hash").notNull().unique(),
+  purpose: text("purpose").notNull(),
+  targetType: text("target_type").notNull(),
+  targetId: integer("target_id").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  usedAt: timestamp("used_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const emailVerificationTokensTable = pgTable("email_verification_tokens", {
+  id: serial("id").primaryKey(),
+  tokenHash: text("token_hash").notNull().unique(),
+  memberId: integer("member_id").notNull(),
+  email: text("email").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  usedAt: timestamp("used_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const membersTable = pgTable("members", {
   id: serial("id").primaryKey(),
   membershipId: text("membership_id").notNull().unique(),
@@ -38,6 +56,7 @@ export const membersTable = pgTable("members", {
   phone1: text("phone1"),
   phone2: text("phone2"),
   email: text("email"),
+  emailVerified: boolean("email_verified").notNull().default(false),
   occupation: text("occupation").notNull().default(""),
   residentialAddress: text("residential_address").notNull().default(""),
   emergencyContact: text("emergency_contact").notNull().default(""),

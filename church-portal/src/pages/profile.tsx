@@ -878,6 +878,7 @@ export default function Profile() {
     emergencyContact: "",
   });
   const [isSaving, setIsSaving] = useState(false);
+  const [isRequestingEmailVerification, setIsRequestingEmailVerification] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [photoEnlarged, setPhotoEnlarged] = useState(false);
   const [showQR, setShowQR] = useState(false);
@@ -1139,14 +1140,46 @@ export default function Profile() {
           emergencyContact: editForm.emergencyContact || null,
         }),
       });
-      if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
       queryClient.invalidateQueries({ queryKey: getGetMemberQueryKey(user.memberId) });
-      toast({ title: "Profile updated successfully" });
+      if (data.emailVerificationRequired) {
+        toast({
+          title: "Email address updated",
+          description: data.emailVerificationSent
+            ? "Check your new inbox for a verification link. Recovery emails will be available after verification."
+            : "We couldn't send a verification link. Try again from your profile or contact the admin.",
+        });
+      } else {
+        toast({ title: "Profile updated successfully" });
+      }
       setEditOpen(false);
     } catch (err: any) {
       toast({ title: "Error", description: err?.message || "Failed to save", variant: "destructive" });
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleRequestEmailVerification = async () => {
+    setIsRequestingEmailVerification(true);
+    try {
+      const res = await fetch("/api/auth/email-verification/request", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Could not send a verification link.");
+      toast({
+        title: data.alreadyVerified ? "Email already verified" : "Verification email sent",
+        description: data.alreadyVerified
+          ? "Your email address is ready for account recovery."
+          : "Check your inbox for a verification link. It expires in 24 hours.",
+      });
+    } catch (err: any) {
+      toast({ title: "Could not send verification email", description: err?.message, variant: "destructive" });
+    } finally {
+      setIsRequestingEmailVerification(false);
     }
   };
 
@@ -1345,6 +1378,20 @@ export default function Profile() {
               <div className="space-y-1.5">
                 <Label>Email Address</Label>
                 <Input type="email" value={editForm.email} onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))} placeholder="your@email.com" />
+                {editForm.email.trim().toLowerCase() !== (m?.email ?? "").trim().toLowerCase() ? (
+                  <p className="text-xs text-amber-700">Your new email must be verified before it can be used for account recovery.</p>
+                ) : m?.emailVerified ? (
+                  <p className="text-xs text-green-700">This email address is verified.</p>
+                ) : (
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-xs text-amber-700">This email is not verified. Recovery links won&apos;t be sent to it.</p>
+                    {m?.email && (
+                      <Button type="button" size="sm" variant="outline" onClick={handleRequestEmailVerification} disabled={isRequestingEmailVerification}>
+                        {isRequestingEmailVerification ? "Sending..." : "Send verification link"}
+                      </Button>
+                    )}
+                  </div>
+                )}
               </div>
               <div className="space-y-1.5">
                 <Label>Primary Phone <span className="text-red-500">*</span></Label>

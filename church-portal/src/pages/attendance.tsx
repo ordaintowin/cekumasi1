@@ -1182,7 +1182,9 @@ function RegisterPage({
       : "")
     : "";
 
-  const { data: attendanceData } = useGetServiceAttendance(serviceId, { refetchInterval: 5000 });
+  // The parent page owns the shared attendance query and refreshes it periodically.
+  // Check-ins invalidate this query immediately, so this screen needs no extra poll.
+  const { data: attendanceData } = useGetServiceAttendance(serviceId);
   const totalCount = (attendanceData?.attendeeList ?? []).length;
   const memberCount = (attendanceData?.attendeeList ?? []).filter((r: any) => r.type === "member" || r.type === "visitor" || r.type === "returning_first_timer").length;
   const ftCount = (attendanceData?.attendeeList ?? []).filter((r: any) => r.type === "first_timer").length;
@@ -2236,7 +2238,7 @@ export default function Attendance() {
 
   const { data: attendanceData, isLoading: attLoading } = useGetServiceAttendance(
     activeService?.id,
-    { query: { queryKey: getGetServiceAttendanceQueryKey(activeService?.id), enabled: !!activeService?.id, refetchInterval: 20000 } }
+    { query: { queryKey: getGetServiceAttendanceQueryKey(activeService?.id), enabled: !!activeService?.id, refetchInterval: 30000 } }
   ) as any;
 
   useListServices(

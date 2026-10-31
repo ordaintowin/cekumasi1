@@ -521,9 +521,15 @@ export default function Teens() {
                     parentSearch={parentSearch} setParentSearch={setParentSearch}
                     useExternalParent={useExternalParent} setUseExternalParent={setUseExternalParent}
                     parentExternal={parentExternal} setParentExternal={setParentExternal} />
-                  <Button type="submit" className="w-full bg-purple-700 text-white mt-4" disabled={createTeen.isPending}>
-                    {createTeen.isPending ? "Registering..." : "Register Teen"}
-                  </Button>
+                  <div className="flex items-center justify-between gap-3 mt-4">
+                    <button type="button" onClick={resetForm} disabled={createTeen.isPending}
+                      className="text-xs text-purple-700 hover:text-purple-900 underline underline-offset-2 disabled:opacity-50">
+                      Clear form
+                    </button>
+                    <Button type="submit" className="bg-purple-700 text-white" disabled={createTeen.isPending}>
+                      {createTeen.isPending ? "Registering..." : "Register Teen"}
+                    </Button>
+                  </div>
                 </form>
               </TabsContent>
 

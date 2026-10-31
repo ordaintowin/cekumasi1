@@ -390,6 +390,8 @@ export default function PublicRegister() {
     setTeenSelectedParent(null); setTeenUseExternal(false); setTeenParentExternal("");
     setTeenRawResults([]);
     setCellError(false);
+    setError(null);
+    if (photoInputRef.current) photoInputRef.current.value = "";
   };
 
   const handleSelectType = (type: RegType) => {
@@ -699,6 +701,9 @@ export default function PublicRegister() {
                     <Inp label="Phone 2" value={memberForm.phone2} onChange={v => setM("phone2", v)} type="tel" />
                     <Inp label="Email" value={memberForm.email} onChange={v => setM("email", v)} type="email" />
                   </div>
+                  {memberForm.email && (
+                    <p className="text-xs text-gray-500">We&apos;ll send a verification link so this address can be used for account recovery.</p>
+                  )}
                   <Inp label="Occupation" value={memberForm.occupation} onChange={v => setM("occupation", v)} placeholder="e.g. Teacher, Nurse" />
                   <Inp label="Emergency Contact" value={memberForm.emergencyContact} onChange={v => setM("emergencyContact", v)} placeholder="Name and phone" />
                   <div className="grid grid-cols-2 gap-3">
@@ -860,6 +865,12 @@ export default function PublicRegister() {
                 <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">{error}</div>
               )}
 
+              <div className="flex justify-end pt-1">
+                <button type="button" onClick={resetForms}
+                  className="flex items-center gap-1.5 text-xs text-purple-700 hover:text-purple-900 underline underline-offset-2">
+                  <X className="w-3.5 h-3.5" /> Clear form
+                </button>
+              </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setStep("welcome")}
                   className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-colors">
@@ -991,6 +1002,17 @@ export default function PublicRegister() {
                   <p className="text-sm text-gray-600 text-center font-medium">
                     Welcome, <strong>{successData.name}</strong>! Save your login details below.
                   </p>
+                  {regType === "member" && successData.emailVerificationRequired && (
+                    <p className={`rounded-lg border p-3 text-sm ${
+                      successData.emailVerificationSent
+                        ? "border-blue-200 bg-blue-50 text-blue-800"
+                        : "border-amber-200 bg-amber-50 text-amber-900"
+                    }`}>
+                      {successData.emailVerificationSent
+                        ? "We sent a verification link to your email. Verify it before requesting a password or PIN reset."
+                        : "Your email is not verified yet, and we could not send a verification link. Contact the admin to verify it before requesting account recovery."}
+                    </p>
+                  )}
 
                   <div className="bg-purple-50 border-2 border-purple-200 rounded-xl p-4 space-y-3">
                     <p className="text-xs font-bold text-purple-700 uppercase tracking-wide text-center">Your Login Details</p>

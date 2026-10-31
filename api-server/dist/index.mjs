@@ -1324,11 +1324,11 @@ var require_http_errors = __commonJS({
     }
     function createServerErrorConstructor(HttpError, name, code) {
       var className = toClassName(name);
-      function ServerError(message2) {
+      function ServerError2(message2) {
         var msg = message2 != null ? message2 : statuses.message[code];
         var err = new Error(msg);
-        Error.captureStackTrace(err, ServerError);
-        setPrototypeOf(err, ServerError.prototype);
+        Error.captureStackTrace(err, ServerError2);
+        setPrototypeOf(err, ServerError2.prototype);
         Object.defineProperty(err, "message", {
           enumerable: true,
           configurable: true,
@@ -1343,12 +1343,12 @@ var require_http_errors = __commonJS({
         });
         return err;
       }
-      inherits(ServerError, HttpError);
-      nameFunc(ServerError, className);
-      ServerError.prototype.status = code;
-      ServerError.prototype.statusCode = code;
-      ServerError.prototype.expose = false;
-      return ServerError;
+      inherits(ServerError2, HttpError);
+      nameFunc(ServerError2, className);
+      ServerError2.prototype.status = code;
+      ServerError2.prototype.statusCode = code;
+      ServerError2.prototype.expose = false;
+      return ServerError2;
     }
     function nameFunc(func, name) {
       var desc3 = Object.getOwnPropertyDescriptor(func, "name");
@@ -1538,9 +1538,9 @@ var require_safer = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/lib/bom-handling.js
+// ../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/lib/bom-handling.js
 var require_bom_handling = __commonJS({
-  "../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/lib/bom-handling.js"(exports) {
+  "../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/lib/bom-handling.js"(exports) {
     "use strict";
     var BOMChar = "\uFEFF";
     exports.PrependBOM = PrependBOMWrapper;
@@ -1584,9 +1584,9 @@ var require_bom_handling = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/lib/helpers/merge-exports.js
+// ../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/lib/helpers/merge-exports.js
 var require_merge_exports = __commonJS({
-  "../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/lib/helpers/merge-exports.js"(exports, module) {
+  "../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/lib/helpers/merge-exports.js"(exports, module) {
     "use strict";
     var hasOwn = typeof Object.hasOwn === "undefined" ? Function.call.bind(Object.prototype.hasOwnProperty) : Object.hasOwn;
     function mergeModules(target, module2) {
@@ -1600,9 +1600,9 @@ var require_merge_exports = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/encodings/internal.js
+// ../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/encodings/internal.js
 var require_internal = __commonJS({
-  "../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/encodings/internal.js"(exports, module) {
+  "../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/encodings/internal.js"(exports, module) {
     "use strict";
     var Buffer4 = require_safer().Buffer;
     module.exports = {
@@ -1781,9 +1781,9 @@ var require_internal = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/encodings/utf32.js
+// ../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/encodings/utf32.js
 var require_utf32 = __commonJS({
-  "../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/encodings/utf32.js"(exports) {
+  "../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/encodings/utf32.js"(exports) {
     "use strict";
     var Buffer4 = require_safer().Buffer;
     exports._utf32 = Utf32Codec;
@@ -1804,7 +1804,7 @@ var require_utf32 = __commonJS({
     }
     Utf32Encoder.prototype.write = function(str) {
       var src = Buffer4.from(str, "ucs2");
-      var dst = Buffer4.alloc(src.length * 2);
+      var dst = Buffer4.alloc(src.length * 2 + 4);
       var write32 = this.isLE ? dst.writeUInt32LE : dst.writeUInt32BE;
       var offset = 0;
       for (var i = 0; i < src.length; i += 2) {
@@ -1871,9 +1871,9 @@ var require_utf32 = __commonJS({
         }
         if (overflow.length === 4) {
           if (isLE) {
-            codepoint = overflow[i] | overflow[i + 1] << 8 | overflow[i + 2] << 16 | overflow[i + 3] << 24;
+            codepoint = overflow[0] | overflow[1] << 8 | overflow[2] << 16 | overflow[3] << 24;
           } else {
-            codepoint = overflow[i + 3] | overflow[i + 2] << 8 | overflow[i + 1] << 16 | overflow[i] << 24;
+            codepoint = overflow[3] | overflow[2] << 8 | overflow[1] << 16 | overflow[0] << 24;
           }
           overflow.length = 0;
           offset = _writeCodepoint(dst, offset, codepoint, badChar);
@@ -1908,7 +1908,11 @@ var require_utf32 = __commonJS({
       return offset;
     }
     Utf32Decoder.prototype.end = function() {
+      if (this.overflow.length === 0) {
+        return;
+      }
       this.overflow.length = 0;
+      return String.fromCharCode(this.badChar);
     };
     exports.utf32 = Utf32AutoCodec;
     exports.ucs4 = "utf32";
@@ -2012,9 +2016,9 @@ var require_utf32 = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/encodings/utf16.js
+// ../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/encodings/utf16.js
 var require_utf16 = __commonJS({
-  "../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/encodings/utf16.js"(exports) {
+  "../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/encodings/utf16.js"(exports) {
     "use strict";
     var Buffer4 = require_safer().Buffer;
     exports.utf16be = Utf16BECodec;
@@ -2155,9 +2159,9 @@ var require_utf16 = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/encodings/utf7.js
+// ../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/encodings/utf7.js
 var require_utf7 = __commonJS({
-  "../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/encodings/utf7.js"(exports) {
+  "../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/encodings/utf7.js"(exports) {
     "use strict";
     var Buffer4 = require_safer().Buffer;
     exports.utf7 = Utf7Codec;
@@ -2373,9 +2377,9 @@ var require_utf7 = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/encodings/sbcs-codec.js
+// ../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/encodings/sbcs-codec.js
 var require_sbcs_codec = __commonJS({
-  "../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/encodings/sbcs-codec.js"(exports) {
+  "../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/encodings/sbcs-codec.js"(exports) {
     "use strict";
     var Buffer4 = require_safer().Buffer;
     exports._sbcs = SBCSCodec;
@@ -2435,9 +2439,9 @@ var require_sbcs_codec = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/encodings/sbcs-data.js
+// ../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/encodings/sbcs-data.js
 var require_sbcs_data = __commonJS({
-  "../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/encodings/sbcs-data.js"(exports, module) {
+  "../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/encodings/sbcs-data.js"(exports, module) {
     "use strict";
     module.exports = {
       // Not supported by iconv, not sure why.
@@ -2533,6 +2537,8 @@ var require_sbcs_data = __commonJS({
       elot928: "iso88597",
       hebrew: "iso88598",
       hebrew8: "iso88598",
+      iso88598i: "iso88598",
+      iso88598e: "iso88598",
       turkish: "iso88599",
       turkish8: "iso88599",
       thai: "iso885911",
@@ -2588,9 +2594,9 @@ var require_sbcs_data = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/encodings/sbcs-data-generated.js
+// ../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/encodings/sbcs-data-generated.js
 var require_sbcs_data_generated = __commonJS({
-  "../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/encodings/sbcs-data-generated.js"(exports, module) {
+  "../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/encodings/sbcs-data-generated.js"(exports, module) {
     "use strict";
     module.exports = {
       "437": "cp437",
@@ -3043,9 +3049,9 @@ var require_sbcs_data_generated = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/encodings/dbcs-codec.js
+// ../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/encodings/dbcs-codec.js
 var require_dbcs_codec = __commonJS({
-  "../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/encodings/dbcs-codec.js"(exports) {
+  "../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/encodings/dbcs-codec.js"(exports) {
     "use strict";
     var Buffer4 = require_safer().Buffer;
     exports._dbcs = DBCSCodec;
@@ -3503,9 +3509,9 @@ var require_dbcs_codec = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/encodings/tables/shiftjis.json
+// ../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/encodings/tables/shiftjis.json
 var require_shiftjis = __commonJS({
-  "../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/encodings/tables/shiftjis.json"(exports, module) {
+  "../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/encodings/tables/shiftjis.json"(exports, module) {
     module.exports = [
       ["0", "\0", 128],
       ["a1", "\uFF61", 62],
@@ -3634,9 +3640,9 @@ var require_shiftjis = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/encodings/tables/eucjp.json
+// ../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/encodings/tables/eucjp.json
 var require_eucjp = __commonJS({
-  "../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/encodings/tables/eucjp.json"(exports, module) {
+  "../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/encodings/tables/eucjp.json"(exports, module) {
     module.exports = [
       ["0", "\0", 127],
       ["8ea1", "\uFF61", 62],
@@ -3822,9 +3828,9 @@ var require_eucjp = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/encodings/tables/cp936.json
+// ../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/encodings/tables/cp936.json
 var require_cp936 = __commonJS({
-  "../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/encodings/tables/cp936.json"(exports, module) {
+  "../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/encodings/tables/cp936.json"(exports, module) {
     module.exports = [
       ["0", "\0", 127, "\u20AC"],
       ["8140", "\u4E02\u4E04\u4E05\u4E06\u4E0F\u4E12\u4E17\u4E1F\u4E20\u4E21\u4E23\u4E26\u4E29\u4E2E\u4E2F\u4E31\u4E33\u4E35\u4E37\u4E3C\u4E40\u4E41\u4E42\u4E44\u4E46\u4E4A\u4E51\u4E55\u4E57\u4E5A\u4E5B\u4E62\u4E63\u4E64\u4E65\u4E67\u4E68\u4E6A", 5, "\u4E72\u4E74", 9, "\u4E7F", 6, "\u4E87\u4E8A"],
@@ -4092,9 +4098,9 @@ var require_cp936 = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/encodings/tables/gbk-added.json
+// ../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/encodings/tables/gbk-added.json
 var require_gbk_added = __commonJS({
-  "../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/encodings/tables/gbk-added.json"(exports, module) {
+  "../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/encodings/tables/gbk-added.json"(exports, module) {
     module.exports = [
       ["a140", "\uE4C6", 62],
       ["a180", "\uE505", 32],
@@ -4154,16 +4160,16 @@ var require_gbk_added = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/encodings/tables/gb18030-ranges.json
+// ../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/encodings/tables/gb18030-ranges.json
 var require_gb18030_ranges = __commonJS({
-  "../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/encodings/tables/gb18030-ranges.json"(exports, module) {
+  "../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/encodings/tables/gb18030-ranges.json"(exports, module) {
     module.exports = { uChars: [128, 165, 169, 178, 184, 216, 226, 235, 238, 244, 248, 251, 253, 258, 276, 284, 300, 325, 329, 334, 364, 463, 465, 467, 469, 471, 473, 475, 477, 506, 594, 610, 712, 716, 730, 930, 938, 962, 970, 1026, 1104, 1106, 8209, 8215, 8218, 8222, 8231, 8241, 8244, 8246, 8252, 8365, 8452, 8454, 8458, 8471, 8482, 8556, 8570, 8596, 8602, 8713, 8720, 8722, 8726, 8731, 8737, 8740, 8742, 8748, 8751, 8760, 8766, 8777, 8781, 8787, 8802, 8808, 8816, 8854, 8858, 8870, 8896, 8979, 9322, 9372, 9548, 9588, 9616, 9622, 9634, 9652, 9662, 9672, 9676, 9680, 9702, 9735, 9738, 9793, 9795, 11906, 11909, 11913, 11917, 11928, 11944, 11947, 11951, 11956, 11960, 11964, 11979, 12284, 12292, 12312, 12319, 12330, 12351, 12436, 12447, 12535, 12543, 12586, 12842, 12850, 12964, 13200, 13215, 13218, 13253, 13263, 13267, 13270, 13384, 13428, 13727, 13839, 13851, 14617, 14703, 14801, 14816, 14964, 15183, 15471, 15585, 16471, 16736, 17208, 17325, 17330, 17374, 17623, 17997, 18018, 18212, 18218, 18301, 18318, 18760, 18811, 18814, 18820, 18823, 18844, 18848, 18872, 19576, 19620, 19738, 19887, 40870, 59244, 59336, 59367, 59413, 59417, 59423, 59431, 59437, 59443, 59452, 59460, 59478, 59493, 63789, 63866, 63894, 63976, 63986, 64016, 64018, 64021, 64025, 64034, 64037, 64042, 65074, 65093, 65107, 65112, 65127, 65132, 65375, 65510, 65536], gbChars: [0, 36, 38, 45, 50, 81, 89, 95, 96, 100, 103, 104, 105, 109, 126, 133, 148, 172, 175, 179, 208, 306, 307, 308, 309, 310, 311, 312, 313, 341, 428, 443, 544, 545, 558, 741, 742, 749, 750, 805, 819, 820, 7922, 7924, 7925, 7927, 7934, 7943, 7944, 7945, 7950, 8062, 8148, 8149, 8152, 8164, 8174, 8236, 8240, 8262, 8264, 8374, 8380, 8381, 8384, 8388, 8390, 8392, 8393, 8394, 8396, 8401, 8406, 8416, 8419, 8424, 8437, 8439, 8445, 8482, 8485, 8496, 8521, 8603, 8936, 8946, 9046, 9050, 9063, 9066, 9076, 9092, 9100, 9108, 9111, 9113, 9131, 9162, 9164, 9218, 9219, 11329, 11331, 11334, 11336, 11346, 11361, 11363, 11366, 11370, 11372, 11375, 11389, 11682, 11686, 11687, 11692, 11694, 11714, 11716, 11723, 11725, 11730, 11736, 11982, 11989, 12102, 12336, 12348, 12350, 12384, 12393, 12395, 12397, 12510, 12553, 12851, 12962, 12973, 13738, 13823, 13919, 13933, 14080, 14298, 14585, 14698, 15583, 15847, 16318, 16434, 16438, 16481, 16729, 17102, 17122, 17315, 17320, 17402, 17418, 17859, 17909, 17911, 17915, 17916, 17936, 17939, 17961, 18664, 18703, 18814, 18962, 19043, 33469, 33470, 33471, 33484, 33485, 33490, 33497, 33501, 33505, 33513, 33520, 33536, 33550, 37845, 37921, 37948, 38029, 38038, 38064, 38065, 38066, 38069, 38075, 38076, 38078, 39108, 39109, 39113, 39114, 39115, 39116, 39265, 39394, 189e3] };
   }
 });
 
-// ../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/encodings/tables/cp949.json
+// ../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/encodings/tables/cp949.json
 var require_cp949 = __commonJS({
-  "../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/encodings/tables/cp949.json"(exports, module) {
+  "../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/encodings/tables/cp949.json"(exports, module) {
     module.exports = [
       ["0", "\0", 127],
       ["8141", "\uAC02\uAC03\uAC05\uAC06\uAC0B", 4, "\uAC18\uAC1E\uAC1F\uAC21\uAC22\uAC23\uAC25", 6, "\uAC2E\uAC32\uAC33\uAC34"],
@@ -4440,9 +4446,9 @@ var require_cp949 = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/encodings/tables/cp950.json
+// ../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/encodings/tables/cp950.json
 var require_cp950 = __commonJS({
-  "../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/encodings/tables/cp950.json"(exports, module) {
+  "../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/encodings/tables/cp950.json"(exports, module) {
     module.exports = [
       ["0", "\0", 127],
       ["a140", "\u3000\uFF0C\u3001\u3002\uFF0E\u2027\uFF1B\uFF1A\uFF1F\uFF01\uFE30\u2026\u2025\uFE50\uFE51\uFE52\xB7\uFE54\uFE55\uFE56\uFE57\uFF5C\u2013\uFE31\u2014\uFE33\u2574\uFE34\uFE4F\uFF08\uFF09\uFE35\uFE36\uFF5B\uFF5D\uFE37\uFE38\u3014\u3015\uFE39\uFE3A\u3010\u3011\uFE3B\uFE3C\u300A\u300B\uFE3D\uFE3E\u3008\u3009\uFE3F\uFE40\u300C\u300D\uFE41\uFE42\u300E\u300F\uFE43\uFE44\uFE59\uFE5A"],
@@ -4623,9 +4629,9 @@ var require_cp950 = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/encodings/tables/big5-added.json
+// ../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/encodings/tables/big5-added.json
 var require_big5_added = __commonJS({
-  "../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/encodings/tables/big5-added.json"(exports, module) {
+  "../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/encodings/tables/big5-added.json"(exports, module) {
     module.exports = [
       ["8740", "\u43F0\u4C32\u4603\u45A6\u4578\u{27267}\u4D77\u45B3\u{27CB1}\u4CE2\u{27CC5}\u3B95\u4736\u4744\u4C47\u4C40\u{242BF}\u{23617}\u{27352}\u{26E8B}\u{270D2}\u4C57\u{2A351}\u474F\u45DA\u4C85\u{27C6C}\u4D07\u4AA4\u46A1\u{26B23}\u7225\u{25A54}\u{21A63}\u{23E06}\u{23F61}\u664D\u56FB"],
       ["8767", "\u7D95\u591D\u{28BB9}\u3DF4\u9734\u{27BEF}\u5BDB\u{21D5E}\u5AA4\u3625\u{29EB0}\u5AD1\u5BB7\u5CFC\u676E\u8593\u{29945}\u7461\u749D\u3875\u{21D53}\u{2369E}\u{26021}\u3EEC"],
@@ -4751,9 +4757,9 @@ var require_big5_added = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/encodings/dbcs-data.js
+// ../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/encodings/dbcs-data.js
 var require_dbcs_data = __commonJS({
-  "../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/encodings/dbcs-data.js"(exports, module) {
+  "../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/encodings/dbcs-data.js"(exports, module) {
     "use strict";
     module.exports = {
       // == Japanese/ShiftJIS ====================================================
@@ -4998,9 +5004,9 @@ var require_dbcs_data = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/encodings/index.js
+// ../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/encodings/index.js
 var require_encodings = __commonJS({
-  "../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/encodings/index.js"(exports, module) {
+  "../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/encodings/index.js"(exports, module) {
     "use strict";
     var mergeModules = require_merge_exports();
     var modules = [
@@ -5023,9 +5029,9 @@ var require_encodings = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/lib/streams.js
+// ../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/lib/streams.js
 var require_streams = __commonJS({
-  "../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/lib/streams.js"(exports, module) {
+  "../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/lib/streams.js"(exports, module) {
     "use strict";
     var Buffer4 = require_safer().Buffer;
     module.exports = function(streamModule) {
@@ -5120,9 +5126,9 @@ var require_streams = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/lib/index.js
+// ../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/lib/index.js
 var require_lib = __commonJS({
-  "../node_modules/.pnpm/iconv-lite@0.7.2/node_modules/iconv-lite/lib/index.js"(exports, module) {
+  "../node_modules/.pnpm/iconv-lite@0.7.3/node_modules/iconv-lite/lib/index.js"(exports, module) {
     "use strict";
     var Buffer4 = require_safer().Buffer;
     var bomHandling = require_bom_handling();
@@ -5535,9 +5541,9 @@ var require_ee_first = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/on-finished@2.4.1/node_modules/on-finished/index.js
+// ../node_modules/.pnpm/on-finished@2.4.2/node_modules/on-finished/index.js
 var require_on_finished = __commonJS({
-  "../node_modules/.pnpm/on-finished@2.4.1/node_modules/on-finished/index.js"(exports, module) {
+  "../node_modules/.pnpm/on-finished@2.4.2/node_modules/on-finished/index.js"(exports, module) {
     "use strict";
     module.exports = onFinished;
     module.exports.isFinished = isFinished;
@@ -5556,8 +5562,9 @@ var require_on_finished = __commonJS({
     }
     function isFinished(msg) {
       var socket = msg.socket;
-      if (typeof msg.finished === "boolean") {
-        return Boolean(msg.finished || socket && !socket.writable);
+      var finished = writableEnded(msg);
+      if (typeof finished === "boolean") {
+        return Boolean(finished || socket && !socket.writable);
       }
       if (typeof msg.complete === "boolean") {
         return Boolean(msg.upgrade || !socket || !socket.readable || msg.complete && !msg.readable);
@@ -5636,12 +5643,15 @@ var require_on_finished = __commonJS({
       }
       return res.runInAsyncScope.bind(res, fn, null);
     }
+    function writableEnded(res) {
+      return typeof res.writableEnded === "boolean" ? res.writableEnded : res.finished;
+    }
   }
 });
 
-// ../node_modules/.pnpm/content-type@2.0.0/node_modules/content-type/dist/index.js
+// ../node_modules/.pnpm/content-type@2.1.0/node_modules/content-type/dist/index.js
 var require_dist = __commonJS({
-  "../node_modules/.pnpm/content-type@2.0.0/node_modules/content-type/dist/index.js"(exports) {
+  "../node_modules/.pnpm/content-type@2.1.0/node_modules/content-type/dist/index.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.format = format;
@@ -5673,14 +5683,17 @@ var require_dist = __commonJS({
       return result;
     }
     function parse2(header, options) {
+      const stopChar = options?.comma === true ? COMMA : 65536;
       const len = header.length;
-      let index = skipOWS(header, 0, len);
+      let index = skipOWS(header, options?.start ?? 0, len);
       const valueStart = index;
-      index = skipValue(header, index, len);
+      index = skipValue(header, index, len, stopChar);
       const valueEnd = trailingOWS(header, valueStart, index);
       const type = header.slice(valueStart, valueEnd).toLowerCase();
-      const parameters = options?.parameters === false ? new NullObject() : parseParameters(header, index, len);
-      return { type, parameters };
+      if (options?.parameters === false) {
+        return { type, index, parameters: new NullObject() };
+      }
+      return parseParameters(header, type, index, len, stopChar);
     }
     var SP = 32;
     var HTAB = 9;
@@ -5688,13 +5701,18 @@ var require_dist = __commonJS({
     var EQ = 61;
     var DQUOTE = 34;
     var BSLASH = 92;
-    function parseParameters(header, index, len) {
+    var COMMA = 44;
+    function parseParameters(header, type, index, len, stopChar) {
       const parameters = new NullObject();
       parameter: while (index < len) {
+        if (header.charCodeAt(index) === stopChar)
+          break;
         index = skipOWS(header, index + 1, len);
         const keyStart = index;
         while (index < len) {
           const code = header.charCodeAt(index);
+          if (code === stopChar)
+            break parameter;
           if (code === SEMI)
             continue parameter;
           if (code === EQ) {
@@ -5707,7 +5725,7 @@ var require_dist = __commonJS({
               while (index < len) {
                 const code2 = header.charCodeAt(index++);
                 if (code2 === DQUOTE) {
-                  index = skipValue(header, index, len);
+                  index = skipValue(header, index, len, stopChar);
                   if (parameters[key] === void 0)
                     parameters[key] = value;
                   break;
@@ -5721,7 +5739,7 @@ var require_dist = __commonJS({
               continue parameter;
             }
             const valueStart = index;
-            index = skipValue(header, index, len);
+            index = skipValue(header, index, len, stopChar);
             if (parameters[key] === void 0) {
               const valueEnd = trailingOWS(header, valueStart, index);
               parameters[key] = header.slice(valueStart, valueEnd);
@@ -5731,12 +5749,12 @@ var require_dist = __commonJS({
           index++;
         }
       }
-      return parameters;
+      return { type, index, parameters };
     }
-    function skipValue(str, index, len) {
+    function skipValue(str, index, len, stopChar) {
       while (index < len) {
-        const char2 = str.charCodeAt(index);
-        if (char2 === SEMI)
+        const code = str.charCodeAt(index);
+        if (code === SEMI || code === stopChar)
           break;
         index++;
       }
@@ -15275,9 +15293,9 @@ var require_mime_types = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/media-typer@1.1.0/node_modules/media-typer/index.js
+// ../node_modules/.pnpm/media-typer@1.1.1/node_modules/media-typer/index.js
 var require_media_typer = __commonJS({
-  "../node_modules/.pnpm/media-typer@1.1.0/node_modules/media-typer/index.js"(exports) {
+  "../node_modules/.pnpm/media-typer@1.1.1/node_modules/media-typer/index.js"(exports) {
     "use strict";
     var SUBTYPE_NAME_REGEXP = /^[A-Za-z0-9][A-Za-z0-9!#$&^_.-]{0,126}$/;
     var TYPE_NAME_REGEXP = /^[A-Za-z0-9][A-Za-z0-9!#$&^_-]{0,126}$/;
@@ -15308,18 +15326,12 @@ var require_media_typer = __commonJS({
       return string;
     }
     function test(string) {
-      if (!string) {
-        throw new TypeError("argument string is required");
-      }
       if (typeof string !== "string") {
         throw new TypeError("argument string is required to be a string");
       }
       return TYPE_REGEXP.test(string.toLowerCase());
     }
     function parse2(string) {
-      if (!string) {
-        throw new TypeError("argument string is required");
-      }
       if (typeof string !== "string") {
         throw new TypeError("argument string is required to be a string");
       }
@@ -15436,164 +15448,9 @@ var require_type_is = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/content-type@1.0.5/node_modules/content-type/index.js
-var require_content_type = __commonJS({
-  "../node_modules/.pnpm/content-type@1.0.5/node_modules/content-type/index.js"(exports) {
-    "use strict";
-    var PARAM_REGEXP = /; *([!#$%&'*+.^_`|~0-9A-Za-z-]+) *= *("(?:[\u000b\u0020\u0021\u0023-\u005b\u005d-\u007e\u0080-\u00ff]|\\[\u000b\u0020-\u00ff])*"|[!#$%&'*+.^_`|~0-9A-Za-z-]+) */g;
-    var TEXT_REGEXP = /^[\u000b\u0020-\u007e\u0080-\u00ff]+$/;
-    var TOKEN_REGEXP = /^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/;
-    var QESC_REGEXP = /\\([\u000b\u0020-\u00ff])/g;
-    var QUOTE_REGEXP = /([\\"])/g;
-    var TYPE_REGEXP = /^[!#$%&'*+.^_`|~0-9A-Za-z-]+\/[!#$%&'*+.^_`|~0-9A-Za-z-]+$/;
-    exports.format = format;
-    exports.parse = parse2;
-    function format(obj) {
-      if (!obj || typeof obj !== "object") {
-        throw new TypeError("argument obj is required");
-      }
-      var parameters = obj.parameters;
-      var type = obj.type;
-      if (!type || !TYPE_REGEXP.test(type)) {
-        throw new TypeError("invalid type");
-      }
-      var string = type;
-      if (parameters && typeof parameters === "object") {
-        var param;
-        var params = Object.keys(parameters).sort();
-        for (var i = 0; i < params.length; i++) {
-          param = params[i];
-          if (!TOKEN_REGEXP.test(param)) {
-            throw new TypeError("invalid parameter name");
-          }
-          string += "; " + param + "=" + qstring(parameters[param]);
-        }
-      }
-      return string;
-    }
-    function parse2(string) {
-      if (!string) {
-        throw new TypeError("argument string is required");
-      }
-      var header = typeof string === "object" ? getcontenttype(string) : string;
-      if (typeof header !== "string") {
-        throw new TypeError("argument string is required to be a string");
-      }
-      var index = header.indexOf(";");
-      var type = index !== -1 ? header.slice(0, index).trim() : header.trim();
-      if (!TYPE_REGEXP.test(type)) {
-        throw new TypeError("invalid media type");
-      }
-      var obj = new ContentType(type.toLowerCase());
-      if (index !== -1) {
-        var key;
-        var match;
-        var value;
-        PARAM_REGEXP.lastIndex = index;
-        while (match = PARAM_REGEXP.exec(header)) {
-          if (match.index !== index) {
-            throw new TypeError("invalid parameter format");
-          }
-          index += match[0].length;
-          key = match[1].toLowerCase();
-          value = match[2];
-          if (value.charCodeAt(0) === 34) {
-            value = value.slice(1, -1);
-            if (value.indexOf("\\") !== -1) {
-              value = value.replace(QESC_REGEXP, "$1");
-            }
-          }
-          obj.parameters[key] = value;
-        }
-        if (index !== header.length) {
-          throw new TypeError("invalid parameter format");
-        }
-      }
-      return obj;
-    }
-    function getcontenttype(obj) {
-      var header;
-      if (typeof obj.getHeader === "function") {
-        header = obj.getHeader("content-type");
-      } else if (typeof obj.headers === "object") {
-        header = obj.headers && obj.headers["content-type"];
-      }
-      if (typeof header !== "string") {
-        throw new TypeError("content-type header is missing from object");
-      }
-      return header;
-    }
-    function qstring(val) {
-      var str = String(val);
-      if (TOKEN_REGEXP.test(str)) {
-        return str;
-      }
-      if (str.length > 0 && !TEXT_REGEXP.test(str)) {
-        throw new TypeError("invalid parameter value");
-      }
-      return '"' + str.replace(QUOTE_REGEXP, "\\$1") + '"';
-    }
-    function ContentType(type) {
-      this.parameters = /* @__PURE__ */ Object.create(null);
-      this.type = type;
-    }
-  }
-});
-
-// ../node_modules/.pnpm/body-parser@2.2.2/node_modules/body-parser/lib/utils.js
-var require_utils = __commonJS({
-  "../node_modules/.pnpm/body-parser@2.2.2/node_modules/body-parser/lib/utils.js"(exports, module) {
-    "use strict";
-    var bytes = require_bytes();
-    var contentType = require_content_type();
-    var typeis = require_type_is();
-    module.exports = {
-      getCharset,
-      normalizeOptions,
-      passthrough
-    };
-    function getCharset(req) {
-      try {
-        return (contentType.parse(req).parameters.charset || "").toLowerCase();
-      } catch {
-        return void 0;
-      }
-    }
-    function typeChecker(type) {
-      return function checkType(req) {
-        return Boolean(typeis(req, type));
-      };
-    }
-    function normalizeOptions(options, defaultType) {
-      if (!defaultType) {
-        throw new TypeError("defaultType must be provided");
-      }
-      var inflate = options?.inflate !== false;
-      var limit = typeof options?.limit !== "number" ? bytes.parse(options?.limit || "100kb") : options?.limit;
-      var type = options?.type || defaultType;
-      var verify = options?.verify || false;
-      var defaultCharset = options?.defaultCharset || "utf-8";
-      if (verify !== false && typeof verify !== "function") {
-        throw new TypeError("option verify must be function");
-      }
-      var shouldParse = typeof type !== "function" ? typeChecker(type) : type;
-      return {
-        inflate,
-        limit,
-        verify,
-        defaultCharset,
-        shouldParse
-      };
-    }
-    function passthrough(value) {
-      return value;
-    }
-  }
-});
-
-// ../node_modules/.pnpm/body-parser@2.2.2/node_modules/body-parser/lib/read.js
+// ../node_modules/.pnpm/body-parser@2.4.0/node_modules/body-parser/lib/read.js
 var require_read = __commonJS({
-  "../node_modules/.pnpm/body-parser@2.2.2/node_modules/body-parser/lib/read.js"(exports, module) {
+  "../node_modules/.pnpm/body-parser@2.4.0/node_modules/body-parser/lib/read.js"(exports, module) {
     "use strict";
     var createError = require_http_errors();
     var getBody = require_raw_body();
@@ -15601,8 +15458,9 @@ var require_read = __commonJS({
     var onFinished = require_on_finished();
     var zlib = __require("node:zlib");
     var hasBody = require_type_is().hasBody;
-    var { getCharset } = require_utils();
+    var contentType = require_dist();
     module.exports = read;
+    var hasZstandardSupport = "createZstdDecompress" in zlib;
     function read(req, res, next, parse2, debug, options) {
       if (onFinished.isFinished(req)) {
         debug("body already parsed");
@@ -15623,7 +15481,7 @@ var require_read = __commonJS({
         next();
         return;
       }
-      var encoding = null;
+      let encoding = null;
       if (options?.skipCharset !== true) {
         encoding = getCharset(req) || options.defaultCharset;
         if (!!options?.isValidCharset && !options.isValidCharset(encoding)) {
@@ -15635,29 +15493,43 @@ var require_read = __commonJS({
           return;
         }
       }
-      var length;
-      var opts = options;
-      var stream;
-      var verify = opts.verify;
-      try {
-        stream = contentstream(req, debug, opts.inflate);
-        length = stream.length;
-        stream.length = void 0;
-      } catch (err) {
-        return next(err);
-      }
-      opts.length = length;
-      opts.encoding = verify ? null : encoding;
-      if (opts.encoding === null && encoding !== null && !iconv.encodingExists(encoding)) {
+      let length;
+      let stream;
+      const verify = options.verify;
+      if (verify && encoding !== null && !iconv.encodingExists(encoding)) {
         return next(createError(415, 'unsupported charset "' + encoding.toUpperCase() + '"', {
           charset: encoding.toLowerCase(),
           type: "charset.unsupported"
         }));
       }
+      try {
+        const contentEncoding = (req.headers["content-encoding"] || "identity").toLowerCase();
+        debug('content-encoding "%s"', contentEncoding);
+        if (options.inflate === false && contentEncoding !== "identity") {
+          throw createError(415, "content encoding unsupported", {
+            encoding: contentEncoding,
+            type: "encoding.unsupported"
+          });
+        }
+        if (contentEncoding === "identity") {
+          length = req.headers["content-length"];
+          stream = req;
+        } else {
+          stream = createDecompressionStream(contentEncoding, debug);
+          req.pipe(stream);
+        }
+      } catch (err) {
+        return next(err);
+      }
+      const rawBodyOptions = {
+        length,
+        encoding: verify ? null : encoding,
+        limit: options.limit
+      };
       debug("read body");
-      getBody(stream, opts, function(error, body) {
+      getBody(stream, rawBodyOptions, function(error, body) {
         if (error) {
-          var _error;
+          let _error;
           if (error.type === "encoding.unsupported") {
             _error = createError(415, 'unsupported charset "' + encoding.toUpperCase() + '"', {
               charset: encoding.toLowerCase(),
@@ -15675,6 +15547,13 @@ var require_read = __commonJS({
           });
           return;
         }
+        if (stream !== req) {
+          req.unpipe(stream);
+          stream.on("error", () => {
+          });
+          stream.destroy();
+          req.resume();
+        }
         if (verify) {
           try {
             debug("verify body");
@@ -15687,7 +15566,7 @@ var require_read = __commonJS({
             return;
           }
         }
-        var str = body;
+        let str = body;
         try {
           debug("parse body");
           str = typeof body !== "string" && encoding !== null ? iconv.decode(body, encoding) : body;
@@ -15702,24 +15581,6 @@ var require_read = __commonJS({
         next();
       });
     }
-    function contentstream(req, debug, inflate) {
-      var encoding = (req.headers["content-encoding"] || "identity").toLowerCase();
-      var length = req.headers["content-length"];
-      debug('content-encoding "%s"', encoding);
-      if (inflate === false && encoding !== "identity") {
-        throw createError(415, "content encoding unsupported", {
-          encoding,
-          type: "encoding.unsupported"
-        });
-      }
-      if (encoding === "identity") {
-        req.length = length;
-        return req;
-      }
-      var stream = createDecompressionStream(encoding, debug);
-      req.pipe(stream);
-      return stream;
-    }
     function createDecompressionStream(encoding, debug) {
       switch (encoding) {
         case "deflate":
@@ -15731,12 +15592,16 @@ var require_read = __commonJS({
         case "br":
           debug("brotli decompress body");
           return zlib.createBrotliDecompress();
-        default:
-          throw createError(415, 'unsupported content encoding "' + encoding + '"', {
-            encoding,
-            type: "encoding.unsupported"
-          });
+        case "zstd":
+          if (hasZstandardSupport) {
+            debug("zstd decompress body");
+            return zlib.createZstdDecompress();
+          }
       }
+      throw createError(415, 'unsupported content encoding "' + encoding + '"', {
+        encoding,
+        type: "encoding.unsupported"
+      });
     }
     function dump(req, callback) {
       if (onFinished.isFinished(req)) {
@@ -15746,34 +15611,111 @@ var require_read = __commonJS({
         req.resume();
       }
     }
+    function getCharset(req) {
+      const header = req.headers["content-type"];
+      if (!header) return void 0;
+      return contentType.parse(header).parameters.charset?.toLowerCase();
+    }
   }
 });
 
-// ../node_modules/.pnpm/body-parser@2.2.2/node_modules/body-parser/lib/types/json.js
+// ../node_modules/.pnpm/body-parser@2.4.0/node_modules/body-parser/lib/utils.js
+var require_utils = __commonJS({
+  "../node_modules/.pnpm/body-parser@2.4.0/node_modules/body-parser/lib/utils.js"(exports, module) {
+    "use strict";
+    var bytes = require_bytes();
+    var typeis = require_type_is();
+    module.exports = {
+      normalizeOptions,
+      passthrough
+    };
+    function typeChecker(type) {
+      return function checkType(req) {
+        return Boolean(typeis(req, type));
+      };
+    }
+    function normalizeOptions(options, defaultType) {
+      if (!defaultType) {
+        throw new TypeError("defaultType must be provided");
+      }
+      const inflate = options?.inflate !== false;
+      const limit = typeof options?.limit === "undefined" || options?.limit === null ? 102400 : bytes.parse(options.limit);
+      const type = options?.type || defaultType;
+      const verify = options?.verify || false;
+      const defaultCharset = options?.defaultCharset || "utf-8";
+      if (limit === null) {
+        throw new TypeError(`option limit "${String(options.limit)}" is invalid`);
+      }
+      if (verify !== false && typeof verify !== "function") {
+        throw new TypeError("option verify must be function");
+      }
+      const shouldParse = typeof type !== "function" ? typeChecker(type) : type;
+      return {
+        inflate,
+        limit,
+        verify,
+        defaultCharset,
+        shouldParse
+      };
+    }
+    function passthrough(value) {
+      return value;
+    }
+  }
+});
+
+// ../node_modules/.pnpm/body-parser@2.4.0/node_modules/body-parser/lib/types/json.js
 var require_json = __commonJS({
-  "../node_modules/.pnpm/body-parser@2.2.2/node_modules/body-parser/lib/types/json.js"(exports, module) {
+  "../node_modules/.pnpm/body-parser@2.4.0/node_modules/body-parser/lib/types/json.js"(exports, module) {
     "use strict";
     var debug = require_src()("body-parser:json");
     var read = require_read();
     var { normalizeOptions } = require_utils();
     module.exports = json2;
-    var FIRST_CHAR_REGEXP = /^[\x20\x09\x0a\x0d]*([^\x20\x09\x0a\x0d])/;
+    var FIRST_NON_WHITESPACE_REGEXP = /^[\x20\x09\x0a\x0d]*([^\x20\x09\x0a\x0d]|$)/;
     var JSON_SYNTAX_CHAR = "#";
     var JSON_SYNTAX_REGEXP = /#+/g;
     function json2(options) {
       const normalizedOptions = normalizeOptions(options, "application/json");
-      var reviver = options?.reviver;
-      var strict = options?.strict !== false;
-      function parse2(body) {
+      const parse2 = createJsonParser(options);
+      const readOptions = {
+        ...normalizedOptions,
+        // assert charset per RFC 7159 sec 8.1
+        isValidCharset: (charset) => charset.slice(0, 4) === "utf-"
+      };
+      return function jsonParser(req, res, next) {
+        read(req, res, next, parse2, debug, readOptions);
+      };
+    }
+    function createJsonParser(options) {
+      const reviver = options?.reviver;
+      const strict = options?.strict !== false;
+      if (strict) {
+        return function parse2(body) {
+          if (body.length === 0) {
+            return {};
+          }
+          if (body[0] !== "{" && body[0] !== "[") {
+            const first = firstNonWhitespaceChar(body);
+            if (first !== "{" && first !== "[") {
+              debug("strict violation");
+              throw createStrictSyntaxError(body, first);
+            }
+          }
+          try {
+            debug("parse json");
+            return JSON.parse(body, reviver);
+          } catch (e) {
+            throw normalizeJsonSyntaxError(e, {
+              message: e.message,
+              stack: e.stack
+            });
+          }
+        };
+      }
+      return function parse2(body) {
         if (body.length === 0) {
           return {};
-        }
-        if (strict) {
-          var first = firstchar(body);
-          if (first !== "{" && first !== "[") {
-            debug("strict violation");
-            throw createStrictSyntaxError(body, first);
-          }
         }
         try {
           debug("parse json");
@@ -15784,19 +15726,11 @@ var require_json = __commonJS({
             stack: e.stack
           });
         }
-      }
-      const readOptions = {
-        ...normalizedOptions,
-        // assert charset per RFC 7159 sec 8.1
-        isValidCharset: (charset) => charset.slice(0, 4) === "utf-"
-      };
-      return function jsonParser(req, res, next) {
-        read(req, res, next, parse2, debug, readOptions);
       };
     }
     function createStrictSyntaxError(str, char2) {
-      var index = str.indexOf(char2);
-      var partial = "";
+      const index = str.indexOf(char2);
+      let partial = "";
       if (index !== -1) {
         partial = str.substring(0, index) + JSON_SYNTAX_CHAR.repeat(str.length - index);
       }
@@ -15812,14 +15746,14 @@ var require_json = __commonJS({
         });
       }
     }
-    function firstchar(str) {
-      var match = FIRST_CHAR_REGEXP.exec(str);
-      return match ? match[1] : void 0;
+    function firstNonWhitespaceChar(str) {
+      const match = FIRST_NON_WHITESPACE_REGEXP.exec(str);
+      return match && match[1] ? match[1] : void 0;
     }
     function normalizeJsonSyntaxError(error, obj) {
-      var keys = Object.getOwnPropertyNames(error);
-      for (var i = 0; i < keys.length; i++) {
-        var key = keys[i];
+      const keys = Object.getOwnPropertyNames(error);
+      for (let i = 0; i < keys.length; i++) {
+        const key = keys[i];
         if (key !== "stack" && key !== "message") {
           delete error[key];
         }
@@ -15831,9 +15765,9 @@ var require_json = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/body-parser@2.2.2/node_modules/body-parser/lib/types/raw.js
+// ../node_modules/.pnpm/body-parser@2.4.0/node_modules/body-parser/lib/types/raw.js
 var require_raw = __commonJS({
-  "../node_modules/.pnpm/body-parser@2.2.2/node_modules/body-parser/lib/types/raw.js"(exports, module) {
+  "../node_modules/.pnpm/body-parser@2.4.0/node_modules/body-parser/lib/types/raw.js"(exports, module) {
     "use strict";
     var debug = require_src()("body-parser:raw");
     var read = require_read();
@@ -15853,9 +15787,9 @@ var require_raw = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/body-parser@2.2.2/node_modules/body-parser/lib/types/text.js
+// ../node_modules/.pnpm/body-parser@2.4.0/node_modules/body-parser/lib/types/text.js
 var require_text = __commonJS({
-  "../node_modules/.pnpm/body-parser@2.2.2/node_modules/body-parser/lib/types/text.js"(exports, module) {
+  "../node_modules/.pnpm/body-parser@2.4.0/node_modules/body-parser/lib/types/text.js"(exports, module) {
     "use strict";
     var debug = require_src()("body-parser:text");
     var read = require_read();
@@ -17496,15 +17430,16 @@ var require_side_channel = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/qs@6.15.2/node_modules/qs/lib/formats.js
+// ../node_modules/.pnpm/qs@6.17.1/node_modules/qs/lib/formats.js
 var require_formats = __commonJS({
-  "../node_modules/.pnpm/qs@6.15.2/node_modules/qs/lib/formats.js"(exports, module) {
+  "../node_modules/.pnpm/qs@6.17.1/node_modules/qs/lib/formats.js"(exports, module) {
     "use strict";
     var replace = String.prototype.replace;
     var percentTwenties = /%20/g;
     var Format = {
       RFC1738: "RFC1738",
-      RFC3986: "RFC3986"
+      RFC3986: "RFC3986",
+      WHATWG: "WHATWG"
     };
     module.exports = {
       "default": Format.RFC3986,
@@ -17514,20 +17449,25 @@ var require_formats = __commonJS({
         },
         RFC3986: function(value) {
           return String(value);
+        },
+        WHATWG: function(value) {
+          return replace.call(value, percentTwenties, "+");
         }
       },
       RFC1738: Format.RFC1738,
-      RFC3986: Format.RFC3986
+      RFC3986: Format.RFC3986,
+      WHATWG: Format.WHATWG
     };
   }
 });
 
-// ../node_modules/.pnpm/qs@6.15.2/node_modules/qs/lib/utils.js
+// ../node_modules/.pnpm/qs@6.17.1/node_modules/qs/lib/utils.js
 var require_utils2 = __commonJS({
-  "../node_modules/.pnpm/qs@6.15.2/node_modules/qs/lib/utils.js"(exports, module) {
+  "../node_modules/.pnpm/qs@6.17.1/node_modules/qs/lib/utils.js"(exports, module) {
     "use strict";
     var formats = require_formats();
     var getSideChannel = require_side_channel();
+    var defineProperty = require_es_define_property();
     var has = Object.prototype.hasOwnProperty;
     var isArray = Array.isArray;
     var overflowChannel = getSideChannel();
@@ -17543,6 +17483,17 @@ var require_utils2 = __commonJS({
     };
     var setMaxIndex = function setMaxIndex2(obj, maxIndex) {
       overflowChannel.set(obj, maxIndex);
+    };
+    var conflictChannel = getSideChannel();
+    var markConflict = function markConflict2(obj, maxIndex) {
+      conflictChannel.set(obj, maxIndex);
+      return obj;
+    };
+    var isConflict = function isConflict2(obj) {
+      return conflictChannel.has(obj);
+    };
+    var getConflictIndex = function getConflictIndex2(obj) {
+      return conflictChannel.get(obj);
     };
     var hexTable = (function() {
       var array = [];
@@ -17575,6 +17526,48 @@ var require_utils2 = __commonJS({
       }
       return obj;
     };
+    var setProperty = function setProperty2(obj, key, value) {
+      if (key === "__proto__" && defineProperty) {
+        defineProperty(obj, key, {
+          configurable: true,
+          enumerable: true,
+          value,
+          writable: true
+        });
+      } else {
+        obj[key] = value;
+      }
+    };
+    var maxNumericIndex = function maxNumericIndex2(obj, min) {
+      var max = min;
+      var keys = Object.keys(obj);
+      for (var i = 0; i < keys.length; ++i) {
+        var num = parseInt(keys[i], 10);
+        if (String(num) === keys[i] && num > max) {
+          max = num;
+        }
+      }
+      return max;
+    };
+    var countElements = function countElements2(arr) {
+      var count2 = 0;
+      for (var i = 0; i < arr.length; ++i) {
+        if (has.call(arr, i)) {
+          count2 += 1;
+        }
+      }
+      return count2;
+    };
+    var limitedPair = function limitedPair2(first, second, options) {
+      var pair = [first, second];
+      if (options && typeof options.arrayLimit === "number" && pair.length > options.arrayLimit) {
+        if (options.throwOnLimitExceeded) {
+          throw new RangeError("Array limit exceeded. Only " + options.arrayLimit + " element" + (options.arrayLimit === 1 ? "" : "s") + " allowed in an array.");
+        }
+        return markOverflow(arrayToObject(pair, options), 1);
+      }
+      return pair;
+    };
     var merge = function merge2(target, source, options) {
       if (!source) {
         return target;
@@ -17582,7 +17575,10 @@ var require_utils2 = __commonJS({
       if (typeof source !== "object" && typeof source !== "function") {
         if (isArray(target)) {
           var nextIndex = target.length;
-          if (options && typeof options.arrayLimit === "number" && nextIndex > options.arrayLimit) {
+          if (options && typeof options.arrayLimit === "number" && countElements(target) >= options.arrayLimit) {
+            if (options.throwOnLimitExceeded) {
+              throw new RangeError("Array limit exceeded. Only " + options.arrayLimit + " element" + (options.arrayLimit === 1 ? "" : "s") + " allowed in an array.");
+            }
             return markOverflow(arrayToObject(target.concat(source), options), nextIndex);
           }
           target[nextIndex] = source;
@@ -17591,13 +17587,21 @@ var require_utils2 = __commonJS({
             var newIndex = getMaxIndex(target) + 1;
             target[newIndex] = source;
             setMaxIndex(target, newIndex);
+          } else if (options && options.strictMerge && isConflict(target)) {
+            var nextConflict = getConflictIndex(target) + 1;
+            if (options.throwOnLimitExceeded && typeof options.arrayLimit === "number" && nextConflict >= options.arrayLimit) {
+              throw new RangeError("Array limit exceeded. Only " + options.arrayLimit + " element" + (options.arrayLimit === 1 ? "" : "s") + " allowed in an array.");
+            }
+            target[nextConflict] = source;
+            markConflict(target, nextConflict);
           } else if (options && options.strictMerge) {
-            return [target, source];
+            var conflict = limitedPair(target, source, options);
+            return isArray(conflict) ? markConflict(conflict, 1) : conflict;
           } else if (options && (options.plainObjects || options.allowPrototypes) || !has.call(Object.prototype, source)) {
             target[source] = true;
           }
         } else {
-          return [target, source];
+          return limitedPair(target, source, options);
         }
         return target;
       }
@@ -17613,6 +17617,9 @@ var require_utils2 = __commonJS({
         }
         var combined = [target].concat(source);
         if (options && typeof options.arrayLimit === "number" && combined.length > options.arrayLimit) {
+          if (options.throwOnLimitExceeded) {
+            throw new RangeError("Array limit exceeded. Only " + options.arrayLimit + " element" + (options.arrayLimit === 1 ? "" : "s") + " allowed in an array.");
+          }
           return markOverflow(arrayToObject(combined, options), combined.length - 1);
         }
         return combined;
@@ -17620,6 +17627,9 @@ var require_utils2 = __commonJS({
       var mergeTarget = target;
       if (isArray(target) && !isArray(source)) {
         mergeTarget = arrayToObject(target, options);
+        if (isConflict(target)) {
+          markConflict(mergeTarget, target.length - 1);
+        }
       }
       if (isArray(target) && isArray(source)) {
         source.forEach(function(item, i) {
@@ -17634,17 +17644,23 @@ var require_utils2 = __commonJS({
             target[i] = item;
           }
         });
+        if (options && typeof options.arrayLimit === "number" && countElements(target) > options.arrayLimit) {
+          if (options.throwOnLimitExceeded) {
+            throw new RangeError("Array limit exceeded. Only " + options.arrayLimit + " element" + (options.arrayLimit === 1 ? "" : "s") + " allowed in an array.");
+          }
+          return markOverflow(arrayToObject(target, options), target.length - 1);
+        }
         return target;
       }
       return Object.keys(source).reduce(function(acc, key) {
         var value = source[key];
         if (has.call(acc, key)) {
-          acc[key] = merge2(acc[key], value, options);
+          setProperty(acc, key, merge2(acc[key], value, options));
         } else {
-          acc[key] = value;
+          setProperty(acc, key, value);
         }
         if (isOverflow(source) && !isOverflow(acc)) {
-          markOverflow(acc, getMaxIndex(source));
+          markOverflow(acc, maxNumericIndex(acc, getMaxIndex(source)));
         }
         if (isOverflow(acc)) {
           var keyNum = parseInt(key, 10);
@@ -17652,16 +17668,25 @@ var require_utils2 = __commonJS({
             setMaxIndex(acc, keyNum);
           }
         }
+        if (isConflict(acc)) {
+          var conflictKey = parseInt(key, 10);
+          if (String(conflictKey) === key && conflictKey > getConflictIndex(acc)) {
+            markConflict(acc, conflictKey);
+          }
+        }
         return acc;
       }, mergeTarget);
     };
     var assign = function assignSingleSource(target, source) {
       return Object.keys(source).reduce(function(acc, key) {
-        acc[key] = source[key];
+        setProperty(acc, key, source[key]);
         return acc;
       }, target);
     };
     var decode = function(str, defaultDecoder, charset) {
+      if (typeof str === "string" && str.indexOf("%") === -1) {
+        return str.indexOf("+") === -1 ? str : str.replace(/\+/g, " ");
+      }
       var strWithoutPlus = str.replace(/\+/g, " ");
       if (charset === "iso-8859-1") {
         return strWithoutPlus.replace(/%[0-9a-f]{2}/gi, unescape);
@@ -17672,6 +17697,52 @@ var require_utils2 = __commonJS({
         return strWithoutPlus;
       }
     };
+    var hasToPrimitive = typeof Symbol === "function" && typeof Symbol.toPrimitive === "symbol";
+    var arrayJoin = Array.prototype.join;
+    var arrayToString = Array.prototype.toString;
+    var objectToString = Object.prototype.toString;
+    var toCoercible = function toCoercible2(value, joining) {
+      if (!value || typeof value !== "object" && typeof value !== "function") {
+        return value;
+      }
+      if (hasToPrimitive && value[Symbol.toPrimitive] != null) {
+        return value;
+      }
+      if (isArray(value) && value.toString === arrayToString && value.join === arrayJoin) {
+        var ancestors = joining || getSideChannel();
+        if (ancestors.has(value)) {
+          return "";
+        }
+        ancestors.set(value, true);
+        var copy;
+        for (var i = 0; i < value.length; i += 1) {
+          var item = value[i];
+          var coerced = toCoercible2(item, ancestors);
+          if (!copy && coerced !== item) {
+            copy = [];
+            for (var j = 0; j < i; j += 1) {
+              copy[j] = value[j];
+            }
+          }
+          if (copy) {
+            copy[i] = coerced;
+          }
+        }
+        ancestors["delete"](value);
+        return copy || value;
+      }
+      if (typeof value.toString === "function") {
+        return value;
+      }
+      var valueOf = value.valueOf;
+      if (typeof valueOf === "function") {
+        var primitive = valueOf.call(value);
+        if (!primitive || typeof primitive !== "object" && typeof primitive !== "function") {
+          return String(primitive);
+        }
+      }
+      return objectToString.call(value);
+    };
     var limit = 1024;
     var encode2 = function encode3(str, defaultEncoder, charset, kind, format) {
       if (str.length === 0) {
@@ -17681,20 +17752,27 @@ var require_utils2 = __commonJS({
       if (typeof str === "symbol") {
         string = Symbol.prototype.toString.call(str);
       } else if (typeof str !== "string") {
-        string = String(str);
+        string = String(toCoercible(str));
       }
       if (charset === "iso-8859-1") {
         return escape(string).replace(/%u[0-9a-f]{4}/gi, function($0) {
           return "%26%23" + parseInt($0.slice(2), 16) + "%3B";
-        });
+        }).replace(/\+/g, "%2B");
       }
       var out = "";
       for (var j = 0; j < string.length; j += limit) {
         var segment = string.length >= limit ? string.slice(j, j + limit) : string;
+        if (j + limit < string.length) {
+          var last = segment.charCodeAt(segment.length - 1);
+          if (last >= 55296 && last <= 56319) {
+            segment = segment.slice(0, -1);
+            j -= 1;
+          }
+        }
         var arr = [];
         for (var i = 0; i < segment.length; ++i) {
           var c = segment.charCodeAt(i);
-          if (c === 45 || c === 46 || c === 95 || c === 126 || c >= 48 && c <= 57 || c >= 65 && c <= 90 || c >= 97 && c <= 122 || format === formats.RFC1738 && (c === 40 || c === 41)) {
+          if (c === 45 || c === 46 || c === 95 || c === 126 && format !== formats.WHATWG || c >= 48 && c <= 57 || c >= 65 && c <= 90 || c >= 97 && c <= 122 || format === formats.RFC1738 && (c === 40 || c === 41) || format === formats.WHATWG && c === 42) {
             arr[arr.length] = segment.charAt(i);
             continue;
           }
@@ -17710,9 +17788,14 @@ var require_utils2 = __commonJS({
             arr[arr.length] = hexTable[224 | c >> 12] + hexTable[128 | c >> 6 & 63] + hexTable[128 | c & 63];
             continue;
           }
-          i += 1;
-          c = 65536 + ((c & 1023) << 10 | segment.charCodeAt(i) & 1023);
-          arr[arr.length] = hexTable[240 | c >> 18] + hexTable[128 | c >> 12 & 63] + hexTable[128 | c >> 6 & 63] + hexTable[128 | c & 63];
+          var next = segment.charCodeAt(i + 1);
+          if (c <= 56319 && next >= 56320 && next <= 57343) {
+            i += 1;
+            c = 65536 + ((c & 1023) << 10 | next & 1023);
+            arr[arr.length] = hexTable[240 | c >> 18] + hexTable[128 | c >> 12 & 63] + hexTable[128 | c >> 6 & 63] + hexTable[128 | c & 63];
+          } else {
+            arr[arr.length] = "%EF%BF%BD";
+          }
         }
         out += arr.join("");
       }
@@ -17720,7 +17803,7 @@ var require_utils2 = __commonJS({
     };
     var compact = function compact2(value) {
       var queue = [{ obj: { o: value }, prop: "o" }];
-      var refs = [];
+      var refs = getSideChannel();
       for (var i = 0; i < queue.length; ++i) {
         var item = queue[i];
         var obj = item.obj[item.prop];
@@ -17728,9 +17811,9 @@ var require_utils2 = __commonJS({
         for (var j = 0; j < keys.length; ++j) {
           var key = keys[j];
           var val = obj[key];
-          if (typeof val === "object" && val !== null && refs.indexOf(val) === -1) {
+          if (typeof val === "object" && val !== null && !refs.has(val)) {
             queue[queue.length] = { obj, prop: key };
-            refs[refs.length] = val;
+            refs.set(val, true);
           }
         }
       }
@@ -17744,17 +17827,27 @@ var require_utils2 = __commonJS({
       if (!obj || typeof obj !== "object") {
         return false;
       }
-      return !!(obj.constructor && obj.constructor.isBuffer && obj.constructor.isBuffer(obj));
+      return !!(obj.constructor && typeof obj.constructor.isBuffer === "function" && obj.constructor.isBuffer(obj));
     };
-    var combine = function combine2(a, b2, arrayLimit, plainObjects) {
+    var combine = function combine2(a, b2, arrayLimit, plainObjects, throwOnLimitExceeded) {
       if (isOverflow(a)) {
-        var newIndex = getMaxIndex(a) + 1;
-        a[newIndex] = b2;
+        if (throwOnLimitExceeded) {
+          throw new RangeError("Array limit exceeded. Only " + arrayLimit + " element" + (arrayLimit === 1 ? "" : "s") + " allowed in an array.");
+        }
+        var bValues = isArray(b2) ? b2 : [b2];
+        var newIndex = getMaxIndex(a);
+        for (var i = 0; i < bValues.length; ++i) {
+          newIndex += 1;
+          a[newIndex] = bValues[i];
+        }
         setMaxIndex(a, newIndex);
         return a;
       }
       var result = [].concat(a, b2);
       if (result.length > arrayLimit) {
+        if (throwOnLimitExceeded) {
+          throw new RangeError("Array limit exceeded. Only " + arrayLimit + " element" + (arrayLimit === 1 ? "" : "s") + " allowed in an array.");
+        }
         return markOverflow(arrayToObject(result, { plainObjects }), result.length - 1);
       }
       return result;
@@ -17781,14 +17874,16 @@ var require_utils2 = __commonJS({
       isRegExp,
       markOverflow,
       maybeMap,
-      merge
+      merge,
+      setProperty,
+      toCoercible
     };
   }
 });
 
-// ../node_modules/.pnpm/qs@6.15.2/node_modules/qs/lib/stringify.js
+// ../node_modules/.pnpm/qs@6.17.1/node_modules/qs/lib/stringify.js
 var require_stringify = __commonJS({
-  "../node_modules/.pnpm/qs@6.15.2/node_modules/qs/lib/stringify.js"(exports, module) {
+  "../node_modules/.pnpm/qs@6.17.1/node_modules/qs/lib/stringify.js"(exports, module) {
     "use strict";
     var getSideChannel = require_side_channel();
     var utils = require_utils2();
@@ -17822,6 +17917,7 @@ var require_stringify = __commonJS({
       charsetSentinel: false,
       commaRoundTrip: false,
       delimiter: "&",
+      depth: Infinity,
       encode: true,
       encodeDotInKeys: false,
       encoder: utils.encode,
@@ -17841,8 +17937,11 @@ var require_stringify = __commonJS({
       return typeof v === "string" || typeof v === "number" || typeof v === "boolean" || typeof v === "symbol" || typeof v === "bigint";
     };
     var sentinel = {};
-    var stringify2 = function stringify3(object, prefix, generateArrayPrefix, commaRoundTrip, allowEmptyArrays, strictNullHandling, skipNulls, encodeDotInKeys, encoder2, filter, sort, allowDots, serializeDate, format, formatter, encodeValuesOnly, charset, sideChannel) {
+    var stringify2 = function stringify3(object, prefix, generateArrayPrefix, commaRoundTrip, allowEmptyArrays, strictNullHandling, skipNulls, encodeDotInKeys, encoder2, filter, sort, allowDots, serializeDate, format, formatter, encodeValuesOnly, charset, sideChannel, depth, currentDepth) {
       var obj = object;
+      if (currentDepth > depth) {
+        throw new RangeError("Input depth exceeded depth option of " + depth);
+      }
       var tmpSc = sideChannel;
       var step = 0;
       var findFlag = false;
@@ -17860,9 +17959,8 @@ var require_stringify = __commonJS({
           step = 0;
         }
       }
-      if (typeof filter === "function") {
-        obj = filter(prefix, obj);
-      } else if (obj instanceof Date) {
+      obj = typeof filter === "function" ? filter(prefix, obj) : obj;
+      if (obj instanceof Date) {
         obj = serializeDate(obj);
       } else if (generateArrayPrefix === "comma" && isArray(obj)) {
         obj = utils.maybeMap(obj, function(value2) {
@@ -17893,20 +17991,20 @@ var require_stringify = __commonJS({
       if (generateArrayPrefix === "comma" && isArray(obj)) {
         if (encodeValuesOnly && encoder2) {
           obj = utils.maybeMap(obj, function(v) {
-            return v == null ? v : encoder2(v);
+            return v == null ? v : encoder2(v, defaults.encoder, charset, "value", format);
           });
         }
-        objKeys = [{ value: obj.length > 0 ? obj.join(",") || null : void 0 }];
+        objKeys = [{ value: obj.length > 0 ? utils.toCoercible(obj).join(",") || null : void 0 }];
       } else if (isArray(filter)) {
         objKeys = filter;
       } else {
         var keys = Object.keys(obj);
         objKeys = sort ? keys.sort(sort) : keys;
       }
-      var encodedPrefix = encodeDotInKeys ? String(prefix).replace(/\./g, "%2E") : String(prefix);
+      var encodedPrefix = String(prefix);
       var adjustedPrefix = commaRoundTrip && isArray(obj) && obj.length === 1 ? encodedPrefix + "[]" : encodedPrefix;
-      if (allowEmptyArrays && isArray(obj) && obj.length === 0) {
-        return adjustedPrefix + "[]";
+      if (allowEmptyArrays && isArray(obj) && obj.length === 0 && Object.keys(obj).length === 0) {
+        return formatter(encoder2 && !encodeValuesOnly ? encoder2(adjustedPrefix, defaults.encoder, charset, "key", format) : adjustedPrefix) + "[]";
       }
       for (var j = 0; j < objKeys.length; ++j) {
         var key = objKeys[j];
@@ -17937,7 +18035,9 @@ var require_stringify = __commonJS({
           formatter,
           encodeValuesOnly,
           charset,
-          valueSideChannel
+          valueSideChannel,
+          depth,
+          currentDepth + 1
         ));
       }
       return values2;
@@ -17972,7 +18072,7 @@ var require_stringify = __commonJS({
         filter = opts.filter;
       }
       var arrayFormat;
-      if (opts.arrayFormat in arrayPrefixGenerators) {
+      if (has.call(arrayPrefixGenerators, opts.arrayFormat)) {
         arrayFormat = opts.arrayFormat;
       } else if ("indices" in opts) {
         arrayFormat = opts.indices ? "indices" : "repeat";
@@ -17992,6 +18092,7 @@ var require_stringify = __commonJS({
         charsetSentinel: typeof opts.charsetSentinel === "boolean" ? opts.charsetSentinel : defaults.charsetSentinel,
         commaRoundTrip: !!opts.commaRoundTrip,
         delimiter: typeof opts.delimiter === "undefined" ? defaults.delimiter : opts.delimiter,
+        depth: typeof opts.depth === "number" ? opts.depth : defaults.depth,
         encode: typeof opts.encode === "boolean" ? opts.encode : defaults.encode,
         encodeDotInKeys: typeof opts.encodeDotInKeys === "boolean" ? opts.encodeDotInKeys : defaults.encodeDotInKeys,
         encoder: typeof opts.encoder === "function" ? opts.encoder : defaults.encoder,
@@ -18014,7 +18115,7 @@ var require_stringify = __commonJS({
         filter = options.filter;
         obj = filter("", obj);
       } else if (isArray(options.filter)) {
-        filter = options.filter;
+        filter = options.filter.slice();
         objKeys = filter;
       }
       var keys = [];
@@ -18039,9 +18140,10 @@ var require_stringify = __commonJS({
         if (options.skipNulls && value === null) {
           continue;
         }
+        var encodedKey = options.encodeDotInKeys ? String(key).replace(/\./g, "%2E") : String(key);
         pushToArray(keys, stringify2(
           value,
-          key,
+          encodedKey,
           generateArrayPrefix,
           commaRoundTrip,
           options.allowEmptyArrays,
@@ -18049,7 +18151,7 @@ var require_stringify = __commonJS({
           options.skipNulls,
           options.encodeDotInKeys,
           options.encode ? options.encoder : null,
-          options.filter,
+          filter,
           options.sort,
           options.allowDots,
           options.serializeDate,
@@ -18057,7 +18159,9 @@ var require_stringify = __commonJS({
           options.formatter,
           options.encodeValuesOnly,
           options.charset,
-          sideChannel
+          sideChannel,
+          options.depth,
+          0
         ));
       }
       var joined = keys.join(options.delimiter);
@@ -18074,13 +18178,58 @@ var require_stringify = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/qs@6.15.2/node_modules/qs/lib/parse.js
+// ../node_modules/.pnpm/qs@6.17.1/node_modules/qs/lib/parse.js
 var require_parse = __commonJS({
-  "../node_modules/.pnpm/qs@6.15.2/node_modules/qs/lib/parse.js"(exports, module) {
+  "../node_modules/.pnpm/qs@6.17.1/node_modules/qs/lib/parse.js"(exports, module) {
     "use strict";
+    var getSideChannel = require_side_channel();
     var utils = require_utils2();
     var has = Object.prototype.hasOwnProperty;
     var isArray = Array.isArray;
+    var getPrototypeOf = Object.getPrototypeOf;
+    var fromCharCode = String.fromCharCode;
+    var isPlainContainer = function isPlainContainer2(value) {
+      if (!value || typeof value !== "object") {
+        return false;
+      }
+      if (isArray(value)) {
+        return true;
+      }
+      var proto = getPrototypeOf(value);
+      return proto === Object.prototype || proto === null;
+    };
+    var emptyCopyOf = function emptyCopyOf2(value) {
+      if (isArray(value)) {
+        var arr = [];
+        arr.length = value.length;
+        return arr;
+      }
+      return getPrototypeOf(value) === null ? { __proto__: null } : {};
+    };
+    var copyInput = function copyInput2(input) {
+      var copies = getSideChannel();
+      var result = {};
+      var queue = [{ source: input, target: result }];
+      for (var i = 0; i < queue.length; ++i) {
+        var source = queue[i].source;
+        var target = queue[i].target;
+        var keys = Object.keys(source);
+        for (var j = 0; j < keys.length; ++j) {
+          var value = source[keys[j]];
+          if (isPlainContainer(value)) {
+            if (!copies.has(value)) {
+              var copy = emptyCopyOf(value);
+              copies.set(value, copy);
+              queue[queue.length] = { source: value, target: copy };
+            }
+            utils.setProperty(target, keys[j], copies.get(value));
+          } else {
+            utils.setProperty(target, keys[j], value);
+          }
+        }
+      }
+      return result;
+    };
     var defaults = {
       allowDots: false,
       allowEmptyArrays: false,
@@ -18107,14 +18256,30 @@ var require_parse = __commonJS({
     };
     var interpretNumericEntities = function(str) {
       return str.replace(/&#(\d+);/g, function($0, numberStr) {
-        return String.fromCharCode(parseInt(numberStr, 10));
+        var c = parseInt(numberStr, 10);
+        if (c > 65535 && c <= 1114111) {
+          c -= 65536;
+          return fromCharCode(55296 | c >> 10, 56320 | c & 1023);
+        }
+        return fromCharCode(c);
       });
     };
     var parseArrayValue = function(val, options, currentArrayLength) {
       if (val && typeof val === "string" && options.comma && val.indexOf(",") > -1) {
+        if (options.throwOnLimitExceeded) {
+          var commaCount = 0;
+          var commaIndex = val.indexOf(",");
+          while (commaIndex > -1) {
+            commaCount += 1;
+            if (commaCount >= options.arrayLimit) {
+              throw new RangeError("Array limit exceeded. Only " + options.arrayLimit + " element" + (options.arrayLimit === 1 ? "" : "s") + " allowed in an array.");
+            }
+            commaIndex = val.indexOf(",", commaIndex + 1);
+          }
+        }
         return val.split(",");
       }
-      if (options.throwOnLimitExceeded && currentArrayLength >= options.arrayLimit) {
+      if (options.throwOnLimitExceeded && currentArrayLength >= options.arrayLimit && currentArrayLength > 0) {
         throw new RangeError("Array limit exceeded. Only " + options.arrayLimit + " element" + (options.arrayLimit === 1 ? "" : "s") + " allowed in an array.");
       }
       return val;
@@ -18156,6 +18321,7 @@ var require_parse = __commonJS({
         var part = parts[i];
         var bracketEqualsPos = part.indexOf("]=");
         var pos = bracketEqualsPos === -1 ? part.indexOf("=") : bracketEqualsPos + 1;
+        var isEmptyBracketKey = pos > 1 && part.slice(pos - 2, pos) === "[]";
         var key;
         var val;
         if (pos === -1) {
@@ -18168,7 +18334,7 @@ var require_parse = __commonJS({
               parseArrayValue(
                 part.slice(pos + 1),
                 options,
-                isArray(obj[key]) ? obj[key].length : 0
+                isArray(obj[key]) && (options.duplicates === "combine" || isEmptyBracketKey) ? obj[key].length : 0
               ),
               function(encodedVal) {
                 return options.decoder(encodedVal, defaults.decoder, charset, "value");
@@ -18177,25 +18343,25 @@ var require_parse = __commonJS({
           }
         }
         if (val && options.interpretNumericEntities && charset === "iso-8859-1") {
-          val = interpretNumericEntities(String(val));
+          val = utils.maybeMap(val, function(value) {
+            return value ? interpretNumericEntities(String(value)) : value;
+          });
         }
-        if (part.indexOf("[]=") > -1) {
+        if (isEmptyBracketKey) {
           val = isArray(val) ? [val] : val;
         }
         if (options.comma && isArray(val) && val.length > options.arrayLimit) {
-          if (options.throwOnLimitExceeded) {
-            throw new RangeError("Array limit exceeded. Only " + options.arrayLimit + " element" + (options.arrayLimit === 1 ? "" : "s") + " allowed in an array.");
-          }
-          val = utils.combine([], val, options.arrayLimit, options.plainObjects);
+          val = utils.combine([], val, options.arrayLimit, options.plainObjects, options.throwOnLimitExceeded);
         }
         if (key !== null) {
           var existing = has.call(obj, key);
-          if (existing && (options.duplicates === "combine" || part.indexOf("[]=") > -1)) {
+          if (existing && (options.duplicates === "combine" || isEmptyBracketKey)) {
             obj[key] = utils.combine(
               obj[key],
               val,
               options.arrayLimit,
-              options.plainObjects
+              options.plainObjects,
+              options.throwOnLimitExceeded
             );
           } else if (!existing || options.duplicates === "last") {
             obj[key] = val;
@@ -18203,6 +18369,9 @@ var require_parse = __commonJS({
         }
       }
       return obj;
+    };
+    var stripWrappingBrackets = function stripWrappingBrackets2(key) {
+      return key.charAt(0) === "[" && key.charAt(key.length - 1) === "]" ? key.slice(1, -1) : key;
     };
     var parseObject = function(chain, val, options, valuesParsed) {
       var currentArrayLength = 0;
@@ -18222,17 +18391,18 @@ var require_parse = __commonJS({
               [],
               leaf,
               options.arrayLimit,
-              options.plainObjects
+              options.plainObjects,
+              options.throwOnLimitExceeded
             );
           }
         } else {
           obj = options.plainObjects ? { __proto__: null } : {};
-          var cleanRoot = root.charAt(0) === "[" && root.charAt(root.length - 1) === "]" ? root.slice(1, -1) : root;
-          var decodedRoot = options.decodeDotInKeys ? cleanRoot.replace(/%2E/g, ".") : cleanRoot;
+          var cleanRoot = stripWrappingBrackets(root);
+          var decodedRoot = options.decodeDotInKeys ? cleanRoot.replace(/%2E/gi, ".") : cleanRoot;
           var index = parseInt(decodedRoot, 10);
           var isValidArrayIndex = !isNaN(index) && root !== decodedRoot && String(index) === decodedRoot && index >= 0 && options.parseArrays;
           if (!options.parseArrays && decodedRoot === "") {
-            obj = { 0: leaf };
+            obj[0] = leaf;
           } else if (isValidArrayIndex && index < options.arrayLimit) {
             obj = [];
             obj[index] = leaf;
@@ -18249,10 +18419,37 @@ var require_parse = __commonJS({
       }
       return leaf;
     };
+    var topLevelDotsToBrackets = function topLevelDotsToBrackets2(key) {
+      var result = "";
+      var depth = 0;
+      for (var i = 0; i < key.length; i += 1) {
+        var cu = key.charCodeAt(i);
+        if (cu === 91) {
+          depth += 1;
+          result += "[";
+        } else if (cu === 93) {
+          if (depth > 0) {
+            depth -= 1;
+          }
+          result += "]";
+        } else if (cu === 46 && depth === 0 && i + 1 < key.length && key.charCodeAt(i + 1) !== 46 && key.charCodeAt(i + 1) !== 91) {
+          var start = i + 1;
+          var j = start;
+          while (j < key.length && key.charCodeAt(j) !== 46 && key.charCodeAt(j) !== 91) {
+            j += 1;
+          }
+          result += "[" + key.slice(start, j) + "]";
+          i = j - 1;
+        } else {
+          result += key.charAt(i);
+        }
+      }
+      return result;
+    };
     var splitKeyIntoSegments = function splitKeyIntoSegments2(originalKey, options) {
-      var key = options.allowDots ? originalKey.replace(/\.([^.[]+)/g, "[$1]") : originalKey;
+      var key = options.allowDots ? topLevelDotsToBrackets(originalKey) : originalKey;
       if (options.depth <= 0) {
-        if (!options.plainObjects && has.call(Object.prototype, key)) {
+        if (!options.plainObjects && has.call(Object.prototype, stripWrappingBrackets(key))) {
           if (!options.allowPrototypes) {
             return;
           }
@@ -18376,7 +18573,7 @@ var require_parse = __commonJS({
       if (str === "" || str === null || typeof str === "undefined") {
         return options.plainObjects ? { __proto__: null } : {};
       }
-      var tempObj = typeof str === "string" ? parseValues(str, options) : str;
+      var tempObj = typeof str === "string" ? parseValues(str, options) : copyInput(str);
       var obj = options.plainObjects ? { __proto__: null } : {};
       var keys = Object.keys(tempObj);
       for (var i = 0; i < keys.length; ++i) {
@@ -18392,9 +18589,9 @@ var require_parse = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/qs@6.15.2/node_modules/qs/lib/index.js
+// ../node_modules/.pnpm/qs@6.17.1/node_modules/qs/lib/index.js
 var require_lib2 = __commonJS({
-  "../node_modules/.pnpm/qs@6.15.2/node_modules/qs/lib/index.js"(exports, module) {
+  "../node_modules/.pnpm/qs@6.17.1/node_modules/qs/lib/index.js"(exports, module) {
     "use strict";
     var stringify2 = require_stringify();
     var parse2 = require_parse();
@@ -18407,9 +18604,9 @@ var require_lib2 = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/body-parser@2.2.2/node_modules/body-parser/lib/types/urlencoded.js
+// ../node_modules/.pnpm/body-parser@2.4.0/node_modules/body-parser/lib/types/urlencoded.js
 var require_urlencoded = __commonJS({
-  "../node_modules/.pnpm/body-parser@2.2.2/node_modules/body-parser/lib/types/urlencoded.js"(exports, module) {
+  "../node_modules/.pnpm/body-parser@2.4.0/node_modules/body-parser/lib/types/urlencoded.js"(exports, module) {
     "use strict";
     var createError = require_http_errors();
     var debug = require_src()("body-parser:urlencoded");
@@ -18422,10 +18619,7 @@ var require_urlencoded = __commonJS({
       if (normalizedOptions.defaultCharset !== "utf-8" && normalizedOptions.defaultCharset !== "iso-8859-1") {
         throw new TypeError("option defaultCharset must be either utf-8 or iso-8859-1");
       }
-      var queryparse = createQueryParser(options);
-      function parse2(body, encoding) {
-        return body.length ? queryparse(body, encoding) : {};
-      }
+      const parse2 = createQueryParser(options);
       const readOptions = {
         ...normalizedOptions,
         // assert charset
@@ -18436,11 +18630,11 @@ var require_urlencoded = __commonJS({
       };
     }
     function createQueryParser(options) {
-      var extended = Boolean(options?.extended);
-      var parameterLimit = options?.parameterLimit !== void 0 ? options?.parameterLimit : 1e3;
-      var charsetSentinel = options?.charsetSentinel;
-      var interpretNumericEntities = options?.interpretNumericEntities;
-      var depth = extended ? options?.depth !== void 0 ? options?.depth : 32 : 0;
+      const extended = Boolean(options?.extended);
+      let parameterLimit = options?.parameterLimit !== void 0 ? options?.parameterLimit : 1e3;
+      const charsetSentinel = options?.charsetSentinel;
+      const interpretNumericEntities = options?.interpretNumericEntities;
+      const depth = extended ? options?.depth !== void 0 ? options?.depth : 32 : 0;
       if (isNaN(parameterLimit) || parameterLimit < 1) {
         throw new TypeError("option parameterLimit must be a positive number");
       }
@@ -18450,15 +18644,16 @@ var require_urlencoded = __commonJS({
       if (isFinite(parameterLimit)) {
         parameterLimit = parameterLimit | 0;
       }
-      return function queryparse(body, encoding) {
-        var paramCount = parameterCount(body, parameterLimit);
+      return function parse2(body, encoding) {
+        if (!body.length) return {};
+        const paramCount = parameterCount(body, parameterLimit);
         if (paramCount === void 0) {
           debug("too many parameters");
           throw createError(413, "too many parameters", {
             type: "parameters.too.many"
           });
         }
-        var arrayLimit = extended ? Math.max(100, paramCount) : paramCount;
+        const arrayLimit = extended ? Math.max(100, paramCount) : paramCount;
         debug("parse " + (extended ? "extended " : "") + "urlencoding");
         try {
           return qs.parse(body, {
@@ -18495,31 +18690,15 @@ var require_urlencoded = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/body-parser@2.2.2/node_modules/body-parser/index.js
+// ../node_modules/.pnpm/body-parser@2.4.0/node_modules/body-parser/index.js
 var require_body_parser = __commonJS({
-  "../node_modules/.pnpm/body-parser@2.2.2/node_modules/body-parser/index.js"(exports, module) {
+  "../node_modules/.pnpm/body-parser@2.4.0/node_modules/body-parser/index.js"(exports, module) {
     "use strict";
     exports = module.exports = bodyParser;
-    Object.defineProperty(exports, "json", {
-      configurable: true,
-      enumerable: true,
-      get: () => require_json()
-    });
-    Object.defineProperty(exports, "raw", {
-      configurable: true,
-      enumerable: true,
-      get: () => require_raw()
-    });
-    Object.defineProperty(exports, "text", {
-      configurable: true,
-      enumerable: true,
-      get: () => require_text()
-    });
-    Object.defineProperty(exports, "urlencoded", {
-      configurable: true,
-      enumerable: true,
-      get: () => require_urlencoded()
-    });
+    exports.json = require_json();
+    exports.raw = require_raw();
+    exports.text = require_text();
+    exports.urlencoded = require_urlencoded();
     function bodyParser() {
       throw new Error("The bodyParser() generic has been split into individual middleware to use instead.");
     }
@@ -18550,16 +18729,17 @@ var require_merge_descriptors = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/encodeurl@2.0.0/node_modules/encodeurl/index.js
+// ../node_modules/.pnpm/encodeurl@2.0.1/node_modules/encodeurl/index.js
 var require_encodeurl = __commonJS({
-  "../node_modules/.pnpm/encodeurl@2.0.0/node_modules/encodeurl/index.js"(exports, module) {
+  "../node_modules/.pnpm/encodeurl@2.0.1/node_modules/encodeurl/index.js"(exports, module) {
     "use strict";
     module.exports = encodeUrl;
     var ENCODE_CHARS_REGEXP = /(?:[^\x21\x23-\x3B\x3D\x3F-\x5F\x61-\x7A\x7C\x7E]|%(?:[^0-9A-Fa-f]|[0-9A-Fa-f][^0-9A-Fa-f]|$))+/g;
-    var UNMATCHED_SURROGATE_PAIR_REGEXP = /(^|[^\uD800-\uDBFF])[\uDC00-\uDFFF]|[\uD800-\uDBFF]([^\uDC00-\uDFFF]|$)/g;
-    var UNMATCHED_SURROGATE_PAIR_REPLACE = "$1\uFFFD$2";
+    var SURROGATE_REGEXP = /([\uD800-\uDBFF][\uDC00-\uDFFF])|[\uD800-\uDFFF]/g;
     function encodeUrl(url) {
-      return String(url).replace(UNMATCHED_SURROGATE_PAIR_REGEXP, UNMATCHED_SURROGATE_PAIR_REPLACE).replace(ENCODE_CHARS_REGEXP, encodeURI);
+      return String(url).replace(SURROGATE_REGEXP, function(_, pair) {
+        return pair || "\uFFFD";
+      }).replace(ENCODE_CHARS_REGEXP, encodeURI);
     }
   }
 });
@@ -18822,9 +19002,9 @@ var require_finalhandler = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/express@5.2.1/node_modules/express/lib/view.js
+// ../node_modules/.pnpm/express@5.3.0/node_modules/express/lib/view.js
 var require_view = __commonJS({
-  "../node_modules/.pnpm/express@5.2.1/node_modules/express/lib/view.js"(exports, module) {
+  "../node_modules/.pnpm/express@5.3.0/node_modules/express/lib/view.js"(exports, module) {
     "use strict";
     var debug = require_src()("express:view");
     var path2 = __require("node:path");
@@ -18921,14 +19101,14 @@ var require_etag = __commonJS({
   "../node_modules/.pnpm/etag@1.8.1/node_modules/etag/index.js"(exports, module) {
     "use strict";
     module.exports = etag;
-    var crypto12 = __require("crypto");
+    var crypto13 = __require("crypto");
     var Stats = __require("fs").Stats;
     var toString = Object.prototype.toString;
     function entitytag(entity) {
       if (entity.length === 0) {
         return '"0-2jmj7l5rSw0yVb/vlWAYkK/YBwk"';
       }
-      var hash = crypto12.createHash("sha1").update(entity, "utf8").digest("base64").substring(0, 27);
+      var hash = crypto13.createHash("sha1").update(entity, "utf8").digest("base64").substring(0, 27);
       var len = typeof entity === "string" ? Buffer.byteLength(entity, "utf8") : entity.length;
       return '"' + len.toString(16) + "-" + hash + '"';
     }
@@ -19627,9 +19807,9 @@ var require_ipaddr = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/proxy-addr@2.0.7/node_modules/proxy-addr/index.js
+// ../node_modules/.pnpm/proxy-addr@2.0.8/node_modules/proxy-addr/index.js
 var require_proxy_addr = __commonJS({
-  "../node_modules/.pnpm/proxy-addr@2.0.7/node_modules/proxy-addr/index.js"(exports, module) {
+  "../node_modules/.pnpm/proxy-addr@2.0.8/node_modules/proxy-addr/index.js"(exports, module) {
     "use strict";
     module.exports = proxyaddr;
     module.exports.all = alladdrs;
@@ -19741,6 +19921,9 @@ var require_proxy_addr = __commonJS({
       return function trust(addr) {
         if (!isip(addr)) return false;
         var ip = parseip(addr);
+        if (ip.kind() === "ipv6" && ip.isIPv4MappedAddress()) {
+          ip = ip.toIPv4Address();
+        }
         var ipconv;
         var kind = ip.kind();
         for (var i = 0; i < subnets.length; i++) {
@@ -19753,10 +19936,15 @@ var require_proxy_addr = __commonJS({
             if (subnetkind === "ipv4" && !ip.isIPv4MappedAddress()) {
               continue;
             }
+            if (subnetkind !== "ipv4" && !(subnetrange >= 96 && subnetip.isIPv4MappedAddress())) {
+              continue;
+            }
             if (!ipconv) {
               ipconv = subnetkind === "ipv4" ? ip.toIPv4Address() : ip.toIPv4MappedAddress();
             }
             trusted = ipconv;
+          } else if (kind === "ipv6" && subnetip.isIPv4MappedAddress()) {
+            continue;
           }
           if (trusted.match(subnetip, subnetrange)) {
             return true;
@@ -19773,12 +19961,20 @@ var require_proxy_addr = __commonJS({
       return function trust(addr) {
         if (!isip(addr)) return false;
         var ip = parseip(addr);
+        if (ip.kind() === "ipv6" && ip.isIPv4MappedAddress()) {
+          ip = ip.toIPv4Address();
+        }
         var kind = ip.kind();
         if (kind !== subnetkind) {
           if (subnetisipv4 && !ip.isIPv4MappedAddress()) {
             return false;
           }
+          if (!subnetisipv4 && !(subnetrange >= 96 && subnetip.isIPv4MappedAddress())) {
+            return false;
+          }
           ip = subnetisipv4 ? ip.toIPv4Address() : ip.toIPv4MappedAddress();
+        } else if (kind === "ipv6" && subnetip.isIPv4MappedAddress()) {
+          return false;
         }
         return ip.match(subnetip, subnetrange);
       };
@@ -19786,12 +19982,12 @@ var require_proxy_addr = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/express@5.2.1/node_modules/express/lib/utils.js
+// ../node_modules/.pnpm/express@5.3.0/node_modules/express/lib/utils.js
 var require_utils3 = __commonJS({
-  "../node_modules/.pnpm/express@5.2.1/node_modules/express/lib/utils.js"(exports) {
+  "../node_modules/.pnpm/express@5.3.0/node_modules/express/lib/utils.js"(exports) {
     "use strict";
     var { METHODS } = __require("node:http");
-    var contentType = require_content_type();
+    var contentType = require_dist();
     var etag = require_etag();
     var mime = require_mime_types();
     var proxyaddr = require_proxy_addr();
@@ -21035,9 +21231,9 @@ var require_router = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/express@5.2.1/node_modules/express/lib/application.js
+// ../node_modules/.pnpm/express@5.3.0/node_modules/express/lib/application.js
 var require_application = __commonJS({
-  "../node_modules/.pnpm/express@5.2.1/node_modules/express/lib/application.js"(exports, module) {
+  "../node_modules/.pnpm/express@5.3.0/node_modules/express/lib/application.js"(exports, module) {
     "use strict";
     var finalhandler = require_finalhandler();
     var debug = require_src()("express:application");
@@ -21242,7 +21438,7 @@ var require_application = __commonJS({
       var cache = this.cache;
       var done = callback;
       var engines = this.engines;
-      var opts = options;
+      var opts = options || {};
       var view;
       if (typeof options === "function") {
         done = options;
@@ -21284,7 +21480,7 @@ var require_application = __commonJS({
       return server2.listen.apply(server2, args);
     };
     function logerror(err) {
-      if (this.get("env") !== "test") console.error(err.stack || err.toString());
+      if (this.get("env") !== "test") console.error(err);
     }
     function tryRender(view, options, callback) {
       try {
@@ -21296,42 +21492,55 @@ var require_application = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/negotiator@1.0.0/node_modules/negotiator/lib/charset.js
-var require_charset = __commonJS({
-  "../node_modules/.pnpm/negotiator@1.0.0/node_modules/negotiator/lib/charset.js"(exports, module) {
+// ../node_modules/.pnpm/negotiator@1.1.0/node_modules/negotiator/lib/accept.js
+var require_accept = __commonJS({
+  "../node_modules/.pnpm/negotiator@1.1.0/node_modules/negotiator/lib/accept.js"(exports, module) {
     "use strict";
+    var contentType = require_dist();
+    module.exports = parseAccept;
+    function parseAccept(header) {
+      var values2 = [];
+      var index = 0;
+      while (index < header.length) {
+        var start = skipOptionalWhitespace(header, index);
+        var parsed = contentType.parse(header, { comma: true, start });
+        parsed.type = header.slice(start, start + parsed.type.length);
+        values2.push(parsed);
+        index = parsed.index + 1;
+      }
+      return values2;
+    }
+    function skipOptionalWhitespace(header, index) {
+      var cursor = index;
+      while (header.charCodeAt(cursor) === 32 || header.charCodeAt(cursor) === 9) {
+        cursor++;
+      }
+      return cursor;
+    }
+  }
+});
+
+// ../node_modules/.pnpm/negotiator@1.1.0/node_modules/negotiator/lib/charset.js
+var require_charset = __commonJS({
+  "../node_modules/.pnpm/negotiator@1.1.0/node_modules/negotiator/lib/charset.js"(exports, module) {
+    "use strict";
+    var parseAccept = require_accept();
     module.exports = preferredCharsets;
     module.exports.preferredCharsets = preferredCharsets;
-    var simpleCharsetRegExp = /^\s*([^\s;]+)\s*(?:;(.*))?$/;
     function parseAcceptCharset(accept) {
-      var accepts = accept.split(",");
+      var accepts = parseAccept(accept);
       for (var i = 0, j = 0; i < accepts.length; i++) {
-        var charset = parseCharset(accepts[i].trim(), i);
-        if (charset) {
-          accepts[j++] = charset;
-        }
+        var charset = formatCharset(accepts[i], i);
+        if (charset) accepts[j++] = charset;
       }
       accepts.length = j;
       return accepts;
     }
-    function parseCharset(str, i) {
-      var match = simpleCharsetRegExp.exec(str);
-      if (!match) return null;
-      var charset = match[1];
-      var q = 1;
-      if (match[2]) {
-        var params = match[2].split(";");
-        for (var j = 0; j < params.length; j++) {
-          var p = params[j].trim().split("=");
-          if (p[0] === "q") {
-            q = parseFloat(p[1]);
-            break;
-          }
-        }
-      }
+    function formatCharset(parsed, i) {
+      if (!parsed.type) return null;
       return {
-        charset,
-        q,
+        charset: parsed.type,
+        q: parsed.parameters.q ? parseFloat(parsed.parameters.q) : 1,
         i
       };
     }
@@ -21383,19 +21592,19 @@ var require_charset = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/negotiator@1.0.0/node_modules/negotiator/lib/encoding.js
+// ../node_modules/.pnpm/negotiator@1.1.0/node_modules/negotiator/lib/encoding.js
 var require_encoding = __commonJS({
-  "../node_modules/.pnpm/negotiator@1.0.0/node_modules/negotiator/lib/encoding.js"(exports, module) {
+  "../node_modules/.pnpm/negotiator@1.1.0/node_modules/negotiator/lib/encoding.js"(exports, module) {
     "use strict";
+    var parseAccept = require_accept();
     module.exports = preferredEncodings;
     module.exports.preferredEncodings = preferredEncodings;
-    var simpleEncodingRegExp = /^\s*([^\s;]+)\s*(?:;(.*))?$/;
     function parseAcceptEncoding(accept) {
-      var accepts = accept.split(",");
+      var accepts = parseAccept(accept);
       var hasIdentity = false;
       var minQuality = 1;
       for (var i = 0, j = 0; i < accepts.length; i++) {
-        var encoding = parseEncoding(accepts[i].trim(), i);
+        var encoding = formatEncoding(accepts[i], i);
         if (encoding) {
           accepts[j++] = encoding;
           hasIdentity = hasIdentity || specify("identity", encoding);
@@ -21412,24 +21621,11 @@ var require_encoding = __commonJS({
       accepts.length = j;
       return accepts;
     }
-    function parseEncoding(str, i) {
-      var match = simpleEncodingRegExp.exec(str);
-      if (!match) return null;
-      var encoding = match[1];
-      var q = 1;
-      if (match[2]) {
-        var params = match[2].split(";");
-        for (var j = 0; j < params.length; j++) {
-          var p = params[j].trim().split("=");
-          if (p[0] === "q") {
-            q = parseFloat(p[1]);
-            break;
-          }
-        }
-      }
+    function formatEncoding(parsed, i) {
+      if (!parsed.type) return null;
       return {
-        encoding,
-        q,
+        encoding: parsed.type,
+        q: parsed.parameters.q ? parseFloat(parsed.parameters.q) : 1,
         i
       };
     }
@@ -21496,45 +21692,34 @@ var require_encoding = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/negotiator@1.0.0/node_modules/negotiator/lib/language.js
+// ../node_modules/.pnpm/negotiator@1.1.0/node_modules/negotiator/lib/language.js
 var require_language = __commonJS({
-  "../node_modules/.pnpm/negotiator@1.0.0/node_modules/negotiator/lib/language.js"(exports, module) {
+  "../node_modules/.pnpm/negotiator@1.1.0/node_modules/negotiator/lib/language.js"(exports, module) {
     "use strict";
+    var contentType = require_dist();
+    var parseAccept = require_accept();
     module.exports = preferredLanguages;
     module.exports.preferredLanguages = preferredLanguages;
-    var simpleLanguageRegExp = /^\s*([^\s\-;]+)(?:-([^\s;]+))?\s*(?:;(.*))?$/;
     function parseAcceptLanguage(accept) {
-      var accepts = accept.split(",");
+      var accepts = parseAccept(accept);
       for (var i = 0, j = 0; i < accepts.length; i++) {
-        var language = parseLanguage(accepts[i].trim(), i);
-        if (language) {
-          accepts[j++] = language;
-        }
+        var language = formatLanguage(accepts[i], i);
+        if (language) accepts[j++] = language;
       }
       accepts.length = j;
       return accepts;
     }
-    function parseLanguage(str, i) {
-      var match = simpleLanguageRegExp.exec(str);
-      if (!match) return null;
-      var prefix = match[1];
-      var suffix = match[2];
-      var full = prefix;
-      if (suffix) full += "-" + suffix;
-      var q = 1;
-      if (match[3]) {
-        var params = match[3].split(";");
-        for (var j = 0; j < params.length; j++) {
-          var p = params[j].split("=");
-          if (p[0] === "q") q = parseFloat(p[1]);
-        }
-      }
+    function formatLanguage(parsed, i) {
+      if (!parsed.type) return null;
+      var hyphen = parsed.type.indexOf("-");
+      var prefix = hyphen === -1 ? parsed.type : parsed.type.slice(0, hyphen);
+      var suffix = hyphen === -1 ? void 0 : parsed.type.slice(hyphen + 1);
       return {
         prefix,
         suffix,
-        q,
+        q: parsed.parameters.q ? parseFloat(parsed.parameters.q) : 1,
         i,
-        full
+        full: parsed.type
       };
     }
     function getLanguagePriority(language, accepted, index) {
@@ -21548,7 +21733,7 @@ var require_language = __commonJS({
       return priority;
     }
     function specify(language, spec, index) {
-      var p = parseLanguage(language);
+      var p = formatLanguage(contentType.parse(language), 0);
       if (!p) return null;
       var s = 0;
       if (spec.full.toLowerCase() === p.full.toLowerCase()) {
@@ -21591,49 +21776,32 @@ var require_language = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/negotiator@1.0.0/node_modules/negotiator/lib/mediaType.js
+// ../node_modules/.pnpm/negotiator@1.1.0/node_modules/negotiator/lib/mediaType.js
 var require_mediaType = __commonJS({
-  "../node_modules/.pnpm/negotiator@1.0.0/node_modules/negotiator/lib/mediaType.js"(exports, module) {
+  "../node_modules/.pnpm/negotiator@1.1.0/node_modules/negotiator/lib/mediaType.js"(exports, module) {
     "use strict";
+    var contentType = require_dist();
+    var parseAcceptHeader = require_accept();
     module.exports = preferredMediaTypes;
     module.exports.preferredMediaTypes = preferredMediaTypes;
-    var simpleMediaTypeRegExp = /^\s*([^\s\/;]+)\/([^;\s]+)\s*(?:;(.*))?$/;
     function parseAccept(accept) {
-      var accepts = splitMediaTypes(accept);
+      var accepts = parseAcceptHeader(accept);
       for (var i = 0, j = 0; i < accepts.length; i++) {
-        var mediaType = parseMediaType(accepts[i].trim(), i);
-        if (mediaType) {
-          accepts[j++] = mediaType;
-        }
+        var mediaType = formatMediaType(accepts[i], i);
+        if (mediaType) accepts[j++] = mediaType;
       }
       accepts.length = j;
       return accepts;
     }
-    function parseMediaType(str, i) {
-      var match = simpleMediaTypeRegExp.exec(str);
-      if (!match) return null;
-      var params = /* @__PURE__ */ Object.create(null);
-      var q = 1;
-      var subtype = match[2];
-      var type = match[1];
-      if (match[3]) {
-        var kvps = splitParameters(match[3]).map(splitKeyValuePair);
-        for (var j = 0; j < kvps.length; j++) {
-          var pair = kvps[j];
-          var key = pair[0].toLowerCase();
-          var val = pair[1];
-          var value = val && val[0] === '"' && val[val.length - 1] === '"' ? val.slice(1, -1) : val;
-          if (key === "q") {
-            q = parseFloat(value);
-            break;
-          }
-          params[key] = value;
-        }
-      }
+    function formatMediaType(parsed, i) {
+      var slash = parsed.type.indexOf("/");
+      if (slash === -1) return null;
+      var q = parsed.parameters.q ? parseFloat(parsed.parameters.q) : 1;
+      delete parsed.parameters.q;
       return {
-        type,
-        subtype,
-        params,
+        type: parsed.type.slice(0, slash),
+        subtype: parsed.type.slice(slash + 1),
+        params: parsed.parameters,
         q,
         i
       };
@@ -21649,7 +21817,7 @@ var require_mediaType = __commonJS({
       return priority;
     }
     function specify(type, spec, index) {
-      var p = parseMediaType(type);
+      var p = formatMediaType(contentType.parse(type), 0);
       var s = 0;
       if (!p) {
         return null;
@@ -21702,60 +21870,12 @@ var require_mediaType = __commonJS({
     function isQuality(spec) {
       return spec.q > 0;
     }
-    function quoteCount(string) {
-      var count2 = 0;
-      var index = 0;
-      while ((index = string.indexOf('"', index)) !== -1) {
-        count2++;
-        index++;
-      }
-      return count2;
-    }
-    function splitKeyValuePair(str) {
-      var index = str.indexOf("=");
-      var key;
-      var val;
-      if (index === -1) {
-        key = str;
-      } else {
-        key = str.slice(0, index);
-        val = str.slice(index + 1);
-      }
-      return [key, val];
-    }
-    function splitMediaTypes(accept) {
-      var accepts = accept.split(",");
-      for (var i = 1, j = 0; i < accepts.length; i++) {
-        if (quoteCount(accepts[j]) % 2 == 0) {
-          accepts[++j] = accepts[i];
-        } else {
-          accepts[j] += "," + accepts[i];
-        }
-      }
-      accepts.length = j + 1;
-      return accepts;
-    }
-    function splitParameters(str) {
-      var parameters = str.split(";");
-      for (var i = 1, j = 0; i < parameters.length; i++) {
-        if (quoteCount(parameters[j]) % 2 == 0) {
-          parameters[++j] = parameters[i];
-        } else {
-          parameters[j] += ";" + parameters[i];
-        }
-      }
-      parameters.length = j + 1;
-      for (var i = 0; i < parameters.length; i++) {
-        parameters[i] = parameters[i].trim();
-      }
-      return parameters;
-    }
   }
 });
 
-// ../node_modules/.pnpm/negotiator@1.0.0/node_modules/negotiator/index.js
+// ../node_modules/.pnpm/negotiator@1.1.0/node_modules/negotiator/index.js
 var require_negotiator = __commonJS({
-  "../node_modules/.pnpm/negotiator@1.0.0/node_modules/negotiator/index.js"(exports, module) {
+  "../node_modules/.pnpm/negotiator@1.1.0/node_modules/negotiator/index.js"(exports, module) {
     "use strict";
     var preferredCharsets = require_charset();
     var preferredEncodings = require_encoding();
@@ -21962,9 +22082,9 @@ var require_fresh = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/range-parser@1.2.1/node_modules/range-parser/index.js
+// ../node_modules/.pnpm/range-parser@1.3.0/node_modules/range-parser/index.js
 var require_range_parser = __commonJS({
-  "../node_modules/.pnpm/range-parser@1.2.1/node_modules/range-parser/index.js"(exports, module) {
+  "../node_modules/.pnpm/range-parser@1.3.0/node_modules/range-parser/index.js"(exports, module) {
     "use strict";
     module.exports = rangeParser;
     function rangeParser(size2, str, options) {
@@ -21979,19 +22099,27 @@ var require_range_parser = __commonJS({
       var ranges = [];
       ranges.type = str.slice(0, index);
       for (var i = 0; i < arr.length; i++) {
-        var range = arr[i].split("-");
-        var start = parseInt(range[0], 10);
-        var end = parseInt(range[1], 10);
-        if (isNaN(start)) {
+        var indexOf = arr[i].indexOf("-");
+        if (indexOf === -1) {
+          return -2;
+        }
+        var startStr = arr[i].slice(0, indexOf).trim();
+        var endStr = arr[i].slice(indexOf + 1).trim();
+        var start = parsePos(startStr);
+        var end = parsePos(endStr);
+        if (startStr.length === 0) {
           start = size2 - end;
           end = size2 - 1;
-        } else if (isNaN(end)) {
+        } else if (endStr.length === 0) {
           end = size2 - 1;
         }
         if (end > size2 - 1) {
           end = size2 - 1;
         }
-        if (isNaN(start) || isNaN(end) || start > end || start < 0) {
+        if (isNaN(start) || isNaN(end)) {
+          return -2;
+        }
+        if (start > end || start < 0) {
           continue;
         }
         ranges.push({
@@ -22003,6 +22131,10 @@ var require_range_parser = __commonJS({
         return -1;
       }
       return options && options.combine ? combineRanges(ranges) : ranges;
+    }
+    function parsePos(str) {
+      if (/^\d+$/.test(str)) return Number(str);
+      return NaN;
     }
     function combineRanges(ranges) {
       var ordered = ranges.map(mapWithIndex).sort(sortByRangeStart);
@@ -22043,9 +22175,9 @@ var require_range_parser = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/express@5.2.1/node_modules/express/lib/request.js
+// ../node_modules/.pnpm/express@5.3.0/node_modules/express/lib/request.js
 var require_request = __commonJS({
-  "../node_modules/.pnpm/express@5.2.1/node_modules/express/lib/request.js"(exports, module) {
+  "../node_modules/.pnpm/express@5.3.0/node_modules/express/lib/request.js"(exports, module) {
     "use strict";
     var accepts = require_accepts();
     var isIP2 = __require("node:net").isIP;
@@ -22081,9 +22213,9 @@ var require_request = __commonJS({
       var accept = accepts(this);
       return accept.encodings.apply(accept, arguments);
     };
-    req.acceptsCharsets = function() {
-      var accept = accepts(this);
-      return accept.charsets.apply(accept, arguments);
+    req.acceptsCharsets = function(...charsets) {
+      const accept = accepts(this);
+      return accept.charsets(...charsets);
     };
     req.acceptsLanguages = function(...languages) {
       return accepts(this).languages(...languages);
@@ -22150,7 +22282,7 @@ var require_request = __commonJS({
       if (!val || !trust(this.socket.remoteAddress, 0)) {
         val = this.get("Host");
       } else if (val.indexOf(",") !== -1) {
-        val = val.substring(0, val.indexOf(",")).trimRight();
+        val = val.substring(0, val.indexOf(",")).trimEnd();
       }
       return val || void 0;
     });
@@ -22165,7 +22297,7 @@ var require_request = __commonJS({
       var method = this.method;
       var res = this.res;
       var status = res.statusCode;
-      if ("GET" !== method && "HEAD" !== method) return false;
+      if ("GET" !== method && "HEAD" !== method && "QUERY" !== method) return false;
       if (status >= 200 && status < 300 || 304 === status) {
         return fresh(this.headers, {
           "etag": res.get("ETag"),
@@ -22191,181 +22323,270 @@ var require_request = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/content-disposition@1.1.0/node_modules/content-disposition/index.js
-var require_content_disposition = __commonJS({
-  "../node_modules/.pnpm/content-disposition@1.1.0/node_modules/content-disposition/index.js"(exports, module) {
+// ../node_modules/.pnpm/content-disposition@2.0.1/node_modules/content-disposition/dist/index.js
+var require_dist3 = __commonJS({
+  "../node_modules/.pnpm/content-disposition@2.0.1/node_modules/content-disposition/dist/index.js"(exports) {
     "use strict";
-    module.exports = contentDisposition;
-    module.exports.parse = parse2;
-    var utf8Decoder = new TextDecoder("utf-8");
-    var ENCODE_URL_ATTR_CHAR_REGEXP = /[\x00-\x20"'()*,/:;<=>?@[\\\]{}\x7f]/g;
-    var NON_LATIN1_REGEXP = /[^\x20-\x7e\xa0-\xff]/g;
-    var QESC_REGEXP = /\\([\u0000-\u007f])/g;
-    var QUOTE_REGEXP = /([\\"])/g;
-    var PARAM_REGEXP = /;[\x09\x20]*([!#$%&'*+.0-9A-Z^_`a-z|~-]+)[\x09\x20]*=[\x09\x20]*("(?:[\x20!\x23-\x5b\x5d-\x7e\x80-\xff]|\\[\x20-\x7e])*"|[!#$%&'*+.0-9A-Z^_`a-z|~-]+)[\x09\x20]*/g;
-    var TEXT_REGEXP = /^[\x20-\x7e\x80-\xff]+$/;
-    var TOKEN_REGEXP = /^[!#$%&'*+.0-9A-Z^_`a-z|~-]+$/;
-    var EXT_VALUE_REGEXP = /^([A-Za-z0-9!#$%&+\-^_`{}~]+)'(?:[A-Za-z]{2,3}(?:-[A-Za-z]{3}){0,3}|[A-Za-z]{4,8}|)'((?:%[0-9A-Fa-f]{2}|[A-Za-z0-9!#$&+.^_`|~-])+)$/;
-    var DISPOSITION_TYPE_REGEXP = /^([!#$%&'*+.0-9A-Z^_`a-z|~-]+)[\x09\x20]*(?:$|;)/;
-    function contentDisposition(filename, options) {
-      var opts = options || {};
-      var type = opts.type || "attachment";
-      var params = createparams(filename, opts.fallback);
-      return format(new ContentDisposition(type, params));
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.create = create;
+    exports.parse = parse2;
+    exports.decodeExtended = decodeExtended;
+    exports.format = format;
+    exports.encodeExtended = encodeExtended;
+    var NullObject = /* @__PURE__ */ (() => {
+      const C = function() {
+      };
+      C.prototype = /* @__PURE__ */ Object.create(null);
+      return C;
+    })();
+    function create(filename, options) {
+      const type = options?.type || "attachment";
+      const parameters = createParameters(filename, options?.fallback);
+      return format({ type, parameters }, { extended: false });
     }
-    function createparams(filename, fallback2) {
-      if (filename === void 0) {
-        return;
-      }
-      var params = {};
-      if (typeof filename !== "string") {
-        throw new TypeError("filename must be a string");
-      }
-      if (fallback2 === void 0) {
-        fallback2 = true;
-      }
-      if (typeof fallback2 !== "string" && typeof fallback2 !== "boolean") {
-        throw new TypeError("fallback must be a string or boolean");
-      }
-      if (typeof fallback2 === "string" && NON_LATIN1_REGEXP.test(fallback2)) {
-        throw new TypeError("fallback must be ISO-8859-1 string");
-      }
-      var name = basename(filename);
-      var isQuotedString = TEXT_REGEXP.test(name);
-      var fallbackName = typeof fallback2 !== "string" ? fallback2 && getlatin1(name) : basename(fallback2);
-      var hasFallback = typeof fallbackName === "string" && fallbackName !== name;
-      if (hasFallback || !isQuotedString || hasHexEscape(name)) {
-        params["filename*"] = name;
-      }
-      if (isQuotedString || hasFallback) {
-        params.filename = hasFallback ? fallbackName : name;
-      }
-      return params;
-    }
-    function format(obj) {
-      var parameters = obj.parameters;
-      var type = obj.type;
-      if (!type || typeof type !== "string" || !TOKEN_REGEXP.test(type)) {
-        throw new TypeError("invalid type");
-      }
-      var string = String(type).toLowerCase();
-      if (parameters && typeof parameters === "object") {
-        var param;
-        var params = Object.keys(parameters).sort();
-        for (var i = 0; i < params.length; i++) {
-          param = params[i];
-          var val = param.slice(-1) === "*" ? ustring(parameters[param]) : qstring(parameters[param]);
-          string += "; " + param + "=" + val;
+    var SP = 32;
+    var HTAB = 9;
+    var SEMI = 59;
+    var EQ = 61;
+    var DQUOTE = 34;
+    var BSLASH = 92;
+    var ASTERISK = 42;
+    function parse2(header, options) {
+      const len = header.length;
+      const multipart = options?.multipart === true;
+      const extended = options?.extended !== false;
+      let index = skipOWS(header, 0, header.length);
+      const typeStart = index;
+      index = parseToken(header, index, len);
+      const typeEnd = trailingOWS(header, typeStart, index);
+      const type = header.slice(typeStart, typeEnd).toLowerCase();
+      const parameters = new NullObject();
+      parameter: while (index < len) {
+        index = skipOWS(header, index + 1, len);
+        const keyStart = index;
+        while (index < len) {
+          const char2 = header.charCodeAt(index);
+          if (char2 === SEMI)
+            continue parameter;
+          if (char2 === EQ) {
+            const keyEnd = trailingOWS(header, keyStart, index);
+            const key = header.slice(keyStart, keyEnd).toLowerCase();
+            index = skipOWS(header, index + 1, len);
+            if (index < len && header.charCodeAt(index) === DQUOTE) {
+              index++;
+              let value2 = "";
+              if (multipart) {
+                while (index < len) {
+                  const code = header.charCodeAt(index++);
+                  if (code === DQUOTE) {
+                    index = parseToken(header, index, len);
+                    if (parameters[key] === void 0)
+                      parameters[key] = value2;
+                    break;
+                  }
+                  if (code === /* % */
+                  37 && index + 1 < len) {
+                    const code2 = header.charCodeAt(index);
+                    const code3 = header.charCodeAt(index + 1);
+                    if (code2 === 50 && code3 === 50) {
+                      value2 += '"';
+                      index += 2;
+                      continue;
+                    }
+                    if (code2 === 48) {
+                      if (code3 === 100 || code3 === 68) {
+                        value2 += "\r";
+                        index += 2;
+                        continue;
+                      }
+                      if (code3 === 97 || code3 === 65) {
+                        value2 += "\n";
+                        index += 2;
+                        continue;
+                      }
+                    }
+                  }
+                  value2 += String.fromCharCode(code);
+                }
+              } else {
+                while (index < len) {
+                  const code = header.charCodeAt(index++);
+                  if (code === DQUOTE) {
+                    index = parseToken(header, index, len);
+                    if (parameters[key] === void 0)
+                      parameters[key] = value2;
+                    break;
+                  }
+                  if (code === BSLASH && index < len) {
+                    value2 += header[index++];
+                    continue;
+                  }
+                  value2 += String.fromCharCode(code);
+                }
+              }
+              continue parameter;
+            }
+            const valueStart = index;
+            index = parseToken(header, index, len);
+            const valueEnd = trailingOWS(header, valueStart, index);
+            const value = header.slice(valueStart, valueEnd);
+            if (parameters[key] === void 0) {
+              parameters[key] = value;
+              if (extended && key.charCodeAt(key.length - 1) === ASTERISK) {
+                const normalizedKey = key.slice(0, -1);
+                const decoded = decodeExtended(value);
+                if (decoded !== void 0)
+                  parameters[normalizedKey] = decoded;
+              }
+            }
+            continue parameter;
+          }
+          index++;
         }
       }
-      return string;
+      return { type, parameters };
     }
-    function decodefield(str) {
-      const match = EXT_VALUE_REGEXP.exec(str);
-      if (!match) {
-        throw new TypeError("invalid extended field value");
+    var ENCODE_URL_ATTR_CHAR_REGEXP = /[\x00-\x20"'()*,/:;<=>?@[\\\]{}\x7f]/g;
+    var NON_ASCII_REGEXP = /[^\x20-\x7e]/g;
+    var QUOTE_REGEXP = /[\\"]/g;
+    var INVALID_FILENAME_REGEXP = /%[0-9A-Fa-f]{2}/;
+    var TEXT_REGEXP = /^[\x20-\x7e\x80-\xff]*$/;
+    var ASCII_TEXT_REGEXP = /^[\x20-\x7e]*$/;
+    var TOKEN_REGEXP = /^[!#$%&'*+.0-9A-Z^_`a-z|~-]+$/;
+    function createParameters(filename, fallback2 = true) {
+      if (filename === void 0)
+        return;
+      if (typeof fallback2 === "string") {
+        if (!ASCII_TEXT_REGEXP.test(fallback2)) {
+          throw new TypeError("Fallback must be valid US-ASCII: " + fallback2);
+        }
+        if (fallback2 === filename)
+          return { filename };
+        return { filename: fallback2, "filename*": encodeExtended(filename) };
       }
-      const charset = match[1].toLowerCase();
-      const encoded = match[2];
+      if (ASCII_TEXT_REGEXP.test(filename) && !INVALID_FILENAME_REGEXP.test(filename)) {
+        return { filename };
+      }
+      if (fallback2 === false) {
+        return { "filename*": encodeExtended(filename) };
+      }
+      return {
+        filename: getAscii(filename),
+        "filename*": encodeExtended(filename)
+      };
+    }
+    function decodeExtended(str) {
+      const charsetEnd = str.indexOf("'");
+      if (charsetEnd <= 0) {
+        return void 0;
+      }
+      const languageEnd = str.indexOf("'", charsetEnd + 1);
+      if (languageEnd === -1) {
+        return void 0;
+      }
+      const charset = str.slice(0, charsetEnd).toLowerCase();
+      const encoded = str.slice(languageEnd + 1);
       switch (charset) {
         case "iso-8859-1": {
-          const binary = decodeHexEscapes(encoded);
-          return getlatin1(binary);
+          return decodeHexEscapes(encoded);
         }
         case "utf-8":
         case "utf8": {
-          try {
-            return decodeURIComponent(encoded);
-          } catch {
-            const binary = decodeHexEscapes(encoded);
-            const bytes = new Uint8Array(binary.length);
-            for (let idx = 0; idx < binary.length; idx++) {
-              bytes[idx] = binary.charCodeAt(idx);
-            }
-            return utf8Decoder.decode(bytes);
-          }
+          return tryDecodeURIComponent(encoded);
         }
       }
-      throw new TypeError("unsupported charset in extended field");
+      return void 0;
     }
-    function getlatin1(val) {
-      return String(val).replace(NON_LATIN1_REGEXP, "?");
-    }
-    function parse2(string) {
-      if (!string || typeof string !== "string") {
-        throw new TypeError("argument string is required");
+    function tryDecodeURIComponent(str) {
+      try {
+        return decodeURIComponent(str);
+      } catch {
+        return void 0;
       }
-      var match = DISPOSITION_TYPE_REGEXP.exec(string);
-      if (!match) {
-        throw new TypeError("invalid type format");
+    }
+    function parseToken(str, index, len) {
+      while (index < len) {
+        const char2 = str.charCodeAt(index);
+        if (char2 === SEMI)
+          break;
+        index++;
       }
-      var index = match[0].length;
-      var type = match[1].toLowerCase();
-      var key;
-      var names = [];
-      var params = {};
-      var value;
-      index = PARAM_REGEXP.lastIndex = match[0].slice(-1) === ";" ? index - 1 : index;
-      while (match = PARAM_REGEXP.exec(string)) {
-        if (match.index !== index) {
-          throw new TypeError("invalid parameter format");
-        }
-        index += match[0].length;
-        key = match[1].toLowerCase();
-        value = match[2];
-        if (names.indexOf(key) !== -1) {
-          throw new TypeError("invalid duplicate parameter");
-        }
-        names.push(key);
-        if (key.indexOf("*") + 1 === key.length) {
-          key = key.slice(0, -1);
-          value = decodefield(value);
-          params[key] = value;
-          continue;
-        }
-        if (typeof params[key] === "string") {
-          continue;
-        }
-        if (value[0] === '"') {
-          value = value.slice(1, -1).replace(QESC_REGEXP, "$1");
-        }
-        params[key] = value;
+      return index;
+    }
+    function skipOWS(str, index, len) {
+      while (index < len) {
+        const char2 = str.charCodeAt(index);
+        if (char2 !== SP && char2 !== HTAB)
+          break;
+        index++;
       }
-      if (index !== -1 && index !== string.length) {
-        throw new TypeError("invalid parameter format");
-      }
-      return new ContentDisposition(type, params);
+      return index;
     }
-    function pencode(char2) {
-      return "%" + String(char2).charCodeAt(0).toString(16).toUpperCase();
-    }
-    function qstring(val) {
-      var str = String(val);
-      return '"' + str.replace(QUOTE_REGEXP, "\\$1") + '"';
-    }
-    function ustring(val) {
-      var str = String(val);
-      var encoded = encodeURIComponent(str).replace(ENCODE_URL_ATTR_CHAR_REGEXP, pencode);
-      return "UTF-8''" + encoded;
-    }
-    function ContentDisposition(type, parameters) {
-      this.type = type;
-      this.parameters = parameters;
-    }
-    function basename(path2) {
-      const normalized = path2.replaceAll("\\", "/");
-      let end = normalized.length;
-      while (end > 0 && normalized[end - 1] === "/") {
+    function trailingOWS(str, start, end) {
+      while (end > start) {
+        const char2 = str.charCodeAt(end - 1);
+        if (char2 !== SP && char2 !== HTAB)
+          break;
         end--;
       }
-      if (end === 0) {
-        return "";
+      return end;
+    }
+    function format(obj, options) {
+      const { type, parameters } = obj;
+      const multipart = options?.multipart === true;
+      const extended = options?.extended !== false;
+      if (!type || !TOKEN_REGEXP.test(type)) {
+        throw new TypeError("Invalid type: " + type);
       }
-      let start = end - 1;
-      while (start >= 0 && normalized[start] !== "/") {
-        start--;
+      let result = type;
+      if (parameters) {
+        for (const param of Object.keys(parameters)) {
+          const value = parameters[param];
+          if (!TOKEN_REGEXP.test(param)) {
+            throw new TypeError("Invalid parameter name: " + param);
+          }
+          if (multipart) {
+            result += "; " + param + "=" + qmultipart(value);
+            continue;
+          }
+          if (TOKEN_REGEXP.test(value)) {
+            result += "; " + param + "=" + value;
+            continue;
+          }
+          if (TEXT_REGEXP.test(value)) {
+            result += "; " + param + "=" + qstring(value);
+            continue;
+          }
+          if (!extended) {
+            throw new TypeError("Invalid parameter value: " + value);
+          }
+          result += "; " + param + "*=" + encodeExtended(value);
+        }
       }
-      return normalized.slice(start + 1, end);
+      return result;
+    }
+    function getAscii(val) {
+      return val.replace(NON_ASCII_REGEXP, "?");
+    }
+    function pencode(char2) {
+      return "%" + char2.charCodeAt(0).toString(16).toUpperCase();
+    }
+    function qstring(str) {
+      return '"' + str.replace(QUOTE_REGEXP, "\\$&") + '"';
+    }
+    function qmultipart(str) {
+      return '"' + str.replace(/[\n\r"]/g, multipartEscape) + '"';
+    }
+    function multipartEscape(char2) {
+      if (char2 === "\n")
+        return "%0A";
+      if (char2 === "\r")
+        return "%0D";
+      return "%22";
+    }
+    function encodeExtended(str) {
+      const encoded = encodeURIComponent(str).replace(ENCODE_URL_ATTR_CHAR_REGEXP, pencode);
+      return "UTF-8''" + encoded;
     }
     function isHexDigit(char2) {
       const code = char2.charCodeAt(0);
@@ -22373,19 +22594,10 @@ var require_content_disposition = __commonJS({
       code >= 65 && code <= 70 || // A-F
       code >= 97 && code <= 102;
     }
-    function hasHexEscape(str) {
-      const maxIndex = str.length - 3;
-      let lastIndex = -1;
-      while ((lastIndex = str.indexOf("%", lastIndex + 1)) !== -1 && lastIndex <= maxIndex) {
-        if (isHexDigit(str[lastIndex + 1]) && isHexDigit(str[lastIndex + 2])) {
-          return true;
-        }
-      }
-      return false;
-    }
     function decodeHexEscapes(str) {
       const firstEscape = str.indexOf("%");
-      if (firstEscape === -1) return str;
+      if (firstEscape === -1)
+        return str;
       let result = str.slice(0, firstEscape);
       for (let idx = firstEscape; idx < str.length; idx++) {
         if (str[idx] === "%" && idx + 2 < str.length && isHexDigit(str[idx + 1]) && isHexDigit(str[idx + 2])) {
@@ -22403,17 +22615,17 @@ var require_content_disposition = __commonJS({
 // ../node_modules/.pnpm/cookie-signature@1.2.2/node_modules/cookie-signature/index.js
 var require_cookie_signature = __commonJS({
   "../node_modules/.pnpm/cookie-signature@1.2.2/node_modules/cookie-signature/index.js"(exports) {
-    var crypto12 = __require("crypto");
+    var crypto13 = __require("crypto");
     exports.sign = function(val, secret) {
       if ("string" != typeof val) throw new TypeError("Cookie value must be provided as a string.");
       if (null == secret) throw new TypeError("Secret key must be provided.");
-      return val + "." + crypto12.createHmac("sha256", secret).update(val).digest("base64").replace(/\=+$/, "");
+      return val + "." + crypto13.createHmac("sha256", secret).update(val).digest("base64").replace(/\=+$/, "");
     };
     exports.unsign = function(input, secret) {
       if ("string" != typeof input) throw new TypeError("Signed cookie string must be provided.");
       if (null == secret) throw new TypeError("Secret key must be provided.");
       var tentativeValue = input.slice(0, input.lastIndexOf(".")), expectedInput = exports.sign(tentativeValue, secret), expectedBuffer = Buffer.from(expectedInput), inputBuffer = Buffer.from(input);
-      return expectedBuffer.length === inputBuffer.length && crypto12.timingSafeEqual(expectedBuffer, inputBuffer) ? tentativeValue : false;
+      return expectedBuffer.length === inputBuffer.length && crypto13.timingSafeEqual(expectedBuffer, inputBuffer) ? tentativeValue : false;
     };
   }
 });
@@ -23140,11 +23352,11 @@ var require_vary = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/express@5.2.1/node_modules/express/lib/response.js
+// ../node_modules/.pnpm/express@5.3.0/node_modules/express/lib/response.js
 var require_response = __commonJS({
-  "../node_modules/.pnpm/express@5.2.1/node_modules/express/lib/response.js"(exports, module) {
+  "../node_modules/.pnpm/express@5.3.0/node_modules/express/lib/response.js"(exports, module) {
     "use strict";
-    var contentDisposition = require_content_disposition();
+    var contentDisposition = require_dist3();
     var createError = require_http_errors();
     var deprecate = require_depd()("express");
     var encodeUrl = require_encodeurl();
@@ -23163,6 +23375,7 @@ var require_response = __commonJS({
     var send = require_send();
     var extname = path2.extname;
     var resolve = path2.resolve;
+    var basename = path2.basename;
     var vary = require_vary();
     var { Buffer: Buffer4 } = __require("node:buffer");
     var res = Object.create(http.ServerResponse.prototype);
@@ -23194,12 +23407,15 @@ var require_response = __commonJS({
       var chunk = body;
       var encoding;
       var req = this.req;
-      var type;
       var app2 = this.app;
       switch (typeof chunk) {
         // string defaulting to html
         case "string":
-          if (!this.get("Content-Type")) {
+          encoding = "utf8";
+          const type = this.get("Content-Type");
+          if (typeof type === "string") {
+            this.set("Content-Type", setCharset(type, "utf-8"));
+          } else {
             this.type("html");
           }
           break;
@@ -23217,13 +23433,6 @@ var require_response = __commonJS({
           }
           break;
       }
-      if (typeof chunk === "string") {
-        encoding = "utf8";
-        type = this.get("Content-Type");
-        if (typeof type === "string") {
-          this.set("Content-Type", setCharset(type, "utf-8"));
-        }
-      }
       var etagFn = app2.get("etag fn");
       var generateETag = !this.get("ETag") && typeof etagFn === "function";
       var len;
@@ -23237,7 +23446,9 @@ var require_response = __commonJS({
           encoding = void 0;
           len = chunk.length;
         }
-        this.set("Content-Length", len);
+        if (!this.get("Transfer-Encoding")) {
+          this.set("Content-Length", len);
+        }
       }
       var etag;
       if (generateETag && len !== void 0) {
@@ -23355,7 +23566,7 @@ var require_response = __commonJS({
         opts = filename;
       }
       var headers = {
-        "Content-Disposition": contentDisposition(name || path3)
+        "Content-Disposition": contentDisposition.create(basename(name || path3))
       };
       if (opts && opts.headers) {
         var keys = Object.keys(opts.headers);
@@ -23398,10 +23609,11 @@ var require_response = __commonJS({
       return this;
     };
     res.attachment = function attachment(filename) {
-      if (filename) {
-        this.type(extname(filename));
+      const name = filename !== void 0 ? basename(filename) : void 0;
+      if (name) {
+        this.type(extname(name));
       }
-      this.set("Content-Disposition", contentDisposition(filename));
+      this.set("Content-Disposition", contentDisposition.create(name));
       return this;
     };
     res.append = function append(field, val) {
@@ -23488,7 +23700,7 @@ var require_response = __commonJS({
         },
         html: function() {
           var u = escapeHtml(address);
-          body = "<p>" + statuses.message[status] + ". Redirecting to " + u + "</p>";
+          body = "<!DOCTYPE html><head><title>" + statuses.message[status] + "</title></head><body><p>" + statuses.message[status] + ". Redirecting to " + u + "</p></body>";
         },
         default: function() {
           body = "";
@@ -23714,9 +23926,9 @@ var require_serve_static = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/express@5.2.1/node_modules/express/lib/express.js
+// ../node_modules/.pnpm/express@5.3.0/node_modules/express/lib/express.js
 var require_express = __commonJS({
-  "../node_modules/.pnpm/express@5.2.1/node_modules/express/lib/express.js"(exports, module) {
+  "../node_modules/.pnpm/express@5.3.0/node_modules/express/lib/express.js"(exports, module) {
     "use strict";
     var bodyParser = require_body_parser();
     var EventEmitter2 = __require("node:events").EventEmitter;
@@ -23754,9 +23966,9 @@ var require_express = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/express@5.2.1/node_modules/express/index.js
+// ../node_modules/.pnpm/express@5.3.0/node_modules/express/index.js
 var require_express2 = __commonJS({
-  "../node_modules/.pnpm/express@5.2.1/node_modules/express/index.js"(exports, module) {
+  "../node_modules/.pnpm/express@5.3.0/node_modules/express/index.js"(exports, module) {
     "use strict";
     module.exports = require_express();
   }
@@ -25057,6 +25269,93 @@ var require_src2 = __commonJS({
   }
 });
 
+// ../node_modules/.pnpm/destroy@1.2.0/node_modules/destroy/index.js
+var require_destroy = __commonJS({
+  "../node_modules/.pnpm/destroy@1.2.0/node_modules/destroy/index.js"(exports, module) {
+    "use strict";
+    var EventEmitter2 = __require("events").EventEmitter;
+    var ReadStream = __require("fs").ReadStream;
+    var Stream3 = __require("stream");
+    var Zlib = __require("zlib");
+    module.exports = destroy;
+    function destroy(stream, suppress) {
+      if (isFsReadStream(stream)) {
+        destroyReadStream(stream);
+      } else if (isZlibStream(stream)) {
+        destroyZlibStream(stream);
+      } else if (hasDestroy(stream)) {
+        stream.destroy();
+      }
+      if (isEventEmitter(stream) && suppress) {
+        stream.removeAllListeners("error");
+        stream.addListener("error", noop3);
+      }
+      return stream;
+    }
+    function destroyReadStream(stream) {
+      stream.destroy();
+      if (typeof stream.close === "function") {
+        stream.on("open", onOpenClose);
+      }
+    }
+    function closeZlibStream(stream) {
+      if (stream._hadError === true) {
+        var prop = stream._binding === null ? "_binding" : "_handle";
+        stream[prop] = {
+          close: function() {
+            this[prop] = null;
+          }
+        };
+      }
+      stream.close();
+    }
+    function destroyZlibStream(stream) {
+      if (typeof stream.destroy === "function") {
+        if (stream._binding) {
+          stream.destroy();
+          if (stream._processing) {
+            stream._needDrain = true;
+            stream.once("drain", onDrainClearBinding);
+          } else {
+            stream._binding.clear();
+          }
+        } else if (stream._destroy && stream._destroy !== Stream3.Transform.prototype._destroy) {
+          stream.destroy();
+        } else if (stream._destroy && typeof stream.close === "function") {
+          stream.destroyed = true;
+          stream.close();
+        } else {
+          stream.destroy();
+        }
+      } else if (typeof stream.close === "function") {
+        closeZlibStream(stream);
+      }
+    }
+    function hasDestroy(stream) {
+      return stream instanceof Stream3 && typeof stream.destroy === "function";
+    }
+    function isEventEmitter(val) {
+      return val instanceof EventEmitter2;
+    }
+    function isFsReadStream(stream) {
+      return stream instanceof ReadStream;
+    }
+    function isZlibStream(stream) {
+      return stream instanceof Zlib.Gzip || stream instanceof Zlib.Gunzip || stream instanceof Zlib.Deflate || stream instanceof Zlib.DeflateRaw || stream instanceof Zlib.Inflate || stream instanceof Zlib.InflateRaw || stream instanceof Zlib.Unzip;
+    }
+    function noop3() {
+    }
+    function onDrainClearBinding() {
+      this._binding.clear();
+    }
+    function onOpenClose() {
+      if (typeof this.fd === "number") {
+        this.close();
+      }
+    }
+  }
+});
+
 // ../node_modules/.pnpm/on-headers@1.1.0/node_modules/on-headers/index.js
 var require_on_headers = __commonJS({
   "../node_modules/.pnpm/on-headers@1.1.0/node_modules/on-headers/index.js"(exports, module) {
@@ -25155,22 +25454,23 @@ var require_on_headers = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/compression@1.8.1/node_modules/compression/index.js
+// ../node_modules/.pnpm/compression@1.8.2/node_modules/compression/index.js
 var require_compression = __commonJS({
-  "../node_modules/.pnpm/compression@1.8.1/node_modules/compression/index.js"(exports, module) {
+  "../node_modules/.pnpm/compression@1.8.2/node_modules/compression/index.js"(exports, module) {
     "use strict";
     var Negotiator = require_negotiator2();
     var Buffer4 = require_safe_buffer().Buffer;
     var bytes = require_bytes();
     var compressible = require_compressible();
     var debug = require_src2()("compression");
+    var destroy = require_destroy();
     var onHeaders = require_on_headers();
     var vary = require_vary();
     var zlib = __require("zlib");
     module.exports = compression2;
     module.exports.filter = shouldCompress;
     var hasBrotliSupport = "createBrotliCompress" in zlib;
-    var cacheControlNoTransformRegExp = /(?:^|,)\s*?no-transform\s*?(?:,|$)/;
+    var cacheControlNoTransformRegExp = /(?:^|,)\s*?no-transform\s*?(?:,|$)/i;
     var SUPPORTED_ENCODING = hasBrotliSupport ? ["br", "gzip", "deflate", "identity"] : ["gzip", "deflate", "identity"];
     var PREFERRED_ENCODING = hasBrotliSupport ? ["br", "gzip"] : ["gzip"];
     var encodingSupported = ["gzip", "deflate", "identity", "br"];
@@ -25194,6 +25494,7 @@ var require_compression = __commonJS({
         var length;
         var listeners = [];
         var stream;
+        var closed = false;
         var _end = res.end;
         var _on = res.on;
         var _write = res.write;
@@ -25242,6 +25543,10 @@ var require_compression = __commonJS({
           addListeners(res, _on, listeners);
           listeners = null;
         }
+        _on.call(res, "close", function onResponseClose() {
+          closed = true;
+          destroy(stream);
+        });
         onHeaders(res, function onResponseHeaders() {
           if (!filter(req, res)) {
             nocompress("filtered");
@@ -25276,6 +25581,11 @@ var require_compression = __commonJS({
           }
           debug("%s compression", method);
           stream = method === "gzip" ? zlib.createGzip(opts) : method === "br" ? zlib.createBrotliCompress(optsBrotli) : zlib.createDeflate(opts);
+          if (closed) {
+            destroy(stream);
+            stream = null;
+            return;
+          }
           addListeners(stream, stream.on, listeners);
           res.setHeader("Content-Encoding", method);
           res.removeHeader("Content-Length");
@@ -25326,9 +25636,9 @@ var require_compression = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/ip-address@10.2.0/node_modules/ip-address/dist/address-error.js
+// ../node_modules/.pnpm/ip-address@10.7.5/node_modules/ip-address/dist/address-error.js
 var require_address_error = __commonJS({
-  "../node_modules/.pnpm/ip-address@10.2.0/node_modules/ip-address/dist/address-error.js"(exports) {
+  "../node_modules/.pnpm/ip-address@10.7.5/node_modules/ip-address/dist/address-error.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.AddressError = void 0;
@@ -25343,14 +25653,18 @@ var require_address_error = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/ip-address@10.2.0/node_modules/ip-address/dist/common.js
+// ../node_modules/.pnpm/ip-address@10.7.5/node_modules/ip-address/dist/common.js
 var require_common2 = __commonJS({
-  "../node_modules/.pnpm/ip-address@10.2.0/node_modules/ip-address/dist/common.js"(exports) {
+  "../node_modules/.pnpm/ip-address@10.7.5/node_modules/ip-address/dist/common.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.isInSubnet = isInSubnet;
+    exports.isHostInSubnet = isHostInSubnet;
+    exports.isGloballyReachable = isGloballyReachable;
+    exports.offsetBigInt = offsetBigInt;
     exports.isCorrect = isCorrect;
     exports.prefixLengthFromMask = prefixLengthFromMask;
+    exports.assertByteArray = assertByteArray;
     exports.numberToPaddedHex = numberToPaddedHex;
     exports.stringToPaddedHex = stringToPaddedHex;
     exports.testBit = testBit;
@@ -25359,13 +25673,39 @@ var require_common2 = __commonJS({
       if (this.subnetMask < address.subnetMask) {
         return false;
       }
-      if (this.mask(address.subnetMask) === address.mask()) {
-        return true;
+      return isHostInSubnet.call(this, address);
+    }
+    function isHostInSubnet(address) {
+      if (this.binaryZeroPad().length !== address.binaryZeroPad().length) {
+        return false;
       }
-      return false;
+      return this.mask(address.subnetMask) === address.mask();
+    }
+    function isGloballyReachable(entries) {
+      let best = null;
+      for (let i = 0; i < entries.length; i++) {
+        const entry = entries[i];
+        if (entry.reachable !== null && isHostInSubnet.call(this, entry.subnet) && (best === null || entry.subnet.subnetMask > best.subnet.subnetMask)) {
+          best = entry;
+        }
+      }
+      return best === null ? true : best.reachable;
+    }
+    function offsetBigInt(value, n, bits, family) {
+      if (typeof n === "number" && !Number.isSafeInteger(n)) {
+        throw new address_error_1.AddressError(`${family} offset must be an integer`);
+      }
+      if (typeof n !== "number" && typeof n !== "bigint") {
+        throw new address_error_1.AddressError(`${family} offset must be an integer`);
+      }
+      const result = value + BigInt(n);
+      if (result < BigInt(0) || result > (BigInt(1) << BigInt(bits)) - BigInt(1)) {
+        throw new address_error_1.AddressError(`${family} offset leaves the address space`);
+      }
+      return result;
     }
     function isCorrect(defaultBits) {
-      return function() {
+      return function isCorrectForm() {
         if (this.addressMinusSuffix !== this.correctForm()) {
           return false;
         }
@@ -25389,6 +25729,16 @@ var require_common2 = __commonJS({
       }
       return firstZero;
     }
+    function assertByteArray(bytes, byteCount, family, minimum) {
+      if (bytes.length !== byteCount) {
+        throw new address_error_1.AddressError(`${family} addresses require exactly ${byteCount} bytes`);
+      }
+      for (let i = 0; i < bytes.length; i++) {
+        if (!Number.isInteger(bytes[i]) || bytes[i] < minimum || bytes[i] > 255) {
+          throw new address_error_1.AddressError(`All bytes must be integers between ${minimum} and 255`);
+        }
+      }
+    }
     function numberToPaddedHex(number) {
       return number.toString(16).padStart(2, "0");
     }
@@ -25397,31 +25747,59 @@ var require_common2 = __commonJS({
     }
     function testBit(binaryValue, position) {
       const { length } = binaryValue;
-      if (position > length) {
+      if (position >= length) {
         return false;
       }
-      const positionInString = length - position;
+      const positionInString = length - position - 1;
       return binaryValue.substring(positionInString, positionInString + 1) === "1";
     }
   }
 });
 
-// ../node_modules/.pnpm/ip-address@10.2.0/node_modules/ip-address/dist/v4/constants.js
+// ../node_modules/.pnpm/ip-address@10.7.5/node_modules/ip-address/dist/v4/constants.js
 var require_constants = __commonJS({
-  "../node_modules/.pnpm/ip-address@10.2.0/node_modules/ip-address/dist/v4/constants.js"(exports) {
+  "../node_modules/.pnpm/ip-address@10.7.5/node_modules/ip-address/dist/v4/constants.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.RE_SUBNET_STRING = exports.RE_ADDRESS = exports.GROUPS = exports.BITS = void 0;
+    exports.SPECIAL_PURPOSE = exports.RE_SUBNET_STRING = exports.RE_ADDRESS = exports.GROUPS = exports.BITS = void 0;
     exports.BITS = 32;
     exports.GROUPS = 4;
-    exports.RE_ADDRESS = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/g;
+    exports.RE_ADDRESS = /^(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])$/g;
     exports.RE_SUBNET_STRING = /\/\d{1,2}$/;
+    exports.SPECIAL_PURPOSE = [
+      ["0.0.0.0/8", "This network", false],
+      ["0.0.0.0/32", "This host on this network", false],
+      ["10.0.0.0/8", "Private-Use", false],
+      ["100.64.0.0/10", "Shared Address Space", false],
+      ["127.0.0.0/8", "Loopback", false],
+      ["169.254.0.0/16", "Link Local", false],
+      ["172.16.0.0/12", "Private-Use", false],
+      ["192.0.0.0/24", "IETF Protocol Assignments", false],
+      ["192.0.0.0/29", "IPv4 Service Continuity Prefix", false],
+      ["192.0.0.8/32", "IPv4 dummy address", false],
+      ["192.0.0.9/32", "Port Control Protocol Anycast", true],
+      ["192.0.0.10/32", "Traversal Using Relays around NAT Anycast", true],
+      ["192.0.0.170/32", "NAT64/DNS64 Discovery", false],
+      ["192.0.0.171/32", "NAT64/DNS64 Discovery", false],
+      ["192.0.2.0/24", "Documentation (TEST-NET-1)", false],
+      ["192.31.196.0/24", "AS112-v4", true],
+      ["192.52.193.0/24", "AMT", true],
+      ["192.88.99.0/24", "Deprecated (6to4 Relay Anycast)", null],
+      ["192.88.99.2/32", "6a44-relay anycast address", false],
+      ["192.168.0.0/16", "Private-Use", false],
+      ["192.175.48.0/24", "Direct Delegation AS112 Service", true],
+      ["198.18.0.0/15", "Benchmarking", false],
+      ["198.51.100.0/24", "Documentation (TEST-NET-2)", false],
+      ["203.0.113.0/24", "Documentation (TEST-NET-3)", false],
+      ["240.0.0.0/4", "Reserved", false],
+      ["255.255.255.255/32", "Limited Broadcast", false]
+    ];
   }
 });
 
-// ../node_modules/.pnpm/ip-address@10.2.0/node_modules/ip-address/dist/ipv4.js
+// ../node_modules/.pnpm/ip-address@10.7.5/node_modules/ip-address/dist/ipv4.js
 var require_ipv4 = __commonJS({
-  "../node_modules/.pnpm/ip-address@10.2.0/node_modules/ip-address/dist/ipv4.js"(exports) {
+  "../node_modules/.pnpm/ip-address@10.7.5/node_modules/ip-address/dist/ipv4.js"(exports) {
     "use strict";
     var __createBinding = exports && exports.__createBinding || (Object.create ? (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
@@ -25458,6 +25836,7 @@ var require_ipv4 = __commonJS({
     var isCorrect4 = common.isCorrect(constants2.BITS);
     var Address4 = class _Address4 {
       constructor(address) {
+        this.addressMinusSuffix = "";
         this.groups = constants2.GROUPS;
         this.parsedAddress = [];
         this.parsedSubnet = "";
@@ -25466,6 +25845,7 @@ var require_ipv4 = __commonJS({
         this.v4 = true;
         this.isCorrect = isCorrect4;
         this.isInSubnet = common.isInSubnet;
+        this.isHostInSubnet = common.isHostInSubnet;
         this.address = address;
         const subnet = constants2.RE_SUBNET_STRING.exec(address);
         if (subnet) {
@@ -25476,6 +25856,10 @@ var require_ipv4 = __commonJS({
             throw new address_error_1.AddressError("Invalid subnet mask.");
           }
           address = address.replace(constants2.RE_SUBNET_STRING, "");
+        }
+        const longest = constants2.GROUPS * 4 - 1;
+        if (address.length > longest) {
+          throw new address_error_1.AddressError(`IPv4 addresses are at most ${longest} characters.`);
         }
         this.addressMinusSuffix = address;
         this.parsedAddress = this.parse(address);
@@ -25491,7 +25875,7 @@ var require_ipv4 = __commonJS({
         try {
           new _Address4(address);
           return true;
-        } catch (e) {
+        } catch {
           return false;
         }
       }
@@ -25503,6 +25887,9 @@ var require_ipv4 = __commonJS({
        */
       parse(address) {
         const groups = address.split(".");
+        if (groups.some((group) => /^0\d/.test(group))) {
+          throw new address_error_1.AddressError("IPv4 addresses can't have leading zeroes.");
+        }
         if (!address.match(constants2.RE_ADDRESS)) {
           throw new address_error_1.AddressError("Invalid IPv4 address.");
         }
@@ -25610,15 +25997,22 @@ var require_ipv4 = __commonJS({
         return _Address4.fromHex(integer2.toString(16).padStart(8, "0"));
       }
       /**
-       * Return an address from in-addr.arpa form
+       * Return an address from in-addr.arpa form: the four octets reversed, with
+       * or without the `.in-addr.arpa` suffix and root dot, in any case. Throws
+       * `AddressError` unless the reversed labels form a valid IPv4 address, so
+       * `fromArpa(x.reverseForm())` round-trips {@link reverseForm}.
        * @param {string} arpaFormAddress - an 'in-addr.arpa' form ipv4 address
        * @returns {Adress4}
        * @example
-       * var address = Address4.fromArpa(42.2.0.192.in-addr.arpa.)
+       * var address = Address4.fromArpa('42.2.0.192.in-addr.arpa.')
        * address.correctForm(); // '192.0.2.42'
        */
       static fromArpa(arpaFormAddress) {
-        const leader = arpaFormAddress.replace(/(\.in-addr\.arpa)?\.$/, "");
+        const longest = constants2.GROUPS * 4 - 1 + "/32".length + ".in-addr.arpa.".length;
+        if (arpaFormAddress.length > longest) {
+          throw new address_error_1.AddressError(`in-addr.arpa names are at most ${longest} characters.`);
+        }
+        const leader = arpaFormAddress.replace(/(\.in-addr\.arpa)?\.?$/i, "");
         const address = leader.split(".").reverse().join(".");
         return new _Address4(address);
       }
@@ -25682,6 +26076,33 @@ var require_ipv4 = __commonJS({
         return _Address4.fromBigInt(this._startAddress() + adjust);
       }
       /**
+       * Returns the address `n` addresses after this one (or before, when `n` is
+       * negative), keeping this address's subnet mask. Throws `AddressError` when
+       * the result would fall outside the IPv4 address space or `n` is not an
+       * integer.
+       * @param {number | bigint} n
+       * @returns {Address4}
+       * @example
+       * new Address4('10.0.0.0/24').offset(1).correctForm(); // '10.0.0.1'
+       */
+      offset(n) {
+        return _Address4.fromBigInt(common.offsetBigInt(this.bigInt(), n, constants2.BITS, "IPv4")).withSubnetMask(this.subnetMask);
+      }
+      /**
+       * Returns the network that follows this address's network: the address after
+       * {@link endAddress}, with the same subnet mask. Throws `AddressError` when
+       * this network is the last one in the address space.
+       * @returns {Address4}
+       * @example
+       * new Address4('10.0.0.0/24').nextNetwork().networkForm(); // '10.0.1.0/24'
+       */
+      nextNetwork() {
+        return _Address4.fromBigInt(common.offsetBigInt(this._endAddress(), 1, constants2.BITS, "IPv4")).withSubnetMask(this.subnetMask);
+      }
+      withSubnetMask(subnetMask) {
+        return new _Address4(`${this.correctForm()}/${subnetMask}`);
+      }
+      /**
        * Helper function getting end address.
        * @returns {bigint}
        */
@@ -25738,31 +26159,32 @@ var require_ipv4 = __commonJS({
        * @returns {Address4}
        */
       static fromBigInt(bigInt) {
-        if (bigInt < 0n || bigInt > 0xffffffffn) {
+        if (bigInt < BigInt(0) || bigInt > BigInt(4294967295)) {
           throw new address_error_1.AddressError("IPv4 BigInt must be in the range 0 to 2**32 - 1");
         }
         return _Address4.fromHex(bigInt.toString(16).padStart(8, "0"));
       }
       /**
-       * Convert a byte array to an Address4 object.
+       * Convert a byte array to an Address4 object. Throws `AddressError` unless
+       * given exactly 4 integers from 0 to 255. Signed bytes are rejected, so
+       * this differs from `Address6.fromByteArray`, which folds them; the two
+       * contracts converge on this stricter form in the next major version.
        *
        * To convert from a Node.js `Buffer`, spread it: `Address4.fromByteArray([...buf])`.
        * @param {Array<number>} bytes - an array of 4 bytes (0-255)
        * @returns {Address4}
        */
       static fromByteArray(bytes) {
-        if (bytes.length !== 4) {
-          throw new address_error_1.AddressError("IPv4 addresses require exactly 4 bytes");
-        }
-        for (let i = 0; i < bytes.length; i++) {
-          if (!Number.isInteger(bytes[i]) || bytes[i] < 0 || bytes[i] > 255) {
-            throw new address_error_1.AddressError("All bytes must be integers between 0 and 255");
-          }
-        }
+        common.assertByteArray(bytes, 4, "IPv4", 0);
         return this.fromUnsignedByteArray(bytes);
       }
       /**
-       * Convert an unsigned byte array to an Address4 object
+       * Convert an unsigned byte array to an Address4 object. Throws
+       * `AddressError` unless given exactly 4 bytes, and rejects values outside
+       * 0 to 255 when parsing the resulting address.
+       *
+       * To convert from a Node.js `Buffer`, spread it:
+       * `Address4.fromUnsignedByteArray([...buf])`.
        * @param {Array<number>} bytes - an array of 4 unsigned bytes (0-255)
        * @returns {Address4}
        */
@@ -25792,7 +26214,8 @@ var require_ipv4 = __commonJS({
         return this.binaryZeroPad().slice(start, end);
       }
       /**
-       * Return the reversed ip6.arpa form of the address
+       * Return the reversed in-addr.arpa form of the address, e.g.
+       * `42.2.0.192.in-addr.arpa.` for `192.0.2.42`.
        * @param {Object} options
        * @param {boolean} options.omitSuffix - omit the "in-addr.arpa" suffix
        * @returns {String}
@@ -25812,49 +26235,86 @@ var require_ipv4 = __commonJS({
        * @returns {boolean}
        */
       isMulticast() {
-        return this.isInSubnet(MULTICAST_V4);
+        return this.isHostInSubnet(MULTICAST_V4);
       }
       /**
        * Returns true if the address is in one of the [RFC 1918](https://datatracker.ietf.org/doc/html/rfc1918) private address ranges (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`).
        * @returns {boolean}
        */
       isPrivate() {
-        return PRIVATE_V4.some((subnet) => this.isInSubnet(subnet));
+        return PRIVATE_V4.some((subnet) => this.isHostInSubnet(subnet));
       }
       /**
        * Returns true if the address is in the loopback range `127.0.0.0/8` ([RFC 1122](https://datatracker.ietf.org/doc/html/rfc1122)).
        * @returns {boolean}
        */
       isLoopback() {
-        return this.isInSubnet(LOOPBACK_V4);
+        return this.isHostInSubnet(LOOPBACK_V4);
       }
       /**
        * Returns true if the address is in the link-local range `169.254.0.0/16` ([RFC 3927](https://datatracker.ietf.org/doc/html/rfc3927)).
        * @returns {boolean}
        */
       isLinkLocal() {
-        return this.isInSubnet(LINK_LOCAL_V4);
+        return this.isHostInSubnet(LINK_LOCAL_V4);
       }
       /**
        * Returns true if the address is the unspecified address `0.0.0.0`.
        * @returns {boolean}
        */
       isUnspecified() {
-        return this.isInSubnet(UNSPECIFIED_V4);
+        return this.isHostInSubnet(UNSPECIFIED_V4);
       }
       /**
        * Returns true if the address is the limited broadcast address `255.255.255.255` ([RFC 919](https://datatracker.ietf.org/doc/html/rfc919)).
        * @returns {boolean}
        */
       isBroadcast() {
-        return this.isInSubnet(BROADCAST_V4);
+        return this.isHostInSubnet(BROADCAST_V4);
       }
       /**
        * Returns true if the address is in the carrier-grade NAT range `100.64.0.0/10` ([RFC 6598](https://datatracker.ietf.org/doc/html/rfc6598)).
        * @returns {boolean}
        */
       isCGNAT() {
-        return this.isInSubnet(CGNAT_V4);
+        return this.isHostInSubnet(CGNAT_V4);
+      }
+      /**
+       * Returns true if the address is in one of the documentation ranges
+       * `192.0.2.0/24`, `198.51.100.0/24`, or `203.0.113.0/24` ([RFC 5737](https://datatracker.ietf.org/doc/html/rfc5737)).
+       * @returns {boolean}
+       */
+      isDocumentation() {
+        return DOCUMENTATION_V4.some((subnet) => this.isHostInSubnet(subnet));
+      }
+      /**
+       * Returns true if the address is in the benchmarking range `198.18.0.0/15` ([RFC 2544](https://datatracker.ietf.org/doc/html/rfc2544)).
+       * @returns {boolean}
+       */
+      isBenchmarking() {
+        return this.isHostInSubnet(BENCHMARKING_V4);
+      }
+      /**
+       * Returns true if the address is in the reserved range `240.0.0.0/4` ([RFC 1112](https://datatracker.ietf.org/doc/html/rfc1112)),
+       * which includes the limited broadcast address.
+       * @returns {boolean}
+       */
+      isReserved() {
+        return this.isHostInSubnet(RESERVED_V4);
+      }
+      /**
+       * Returns true if the address is globally reachable: not multicast, and not
+       * in any block the [IANA IPv4 Special-Purpose Address Registry](https://www.iana.org/assignments/iana-ipv4-special-registry/)
+       * marks as not globally reachable. That covers everything the individual
+       * classifiers name (private, loopback, link-local, CGNAT, unspecified,
+       * broadcast, documentation, benchmarking, reserved) and the blocks they do
+       * not, such as `0.0.0.0/8` and the IETF protocol assignments in
+       * `192.0.0.0/24`. This is the single predicate to use where a request must
+       * not reach an internal or special-purpose destination; see SECURITY.md.
+       * @returns {boolean}
+       */
+      isGlobal() {
+        return !this.isMulticast() && common.isGloballyReachable.call(this, SPECIAL_PURPOSE_V4);
       }
       /**
        * Returns a zero-padded base-2 string representation of the address
@@ -25867,12 +26327,17 @@ var require_ipv4 = __commonJS({
         return this._binaryZeroPad;
       }
       /**
-       * Groups an IPv4 address for inclusion at the end of an IPv6 address
+       * Groups an IPv4 address for inclusion at the end of an IPv6 address.
+       *
+       * Returns an HTML fragment: each half of the address is wrapped in a
+       * `<span>` carrying the group classes an address-inspector UI hovers on.
+       * The address content is HTML-escaped; anything you concatenate around it
+       * is your responsibility.
        * @returns {String}
        */
       groupForV6() {
         const segments = this.parsedAddress;
-        return this.address.replace(constants2.RE_ADDRESS, `<span class="hover-group group-v4 group-6">${segments.slice(0, 2).join(".")}</span>.<span class="hover-group group-v4 group-7">${segments.slice(2, 4).join(".")}</span>`);
+        return this.correctForm().replace(constants2.RE_ADDRESS, `<span class="hover-group group-v4 group-6">${segments.slice(0, 2).join(".")}</span>.<span class="hover-group group-v4 group-7">${segments.slice(2, 4).join(".")}</span>`);
       }
     };
     exports.Address4 = Address4;
@@ -25887,15 +26352,26 @@ var require_ipv4 = __commonJS({
     var UNSPECIFIED_V4 = new Address4("0.0.0.0/32");
     var BROADCAST_V4 = new Address4("255.255.255.255/32");
     var CGNAT_V4 = new Address4("100.64.0.0/10");
+    var DOCUMENTATION_V4 = [
+      new Address4("192.0.2.0/24"),
+      new Address4("198.51.100.0/24"),
+      new Address4("203.0.113.0/24")
+    ];
+    var BENCHMARKING_V4 = new Address4("198.18.0.0/15");
+    var RESERVED_V4 = new Address4("240.0.0.0/4");
+    var SPECIAL_PURPOSE_V4 = constants2.SPECIAL_PURPOSE.map(([cidr2, , reachable]) => ({
+      subnet: new Address4(cidr2),
+      reachable
+    }));
   }
 });
 
-// ../node_modules/.pnpm/ip-address@10.2.0/node_modules/ip-address/dist/v6/constants.js
+// ../node_modules/.pnpm/ip-address@10.7.5/node_modules/ip-address/dist/v6/constants.js
 var require_constants2 = __commonJS({
-  "../node_modules/.pnpm/ip-address@10.2.0/node_modules/ip-address/dist/v6/constants.js"(exports) {
+  "../node_modules/.pnpm/ip-address@10.7.5/node_modules/ip-address/dist/v6/constants.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.RE_URL_WITH_PORT = exports.RE_URL = exports.RE_ZONE_STRING = exports.RE_SUBNET_STRING = exports.RE_BAD_ADDRESS = exports.RE_BAD_CHARACTERS = exports.TYPES = exports.SCOPES = exports.GROUPS = exports.BITS = void 0;
+    exports.SPECIAL_PURPOSE = exports.RE_URL_WITH_PORT = exports.RE_URL = exports.RE_ZONE_STRING = exports.RE_SUBNET_STRING = exports.RE_BAD_ADDRESS = exports.RE_BAD_CHARACTERS = exports.TYPES = exports.SCOPES = exports.GROUPS = exports.BITS = void 0;
     exports.BITS = 128;
     exports.GROUPS = 8;
     exports.SCOPES = {
@@ -25929,11 +26405,18 @@ var require_constants2 = __commonJS({
       "ff05::1:3/128": "Multicast (All DHCP servers in this site)",
       "::/128": "Unspecified",
       "::1/128": "Loopback",
+      "::ffff:0:0/96": "IPv4-mapped",
       "ff00::/8": "Multicast",
       "fe80::/10": "Link-local unicast",
       "fc00::/7": "Unique local",
+      "2001::/32": "Teredo",
+      "2001:2::/48": "Benchmarking",
       "2002::/16": "6to4",
       "2001:db8::/32": "Documentation",
+      "3fff::/20": "Documentation",
+      "100::/64": "Discard-only",
+      "fec0::/10": "Site-local unicast (deprecated)",
+      "::/96": "IPv4-compatible (deprecated)",
       "64:ff9b::/96": "NAT64 (well-known)",
       "64:ff9b:1::/48": "NAT64 (local-use)"
     };
@@ -25941,14 +26424,41 @@ var require_constants2 = __commonJS({
     exports.RE_BAD_ADDRESS = /([0-9a-f]{5,}|:{3,}|[^:]:$|^:[^:]|\/$)/gi;
     exports.RE_SUBNET_STRING = /\/\d{1,3}(?=%|$)/;
     exports.RE_ZONE_STRING = /%.*$/;
-    exports.RE_URL = /^\[{0,1}([0-9a-f:]+)\]{0,1}/;
-    exports.RE_URL_WITH_PORT = /\[([0-9a-f:]+)\]:([0-9]{1,5})/;
+    exports.RE_URL = /^(?:\[([0-9a-f:.]+)\]|([0-9a-f:.]+))(?:[/?#].*)?$/i;
+    exports.RE_URL_WITH_PORT = /^\[([0-9a-f:.]+)\]:([0-9]{1,5})(?:[/?#].*)?$/i;
+    exports.SPECIAL_PURPOSE = [
+      ["::1/128", "Loopback Address", false],
+      ["::/128", "Unspecified Address", false],
+      ["::ffff:0:0/96", "IPv4-mapped Address", false],
+      ["64:ff9b::/96", "IPv4-IPv6 Translat.", true],
+      ["64:ff9b:1::/48", "IPv4-IPv6 Translat.", false],
+      ["100::/64", "Discard-Only Address Block", false],
+      ["100:0:0:1::/64", "Dummy IPv6 Prefix", false],
+      ["2001::/23", "IETF Protocol Assignments", false],
+      ["2001::/32", "TEREDO", false],
+      ["2001:1::1/128", "Port Control Protocol Anycast", true],
+      ["2001:1::2/128", "Traversal Using Relays around NAT Anycast", true],
+      ["2001:1::3/128", "DNS-SD Service Registration Protocol Anycast", true],
+      ["2001:2::/48", "Benchmarking", false],
+      ["2001:3::/32", "AMT", true],
+      ["2001:4:112::/48", "AS112-v6", true],
+      ["2001:10::/28", "Deprecated (previously ORCHID)", null],
+      ["2001:20::/28", "ORCHIDv2", true],
+      ["2001:30::/28", "Drone Remote ID Protocol Entity Tags (DETs) Prefix", true],
+      ["2001:db8::/32", "Documentation", false],
+      ["2002::/16", "6to4", false],
+      ["2620:4f:8000::/48", "Direct Delegation AS112 Service", true],
+      ["3fff::/20", "Documentation", false],
+      ["5f00::/16", "Segment Routing (SRv6) SIDs", false],
+      ["fc00::/7", "Unique-Local", false],
+      ["fe80::/10", "Link-Local Unicast", false]
+    ];
   }
 });
 
-// ../node_modules/.pnpm/ip-address@10.2.0/node_modules/ip-address/dist/v6/helpers.js
+// ../node_modules/.pnpm/ip-address@10.7.5/node_modules/ip-address/dist/v6/helpers.js
 var require_helpers = __commonJS({
-  "../node_modules/.pnpm/ip-address@10.2.0/node_modules/ip-address/dist/v6/helpers.js"(exports) {
+  "../node_modules/.pnpm/ip-address@10.7.5/node_modules/ip-address/dist/v6/helpers.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.escapeHtml = escapeHtml;
@@ -25985,9 +26495,9 @@ var require_helpers = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/ip-address@10.2.0/node_modules/ip-address/dist/v6/regular-expressions.js
+// ../node_modules/.pnpm/ip-address@10.7.5/node_modules/ip-address/dist/v6/regular-expressions.js
 var require_regular_expressions = __commonJS({
-  "../node_modules/.pnpm/ip-address@10.2.0/node_modules/ip-address/dist/v6/regular-expressions.js"(exports) {
+  "../node_modules/.pnpm/ip-address@10.7.5/node_modules/ip-address/dist/v6/regular-expressions.js"(exports) {
     "use strict";
     var __createBinding = exports && exports.__createBinding || (Object.create ? (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
@@ -26077,9 +26587,9 @@ var require_regular_expressions = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/ip-address@10.2.0/node_modules/ip-address/dist/ipv6.js
+// ../node_modules/.pnpm/ip-address@10.7.5/node_modules/ip-address/dist/ipv6.js
 var require_ipv6 = __commonJS({
-  "../node_modules/.pnpm/ip-address@10.2.0/node_modules/ip-address/dist/ipv6.js"(exports) {
+  "../node_modules/.pnpm/ip-address@10.7.5/node_modules/ip-address/dist/ipv6.js"(exports) {
     "use strict";
     var __createBinding = exports && exports.__createBinding || (Object.create ? (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
@@ -26164,6 +26674,7 @@ var require_ipv6 = __commonJS({
         this.v4 = false;
         this.zone = "";
         this.isInSubnet = common.isInSubnet;
+        this.isHostInSubnet = common.isHostInSubnet;
         this.isCorrect = isCorrect6;
         if (optionalGroups === void 0) {
           this.groups = constants6.GROUPS;
@@ -26180,13 +26691,18 @@ var require_ipv6 = __commonJS({
             throw new address_error_1.AddressError("Invalid subnet mask.");
           }
           address = address.replace(constants6.RE_SUBNET_STRING, "");
-        } else if (/\//.test(address)) {
+        }
+        if (/\//.test(address)) {
           throw new address_error_1.AddressError("Invalid subnet mask.");
         }
-        const zone = constants6.RE_ZONE_STRING.exec(address);
-        if (zone) {
-          this.zone = zone[0];
-          address = address.replace(constants6.RE_ZONE_STRING, "");
+        const zoneStart = address.indexOf("%");
+        if (zoneStart !== -1 && /^.*$/.test(address.slice(zoneStart))) {
+          this.zone = address.slice(zoneStart);
+          address = address.slice(0, zoneStart);
+        }
+        const longest = this.groups * 5 + 5;
+        if (address.length > longest) {
+          throw new address_error_1.AddressError(`IPv6 addresses are at most ${longest} characters.`);
         }
         this.addressMinusSuffix = address;
         this.parsedAddress = this.parse(this.addressMinusSuffix);
@@ -26202,7 +26718,7 @@ var require_ipv6 = __commonJS({
         try {
           new _Address6(address);
           return true;
-        } catch (e) {
+        } catch {
           return false;
         }
       }
@@ -26217,7 +26733,7 @@ var require_ipv6 = __commonJS({
        * address.correctForm(); // '::e8:d4a5:1000'
        */
       static fromBigInt(bigInt) {
-        if (bigInt < 0n || bigInt > (1n << BigInt(constants6.BITS)) - 1n) {
+        if (bigInt < BigInt(0) || bigInt > (BigInt(1) << BigInt(constants6.BITS)) - BigInt(1)) {
           throw new address_error_1.AddressError("IPv6 BigInt must be in the range 0 to 2**128 - 1");
         }
         const hex = bigInt.toString(16).padStart(32, "0");
@@ -26238,46 +26754,43 @@ var require_ipv6 = __commonJS({
        * addressAndPort.port; // 8080
        */
       static fromURL(url) {
+        var _a;
         let host;
         let port2 = null;
         let result;
-        if (url.indexOf("[") !== -1 && url.indexOf("]:") !== -1) {
-          result = constants6.RE_URL_WITH_PORT.exec(url);
+        let error;
+        const stripped = url.replace(/^[a-z][a-z0-9+.-]*:\/\//i, "");
+        if (stripped.indexOf("[") !== -1 && stripped.indexOf("]:") !== -1) {
+          error = "failed to parse address with port";
+          result = constants6.RE_URL_WITH_PORT.exec(stripped);
           if (result === null) {
-            return {
-              error: "failed to parse address with port",
-              address: null,
-              port: null
-            };
+            return { error, address: null, port: null };
           }
           host = result[1];
           port2 = result[2];
-        } else if (url.indexOf("/") !== -1) {
-          url = url.replace(/^[a-z0-9]+:\/\//, "");
-          result = constants6.RE_URL.exec(url);
-          if (result === null) {
-            return {
-              error: "failed to parse address from URL",
-              address: null,
-              port: null
-            };
-          }
-          host = result[1];
         } else {
-          host = url;
+          error = "failed to parse address from URL";
+          result = constants6.RE_URL.exec(stripped);
+          if (result === null) {
+            return { error, address: null, port: null };
+          }
+          host = (_a = result[1]) !== null && _a !== void 0 ? _a : result[2];
         }
         if (port2) {
           port2 = parseInt(port2, 10);
-          if (port2 < 0 || port2 > 65536) {
+          if (port2 < 0 || port2 > 65535) {
             port2 = null;
           }
         } else {
           port2 = null;
         }
-        return {
-          address: new _Address6(host),
-          port: port2
-        };
+        let address;
+        try {
+          address = new _Address6(host);
+        } catch {
+          return { error, address: null, port: null };
+        }
+        return { address, port: port2 };
       }
       /**
        * Construct an `Address6` from an address and a hex subnet mask given as
@@ -26375,26 +26888,30 @@ var require_ipv6 = __commonJS({
         return new _Address6(`::ffff:${address4.correctForm()}/${mask6}`);
       }
       /**
-       * Return an address from ip6.arpa form
+       * Return an address from ip6.arpa form. A full 32-nibble name gives a /128
+       * address; a shorter name, as used for a delegated reverse zone, gives the
+       * network it covers, with a subnet mask of four bits per nibble, so
+       * `fromArpa(x.reverseForm())` round-trips {@link reverseForm} for any prefix.
        * @param {string} arpaFormAddress - an 'ip6.arpa' form address
        * @returns {Adress6}
        * @example
        * var address = Address6.fromArpa(e.f.f.f.3.c.2.6.f.f.f.e.6.6.8.e.1.0.6.7.9.4.e.c.0.0.0.0.1.0.0.2.ip6.arpa.)
        * address.correctForm(); // '2001:0:ce49:7601:e866:efff:62c3:fffe'
+       * Address6.fromArpa('8.b.d.0.1.0.0.2.ip6.arpa.').networkForm(); // '2001:db8::/32'
        */
       static fromArpa(arpaFormAddress) {
-        let address = arpaFormAddress.replace(/(\.ip6\.arpa)?\.$/, "");
-        const semicolonAmount = 7;
-        if (address.length !== 63) {
+        const nibbles = arpaFormAddress.replace(/(\.ip6\.arpa)?\.?$/i, "");
+        if (!/^[0-9a-f](\.[0-9a-f]){0,31}$/i.test(nibbles)) {
           throw new address_error_1.AddressError("Invalid 'ip6.arpa' form.");
         }
-        const parts = address.split(".").reverse();
-        for (let i = semicolonAmount; i > 0; i--) {
-          const insertIndex = i * 4;
-          parts.splice(insertIndex, 0, ":");
+        const reversed = nibbles.split(".").reverse();
+        const subnetMask = reversed.length * 4;
+        const hex = reversed.join("").padEnd(32, "0");
+        const groups = [];
+        for (let i = 0; i < constants6.GROUPS; i++) {
+          groups.push(hex.slice(i * 4, (i + 1) * 4));
         }
-        address = parts.join("");
-        return new _Address6(address);
+        return new _Address6(`${groups.join(":")}/${subnetMask}`);
       }
       /**
        * Return the Microsoft UNC transcription of the address
@@ -26458,21 +26975,52 @@ var require_ipv6 = __commonJS({
         return BigInt(`0b${this.mask() + "1".repeat(constants6.BITS - this.subnetMask)}`);
       }
       /**
-       * The last address in the range given by this address' subnet
-       * Often referred to as the Broadcast
+       * The last address in the range given by this address's subnet. IPv6 has
+       * no broadcast address, so this is an ordinary assignable address (in a
+       * 64-bit-interface-identifier subnet it falls inside the reserved
+       * subnet-anycast block of [RFC 2526](https://datatracker.ietf.org/doc/html/rfc2526)).
        * @returns {Address6}
        */
       endAddress() {
         return _Address6.fromBigInt(this._endAddress());
       }
       /**
-       * The last host address in the range given by this address's subnet ie
-       * the last address prior to the Broadcast Address
+       * The address one before {@link endAddress}. This is the IPv6 counterpart
+       * of the IPv4 method that skips the broadcast address; IPv6 has no broadcast,
+       * so it drops exactly one address and does not model the 128 reserved
+       * subnet-anycast identifiers of [RFC 2526](https://datatracker.ietf.org/doc/html/rfc2526).
        * @returns {Address6}
        */
       endAddressExclusive() {
         const adjust = BigInt("1");
         return _Address6.fromBigInt(this._endAddress() - adjust);
+      }
+      /**
+       * Returns the address `n` addresses after this one (or before, when `n` is
+       * negative), keeping this address's subnet mask. Throws `AddressError` when
+       * the result would fall outside the IPv6 address space or `n` is not an
+       * integer.
+       * @param {number | bigint} n
+       * @returns {Address6}
+       * @example
+       * new Address6('2001:db8::/64').offset(1).correctForm(); // '2001:db8::1'
+       */
+      offset(n) {
+        return _Address6.fromBigInt(common.offsetBigInt(this.bigInt(), n, constants6.BITS, "IPv6")).withSubnetMask(this.subnetMask);
+      }
+      /**
+       * Returns the network that follows this address's network: the address after
+       * {@link endAddress}, with the same subnet mask. Throws `AddressError` when
+       * this network is the last one in the address space.
+       * @returns {Address6}
+       * @example
+       * new Address6('2001:db8::/64').nextNetwork().networkForm(); // '2001:db8:0:1::/64'
+       */
+      nextNetwork() {
+        return _Address6.fromBigInt(common.offsetBigInt(this._endAddress(), 1, constants6.BITS, "IPv6")).withSubnetMask(this.subnetMask);
+      }
+      withSubnetMask(subnetMask) {
+        return new _Address6(`${this.correctForm()}/${subnetMask}`);
       }
       /**
        * The hex form of the subnet mask, e.g. `ffff:ffff:ffff:ffff::` for a
@@ -26530,7 +27078,7 @@ var require_ipv6 = __commonJS({
       getType() {
         for (let i = 0; i < TYPE_SUBNETS.length; i++) {
           const entry = TYPE_SUBNETS[i];
-          if (this.isInSubnet(entry[0])) {
+          if (this.isHostInSubnet(entry[0])) {
             return entry[1];
           }
         }
@@ -26663,18 +27211,20 @@ var require_ipv6 = __commonJS({
         }
         const groups = address.split(":");
         const lastGroup = groups.slice(-1)[0];
+        const v4Octets = lastGroup.split(".");
+        if (v4Octets.length === constants4.GROUPS && v4Octets.every((octet) => /^\d{1,3}$/.test(octet))) {
+          if (v4Octets.some((octet) => /^0\d/.test(octet))) {
+            const highlighted = v4Octets.map(spanLeadingZeroes4).join(".");
+            const prefix = groups.slice(0, -1).map(helpers.escapeHtml).join(":");
+            const separator = groups.length > 1 ? ":" : "";
+            throw new address_error_1.AddressError("IPv4 addresses can't have leading zeroes.", `${prefix}${separator}${highlighted}`);
+          }
+        }
         const address4 = lastGroup.match(constants4.RE_ADDRESS);
         if (address4) {
           this.parsedAddress4 = address4[0];
-          this.address4 = new ipv4_1.Address4(this.parsedAddress4);
-          for (let i = 0; i < this.address4.groups; i++) {
-            if (/^0[0-9]+/.test(this.address4.parsedAddress[i])) {
-              const highlighted = this.address4.parsedAddress.map(spanLeadingZeroes4).join(".");
-              const prefix = groups.slice(0, -1).map(helpers.escapeHtml).join(":");
-              const separator = groups.length > 1 ? ":" : "";
-              throw new address_error_1.AddressError("IPv4 addresses can't have leading zeroes.", `${prefix}${separator}${highlighted}`);
-            }
-          }
+          const v4Suffix = this.subnetMask >= 96 ? `/${this.subnetMask - 96}` : "";
+          this.address4 = new ipv4_1.Address4(`${this.parsedAddress4}${v4Suffix}`);
           this.v4 = true;
           groups[groups.length - 1] = this.address4.toGroup6();
           address = groups.join(":");
@@ -26758,7 +27308,11 @@ var require_ipv6 = __commonJS({
         return BigInt(`0x${this.parsedAddress.map(paddedHex).join("")}`);
       }
       /**
-       * Return the last two groups of this address as an IPv4 address string
+       * Return the last two groups of this address as an IPv4 address string.
+       * If this address carries a CIDR prefix that covers the trailing 32 bits
+       * (i.e. `subnetMask >= 96`), the resulting `Address4` inherits the
+       * corresponding v4 prefix (`subnetMask - 96`); otherwise it defaults to
+       * `/32`.
        * @returns {Address4}
        * @example
        * var address = new Address6('2001:4860:4001::1825:bf11');
@@ -26766,7 +27320,16 @@ var require_ipv6 = __commonJS({
        */
       to4() {
         const binary = this.binaryZeroPad().split("");
-        return ipv4_1.Address4.fromHex(BigInt(`0b${binary.slice(96, 128).join("")}`).toString(16).padStart(8, "0"));
+        const hex = BigInt(`0b${binary.slice(96, 128).join("")}`).toString(16).padStart(8, "0");
+        if (this.subnetMask >= 96) {
+          const v4Mask = this.subnetMask - 96;
+          const groups = [];
+          for (let i = 0; i < 8; i += 2) {
+            groups.push(parseInt(hex.slice(i, i + 2), 16));
+          }
+          return new ipv4_1.Address4(`${groups.join(".")}/${v4Mask}`);
+        }
+        return ipv4_1.Address4.fromHex(hex);
       }
       /**
        * Return the v4-in-v6 form of the address
@@ -26780,7 +27343,7 @@ var require_ipv6 = __commonJS({
         if (!/:$/.test(correct)) {
           infix = ":";
         }
-        return correct + infix + address4.address;
+        return correct + infix + address4.correctForm();
       }
       /**
        * Decodes the Teredo tunneling fields embedded in this address. Returns the
@@ -26870,7 +27433,14 @@ var require_ipv6 = __commonJS({
           bits = prefixBits.slice(0, 96) + v4Bits;
         } else {
           const beforeU = 64 - pl;
-          bits = prefixBits.slice(0, pl) + v4Bits.slice(0, beforeU) + "00000000" + v4Bits.slice(beforeU) + "0".repeat(128 - 72 - (32 - beforeU));
+          bits = [
+            prefixBits.slice(0, pl),
+            v4Bits.slice(0, beforeU),
+            // Bits 64 to 71 are the reserved u octet and are always zero.
+            "00000000",
+            v4Bits.slice(beforeU),
+            "0".repeat(128 - 72 - (32 - beforeU))
+          ].join("");
         }
         const hex = BigInt(`0b${bits}`).toString(16).padStart(32, "0");
         const groups = [];
@@ -26893,7 +27463,7 @@ var require_ipv6 = __commonJS({
         if (pl !== 32 && pl !== 40 && pl !== 48 && pl !== 56 && pl !== 64 && pl !== 96) {
           throw new address_error_1.AddressError("NAT64 prefix length must be 32, 40, 48, 56, 64, or 96");
         }
-        if (!this.isInSubnet(prefix6)) {
+        if (!this.isHostInSubnet(prefix6)) {
           return null;
         }
         const bits = this.binaryZeroPad();
@@ -26917,9 +27487,7 @@ var require_ipv6 = __commonJS({
        * @returns {Array}
        */
       toByteArray() {
-        const valueWithoutPadding = this.bigInt().toString(16);
-        const leadingPad = "0".repeat(valueWithoutPadding.length % 2);
-        const value = `${leadingPad}${valueWithoutPadding}`;
+        const value = this.bigInt().toString(16).padStart(constants6.BITS / 4, "0");
         const bytes = [];
         for (let i = 0, length = value.length; i < length; i += 2) {
           bytes.push(parseInt(value.substring(i, i + 2), 16));
@@ -26938,19 +27506,28 @@ var require_ipv6 = __commonJS({
       /**
        * Convert a byte array to an Address6 object.
        *
+       * Accepts unsigned bytes (0 to 255) or signed bytes (-128 to 127, as an
+       * `Int8Array` or a Java `byte[]` holds them), folding signed values to their
+       * unsigned equivalent. Throws `AddressError` unless given exactly 16
+       * integers from -128 to 255.
+       *
        * To convert from a Node.js `Buffer`, spread it: `Address6.fromByteArray([...buf])`.
        * @returns {Address6}
        */
       static fromByteArray(bytes) {
+        common.assertByteArray(bytes, 16, "IPv6", -128);
         return this.fromUnsignedByteArray(bytes.map(unsignByte));
       }
       /**
        * Convert an unsigned byte array to an Address6 object.
        *
+       * Throws `AddressError` unless given exactly 16 integers from 0 to 255.
+       *
        * To convert from a Node.js `Buffer`, spread it: `Address6.fromUnsignedByteArray([...buf])`.
        * @returns {Address6}
        */
       static fromUnsignedByteArray(bytes) {
+        common.assertByteArray(bytes, 16, "IPv6", 0);
         const BYTE_MAX = BigInt("256");
         let result = BigInt("0");
         let multiplier = BigInt("1");
@@ -26968,20 +27545,28 @@ var require_ipv6 = __commonJS({
         return this.addressMinusSuffix === this.canonicalForm();
       }
       /**
-       * Returns true if the address is a link local address, false otherwise
+       * Returns true if the address is a link-local unicast address in `fe80::/10`
+       * ([RFC 4291 §2.4](https://datatracker.ietf.org/doc/html/rfc4291#section-2.4))
+       * or an IPv4-mapped / NAT64 address whose embedded IPv4 address is link-local
+       * (`169.254.0.0/16`, e.g. `::ffff:169.254.169.254`), false otherwise.
        * @returns {boolean}
        */
       isLinkLocal() {
-        if (this.getBitsBase2(0, 64) === "1111111010000000000000000000000000000000000000000000000000000000") {
-          return true;
+        const embedded = this.embeddedIPv4();
+        if (embedded) {
+          return embedded.isLinkLocal();
         }
-        return false;
+        return this.isHostInSubnet(LINK_LOCAL_SUBNET);
       }
       /**
        * Returns true if the address is a multicast address, false otherwise
        * @returns {boolean}
        */
       isMulticast() {
+        const embedded = this.embeddedIPv4();
+        if (embedded) {
+          return embedded.isMulticast();
+        }
         const type = this.getType();
         return type === "Multicast" || type.startsWith("Multicast ");
       }
@@ -27004,27 +27589,54 @@ var require_ipv6 = __commonJS({
        * @returns {boolean}
        */
       isMapped4() {
-        return this.isInSubnet(IPV4_MAPPED_SUBNET);
+        return this.isHostInSubnet(IPV4_MAPPED_SUBNET);
+      }
+      /**
+       * If this address embeds a routable IPv4 address — i.e. it is IPv4-mapped
+       * (`::ffff:0:0/96`) or sits in the NAT64 well-known prefix (`64:ff9b::/96`,
+       * [RFC 6052](https://datatracker.ietf.org/doc/html/rfc6052)) — return that
+       * embedded address as an {@link Address4}; otherwise return null.
+       *
+       * The special-property checks (`isLoopback`, `isLinkLocal`, `isMulticast`,
+       * `isUnspecified`, `isPrivate`, `isCGNAT`, `isBroadcast`) call this first and
+       * delegate to the embedded {@link Address4} when present, so a literal such as
+       * `::ffff:127.0.0.1` is classified by what it actually reaches (loopback)
+       * rather than by its IPv6 wrapper (which `getType()` reports as IPv4-mapped).
+       * This matters wherever the checks back a trust-boundary decision (e.g. an
+       * SSRF allow/deny filter): without normalization, `::ffff:10.0.0.1`,
+       * `::ffff:169.254.169.254`, `64:ff9b::7f00:1`, etc. would all read as
+       * non-internal.
+       * @returns {Address4 | null}
+       */
+      embeddedIPv4() {
+        if (this.isMapped4() || this.isHostInSubnet(NAT64_WELL_KNOWN_SUBNET)) {
+          return this.to4();
+        }
+        return null;
       }
       /**
        * Returns true if the address is a Teredo address, false otherwise
        * @returns {boolean}
        */
       isTeredo() {
-        return this.isInSubnet(TEREDO_SUBNET);
+        return this.isHostInSubnet(TEREDO_SUBNET);
       }
       /**
        * Returns true if the address is a 6to4 address, false otherwise
        * @returns {boolean}
        */
       is6to4() {
-        return this.isInSubnet(SIX_TO_FOUR_SUBNET);
+        return this.isHostInSubnet(SIX_TO_FOUR_SUBNET);
       }
       /**
        * Returns true if the address is a loopback address, false otherwise
        * @returns {boolean}
        */
       isLoopback() {
+        const embedded = this.embeddedIPv4();
+        if (embedded) {
+          return embedded.isLoopback();
+        }
         return this.getType() === "Loopback";
       }
       /**
@@ -27032,13 +27644,72 @@ var require_ipv6 = __commonJS({
        * @returns {boolean}
        */
       isULA() {
-        return this.isInSubnet(ULA_SUBNET);
+        return this.isHostInSubnet(ULA_SUBNET);
+      }
+      /**
+       * Returns true if the address is private, i.e. a Unique Local Address in
+       * `fc00::/7` ([RFC 4193](https://datatracker.ietf.org/doc/html/rfc4193)), an
+       * address in the NAT64 local-use range `64:ff9b:1::/48`
+       * ([RFC 8215](https://datatracker.ietf.org/doc/html/rfc8215)), or an
+       * IPv4-mapped / NAT64 well-known address whose embedded IPv4 address is in
+       * one of the [RFC 1918](https://datatracker.ietf.org/doc/html/rfc1918)
+       * private ranges (e.g. `::ffff:10.0.0.1`). This is the IPv6 counterpart to
+       * {@link Address4.isPrivate}; use it instead of {@link isULA} when you need to
+       * catch mapped RFC 1918 addresses as well as native ULAs.
+       *
+       * The local-use NAT64 range is reported private as a whole rather than by
+       * its embedded IPv4 address: an operator may carve a prefix of any RFC 6052
+       * length out of `64:ff9b:1::/48`, so the same bits decode to different IPv4
+       * addresses under different deployments and no single decoding is correct.
+       * Use {@link toAddress4Nat64} with the deployment's prefix to decode one.
+       * @returns {boolean}
+       */
+      isPrivate() {
+        const embedded = this.embeddedIPv4();
+        if (embedded) {
+          return embedded.isPrivate();
+        }
+        return this.isULA() || this.isHostInSubnet(NAT64_LOCAL_USE_SUBNET);
+      }
+      /**
+       * Returns true if the address is an IPv4-mapped / NAT64 address whose embedded
+       * IPv4 address is in the carrier-grade NAT range `100.64.0.0/10`
+       * ([RFC 6598](https://datatracker.ietf.org/doc/html/rfc6598)), false
+       * otherwise. There is no native IPv6 CGNAT range, so this only ever returns
+       * true for an embedded IPv4 address (e.g. `::ffff:100.64.0.1`).
+       * @returns {boolean}
+       */
+      isCGNAT() {
+        const embedded = this.embeddedIPv4();
+        if (embedded) {
+          return embedded.isCGNAT();
+        }
+        return false;
+      }
+      /**
+       * Returns true if the address is an IPv4-mapped / NAT64 address whose embedded
+       * IPv4 address is the limited broadcast address `255.255.255.255`
+       * ([RFC 919](https://datatracker.ietf.org/doc/html/rfc919)), false otherwise.
+       * There is no IPv6 broadcast, so this only ever returns true for an embedded
+       * IPv4 address (e.g. `::ffff:255.255.255.255`).
+       * @returns {boolean}
+       */
+      isBroadcast() {
+        const embedded = this.embeddedIPv4();
+        if (embedded) {
+          return embedded.isBroadcast();
+        }
+        return false;
       }
       /**
        * Returns true if the address is the unspecified address `::`.
        * @returns {boolean}
        */
       isUnspecified() {
+        const embedded = this.embeddedIPv4();
+        if (embedded) {
+          return embedded.isUnspecified();
+        }
         return this.getType() === "Unspecified";
       }
       /**
@@ -27046,7 +27717,48 @@ var require_ipv6 = __commonJS({
        * @returns {boolean}
        */
       isDocumentation() {
-        return this.isInSubnet(DOCUMENTATION_SUBNET);
+        return DOCUMENTATION_SUBNETS.some((subnet) => this.isHostInSubnet(subnet));
+      }
+      /**
+       * Returns true if the address is in the benchmarking range `2001:2::/48`
+       * ([RFC 5180](https://datatracker.ietf.org/doc/html/rfc5180)) or is an
+       * IPv4-mapped / NAT64 address whose embedded IPv4 address is in
+       * `198.18.0.0/15`, false otherwise.
+       * @returns {boolean}
+       */
+      isBenchmarking() {
+        const embedded = this.embeddedIPv4();
+        if (embedded) {
+          return embedded.isBenchmarking();
+        }
+        return this.isHostInSubnet(BENCHMARKING_SUBNET);
+      }
+      /**
+       * Returns true if the address is globally reachable: inside the global
+       * unicast allocation `2000::/3` (the only range the [IANA IPv6 Address Space
+       * Registry](https://www.iana.org/assignments/ipv6-address-space/) assigns
+       * for global unicast; everything else is reserved, ULA, link-local, or
+       * multicast) and not in any block the [IANA IPv6 Special-Purpose Address Registry](https://www.iana.org/assignments/iana-ipv6-special-registry/)
+       * marks as not globally reachable. An IPv4-mapped or NAT64 well-known
+       * address answers for its embedded IPv4 address, so `::ffff:10.0.0.1` and
+       * `64:ff9b::7f00:1` are not global. Teredo (`2001::/32`) and 6to4
+       * (`2002::/16`) are not global either: the registry lists them as N/A and a
+       * packet to one needs a relay.
+       *
+       * This covers everything the individual classifiers name and the blocks they
+       * do not: the discard-only prefix `100::/64`, the IETF protocol assignments
+       * in `2001::/23`, the deprecated site-local `fec0::/10` and IPv4-compatible
+       * `::/96` ranges, and unallocated space such as `4000::/3`. It is the single
+       * predicate to use where a request must not reach an internal or
+       * special-purpose destination; see SECURITY.md.
+       * @returns {boolean}
+       */
+      isGlobal() {
+        const embedded = this.embeddedIPv4();
+        if (embedded) {
+          return embedded.isGlobal();
+        }
+        return this.isHostInSubnet(GLOBAL_UNICAST_SUBNET) && common.isGloballyReachable.call(this, SPECIAL_PURPOSE_V6);
       }
       // #endregion
       // #region HTML
@@ -27098,7 +27810,12 @@ var require_ipv6 = __commonJS({
         return `<a href="${safeHref}">${safeForm}</a>`;
       }
       /**
-       * Groups an address
+       * Groups an address.
+       *
+       * Returns an HTML fragment: each group is wrapped in a `<span>` carrying
+       * the group classes an address-inspector UI hovers on. The address content
+       * is HTML-escaped; anything you concatenate around it is your
+       * responsibility.
        * @returns {String}
        */
       group() {
@@ -27189,14 +27906,23 @@ var require_ipv6 = __commonJS({
     var TEREDO_SUBNET = new Address62("2001::/32");
     var SIX_TO_FOUR_SUBNET = new Address62("2002::/16");
     var ULA_SUBNET = new Address62("fc00::/7");
-    var DOCUMENTATION_SUBNET = new Address62("2001:db8::/32");
+    var LINK_LOCAL_SUBNET = new Address62("fe80::/10");
+    var DOCUMENTATION_SUBNETS = [new Address62("2001:db8::/32"), new Address62("3fff::/20")];
+    var BENCHMARKING_SUBNET = new Address62("2001:2::/48");
+    var GLOBAL_UNICAST_SUBNET = new Address62("2000::/3");
+    var SPECIAL_PURPOSE_V6 = constants6.SPECIAL_PURPOSE.map(([cidr2, , reachable]) => ({
+      subnet: new Address62(cidr2),
+      reachable
+    }));
     var IPV4_MAPPED_SUBNET = new Address62("::ffff:0:0/96");
+    var NAT64_WELL_KNOWN_SUBNET = new Address62("64:ff9b::/96");
+    var NAT64_LOCAL_USE_SUBNET = new Address62("64:ff9b:1::/48");
   }
 });
 
-// ../node_modules/.pnpm/ip-address@10.2.0/node_modules/ip-address/dist/ip-address.js
+// ../node_modules/.pnpm/ip-address@10.7.5/node_modules/ip-address/dist/ip-address.js
 var require_ip_address = __commonJS({
-  "../node_modules/.pnpm/ip-address@10.2.0/node_modules/ip-address/dist/ip-address.js"(exports) {
+  "../node_modules/.pnpm/ip-address@10.7.5/node_modules/ip-address/dist/ip-address.js"(exports) {
     "use strict";
     var __createBinding = exports && exports.__createBinding || (Object.create ? (function(o, m, k, k2) {
       if (k2 === void 0) k2 = k;
@@ -27494,14 +28220,14 @@ var require_buffer_equal_constant_time = __commonJS({
 var require_jwa = __commonJS({
   "../node_modules/.pnpm/jwa@2.0.1/node_modules/jwa/index.js"(exports, module) {
     var Buffer4 = require_safe_buffer().Buffer;
-    var crypto12 = __require("crypto");
+    var crypto13 = __require("crypto");
     var formatEcdsa = require_ecdsa_sig_formatter();
     var util4 = __require("util");
     var MSG_INVALID_ALGORITHM = '"%s" is not a valid algorithm.\n  Supported algorithms are:\n  "HS256", "HS384", "HS512", "RS256", "RS384", "RS512", "PS256", "PS384", "PS512", "ES256", "ES384", "ES512" and "none".';
     var MSG_INVALID_SECRET = "secret must be a string or buffer";
     var MSG_INVALID_VERIFIER_KEY = "key must be a string or a buffer";
     var MSG_INVALID_SIGNER_KEY = "key must be a string, a buffer or an object";
-    var supportsKeyObjects = typeof crypto12.createPublicKey === "function";
+    var supportsKeyObjects = typeof crypto13.createPublicKey === "function";
     if (supportsKeyObjects) {
       MSG_INVALID_VERIFIER_KEY += " or a KeyObject";
       MSG_INVALID_SECRET += "or a KeyObject";
@@ -27591,17 +28317,17 @@ var require_jwa = __commonJS({
       return function sign3(thing, secret) {
         checkIsSecretKey(secret);
         thing = normalizeInput(thing);
-        var hmac2 = crypto12.createHmac("sha" + bits, secret);
+        var hmac2 = crypto13.createHmac("sha" + bits, secret);
         var sig = (hmac2.update(thing), hmac2.digest("base64"));
         return fromBase64(sig);
       };
     }
     var bufferEqual;
-    var timingSafeEqual = "timingSafeEqual" in crypto12 ? function timingSafeEqual2(a, b2) {
+    var timingSafeEqual = "timingSafeEqual" in crypto13 ? function timingSafeEqual2(a, b2) {
       if (a.byteLength !== b2.byteLength) {
         return false;
       }
-      return crypto12.timingSafeEqual(a, b2);
+      return crypto13.timingSafeEqual(a, b2);
     } : function timingSafeEqual2(a, b2) {
       if (!bufferEqual) {
         bufferEqual = require_buffer_equal_constant_time();
@@ -27618,7 +28344,7 @@ var require_jwa = __commonJS({
       return function sign3(thing, privateKey) {
         checkIsPrivateKey(privateKey);
         thing = normalizeInput(thing);
-        var signer = crypto12.createSign("RSA-SHA" + bits);
+        var signer = crypto13.createSign("RSA-SHA" + bits);
         var sig = (signer.update(thing), signer.sign(privateKey, "base64"));
         return fromBase64(sig);
       };
@@ -27628,7 +28354,7 @@ var require_jwa = __commonJS({
         checkIsPublicKey(publicKey);
         thing = normalizeInput(thing);
         signature = toBase64(signature);
-        var verifier = crypto12.createVerify("RSA-SHA" + bits);
+        var verifier = crypto13.createVerify("RSA-SHA" + bits);
         verifier.update(thing);
         return verifier.verify(publicKey, signature, "base64");
       };
@@ -27637,11 +28363,11 @@ var require_jwa = __commonJS({
       return function sign3(thing, privateKey) {
         checkIsPrivateKey(privateKey);
         thing = normalizeInput(thing);
-        var signer = crypto12.createSign("RSA-SHA" + bits);
+        var signer = crypto13.createSign("RSA-SHA" + bits);
         var sig = (signer.update(thing), signer.sign({
           key: privateKey,
-          padding: crypto12.constants.RSA_PKCS1_PSS_PADDING,
-          saltLength: crypto12.constants.RSA_PSS_SALTLEN_DIGEST
+          padding: crypto13.constants.RSA_PKCS1_PSS_PADDING,
+          saltLength: crypto13.constants.RSA_PSS_SALTLEN_DIGEST
         }, "base64"));
         return fromBase64(sig);
       };
@@ -27651,12 +28377,12 @@ var require_jwa = __commonJS({
         checkIsPublicKey(publicKey);
         thing = normalizeInput(thing);
         signature = toBase64(signature);
-        var verifier = crypto12.createVerify("RSA-SHA" + bits);
+        var verifier = crypto13.createVerify("RSA-SHA" + bits);
         verifier.update(thing);
         return verifier.verify({
           key: publicKey,
-          padding: crypto12.constants.RSA_PKCS1_PSS_PADDING,
-          saltLength: crypto12.constants.RSA_PSS_SALTLEN_DIGEST
+          padding: crypto13.constants.RSA_PKCS1_PSS_PADDING,
+          saltLength: crypto13.constants.RSA_PSS_SALTLEN_DIGEST
         }, signature, "base64");
       };
     }
@@ -28052,9 +28778,9 @@ var require_timespan = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/internal/constants.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/constants.js
 var require_constants3 = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/internal/constants.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/constants.js"(exports, module) {
     "use strict";
     var SEMVER_SPEC_VERSION = "2.0.0";
     var MAX_LENGTH = 256;
@@ -28084,9 +28810,9 @@ var require_constants3 = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/internal/debug.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/debug.js
 var require_debug2 = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/internal/debug.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/debug.js"(exports, module) {
     "use strict";
     var debug = typeof process === "object" && process.env && process.env.NODE_DEBUG && /\bsemver\b/i.test(process.env.NODE_DEBUG) ? (...args) => console.error("SEMVER", ...args) : () => {
     };
@@ -28094,9 +28820,9 @@ var require_debug2 = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/internal/re.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/re.js
 var require_re = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/internal/re.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/re.js"(exports, module) {
     "use strict";
     var {
       MAX_SAFE_COMPONENT_LENGTH,
@@ -28182,9 +28908,9 @@ var require_re = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/internal/parse-options.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/parse-options.js
 var require_parse_options = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/internal/parse-options.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/parse-options.js"(exports, module) {
     "use strict";
     var looseOption = Object.freeze({ loose: true });
     var emptyOpts = Object.freeze({});
@@ -28201,9 +28927,9 @@ var require_parse_options = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/internal/identifiers.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/identifiers.js
 var require_identifiers = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/internal/identifiers.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/identifiers.js"(exports, module) {
     "use strict";
     var numeric3 = /^[0-9]+$/;
     var compareIdentifiers = (a, b2) => {
@@ -28226,9 +28952,9 @@ var require_identifiers = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/classes/semver.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/classes/semver.js
 var require_semver = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/classes/semver.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/classes/semver.js"(exports, module) {
     "use strict";
     var debug = require_debug2();
     var { MAX_LENGTH, MAX_SAFE_INTEGER } = require_constants3();
@@ -28518,9 +29244,9 @@ var require_semver = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/parse.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/parse.js
 var require_parse2 = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/parse.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/parse.js"(exports, module) {
     "use strict";
     var SemVer = require_semver();
     var parse2 = (version2, options, throwErrors = false) => {
@@ -28540,9 +29266,9 @@ var require_parse2 = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/valid.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/valid.js
 var require_valid = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/valid.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/valid.js"(exports, module) {
     "use strict";
     var parse2 = require_parse2();
     var valid = (version2, options) => {
@@ -28553,9 +29279,9 @@ var require_valid = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/clean.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/clean.js
 var require_clean = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/clean.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/clean.js"(exports, module) {
     "use strict";
     var parse2 = require_parse2();
     var clean = (version2, options) => {
@@ -28566,9 +29292,9 @@ var require_clean = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/inc.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/inc.js
 var require_inc = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/inc.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/inc.js"(exports, module) {
     "use strict";
     var SemVer = require_semver();
     var inc = (version2, release, options, identifier, identifierBase) => {
@@ -28590,9 +29316,9 @@ var require_inc = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/diff.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/diff.js
 var require_diff = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/diff.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/diff.js"(exports, module) {
     "use strict";
     var parse2 = require_parse2();
     var diff = (version1, version2) => {
@@ -28634,9 +29360,9 @@ var require_diff = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/major.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/major.js
 var require_major = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/major.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/major.js"(exports, module) {
     "use strict";
     var SemVer = require_semver();
     var major = (a, loose) => new SemVer(a, loose).major;
@@ -28644,9 +29370,9 @@ var require_major = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/minor.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/minor.js
 var require_minor = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/minor.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/minor.js"(exports, module) {
     "use strict";
     var SemVer = require_semver();
     var minor = (a, loose) => new SemVer(a, loose).minor;
@@ -28654,9 +29380,9 @@ var require_minor = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/patch.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/patch.js
 var require_patch = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/patch.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/patch.js"(exports, module) {
     "use strict";
     var SemVer = require_semver();
     var patch = (a, loose) => new SemVer(a, loose).patch;
@@ -28664,9 +29390,9 @@ var require_patch = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/prerelease.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/prerelease.js
 var require_prerelease = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/prerelease.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/prerelease.js"(exports, module) {
     "use strict";
     var parse2 = require_parse2();
     var prerelease = (version2, options) => {
@@ -28677,9 +29403,9 @@ var require_prerelease = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/compare.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/compare.js
 var require_compare = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/compare.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/compare.js"(exports, module) {
     "use strict";
     var SemVer = require_semver();
     var compare = (a, b2, loose) => new SemVer(a, loose).compare(new SemVer(b2, loose));
@@ -28687,9 +29413,9 @@ var require_compare = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/rcompare.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/rcompare.js
 var require_rcompare = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/rcompare.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/rcompare.js"(exports, module) {
     "use strict";
     var compare = require_compare();
     var rcompare = (a, b2, loose) => compare(b2, a, loose);
@@ -28697,9 +29423,9 @@ var require_rcompare = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/compare-loose.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/compare-loose.js
 var require_compare_loose = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/compare-loose.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/compare-loose.js"(exports, module) {
     "use strict";
     var compare = require_compare();
     var compareLoose = (a, b2) => compare(a, b2, true);
@@ -28707,9 +29433,9 @@ var require_compare_loose = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/compare-build.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/compare-build.js
 var require_compare_build = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/compare-build.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/compare-build.js"(exports, module) {
     "use strict";
     var SemVer = require_semver();
     var compareBuild = (a, b2, loose) => {
@@ -28721,9 +29447,9 @@ var require_compare_build = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/sort.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/sort.js
 var require_sort = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/sort.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/sort.js"(exports, module) {
     "use strict";
     var compareBuild = require_compare_build();
     var sort = (list, loose) => list.sort((a, b2) => compareBuild(a, b2, loose));
@@ -28731,9 +29457,9 @@ var require_sort = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/rsort.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/rsort.js
 var require_rsort = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/rsort.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/rsort.js"(exports, module) {
     "use strict";
     var compareBuild = require_compare_build();
     var rsort = (list, loose) => list.sort((a, b2) => compareBuild(b2, a, loose));
@@ -28741,9 +29467,9 @@ var require_rsort = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/gt.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/gt.js
 var require_gt = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/gt.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/gt.js"(exports, module) {
     "use strict";
     var compare = require_compare();
     var gt2 = (a, b2, loose) => compare(a, b2, loose) > 0;
@@ -28751,9 +29477,9 @@ var require_gt = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/lt.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/lt.js
 var require_lt = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/lt.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/lt.js"(exports, module) {
     "use strict";
     var compare = require_compare();
     var lt2 = (a, b2, loose) => compare(a, b2, loose) < 0;
@@ -28761,9 +29487,9 @@ var require_lt = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/eq.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/eq.js
 var require_eq = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/eq.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/eq.js"(exports, module) {
     "use strict";
     var compare = require_compare();
     var eq2 = (a, b2, loose) => compare(a, b2, loose) === 0;
@@ -28771,9 +29497,9 @@ var require_eq = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/neq.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/neq.js
 var require_neq = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/neq.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/neq.js"(exports, module) {
     "use strict";
     var compare = require_compare();
     var neq = (a, b2, loose) => compare(a, b2, loose) !== 0;
@@ -28781,9 +29507,9 @@ var require_neq = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/gte.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/gte.js
 var require_gte = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/gte.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/gte.js"(exports, module) {
     "use strict";
     var compare = require_compare();
     var gte2 = (a, b2, loose) => compare(a, b2, loose) >= 0;
@@ -28791,9 +29517,9 @@ var require_gte = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/lte.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/lte.js
 var require_lte = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/lte.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/lte.js"(exports, module) {
     "use strict";
     var compare = require_compare();
     var lte2 = (a, b2, loose) => compare(a, b2, loose) <= 0;
@@ -28801,9 +29527,9 @@ var require_lte = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/cmp.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/cmp.js
 var require_cmp = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/cmp.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/cmp.js"(exports, module) {
     "use strict";
     var eq2 = require_eq();
     var neq = require_neq();
@@ -28851,9 +29577,9 @@ var require_cmp = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/coerce.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/coerce.js
 var require_coerce = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/coerce.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/coerce.js"(exports, module) {
     "use strict";
     var SemVer = require_semver();
     var parse2 = require_parse2();
@@ -28897,9 +29623,9 @@ var require_coerce = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/truncate.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/truncate.js
 var require_truncate = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/truncate.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/truncate.js"(exports, module) {
     "use strict";
     var parse2 = require_parse2();
     var constants2 = require_constants3();
@@ -28938,9 +29664,9 @@ var require_truncate = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/internal/lrucache.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/lrucache.js
 var require_lrucache = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/internal/lrucache.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/internal/lrucache.js"(exports, module) {
     "use strict";
     var LRUCache = class {
       constructor() {
@@ -28976,9 +29702,9 @@ var require_lrucache = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/classes/range.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/classes/range.js
 var require_range2 = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/classes/range.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/classes/range.js"(exports, module) {
     "use strict";
     var SPACE_CHARACTERS = /\s+/g;
     var Range = class _Range {
@@ -29171,15 +29897,16 @@ var require_range2 = __commonJS({
     };
     var replaceTilde = (comp, options) => {
       const r = options.loose ? re[t.TILDELOOSE] : re[t.TILDE];
+      const z = options.includePrerelease ? "-0" : "";
       return comp.replace(r, (_, M, m, p, pr) => {
         debug("tilde", comp, _, M, m, p, pr);
         let ret;
         if (isX(M)) {
           ret = "";
         } else if (isX(m)) {
-          ret = `>=${M}.0.0 <${+M + 1}.0.0-0`;
+          ret = `>=${M}.0.0${z} <${+M + 1}.0.0-0`;
         } else if (isX(p)) {
-          ret = `>=${M}.${m}.0 <${M}.${+m + 1}.0-0`;
+          ret = `>=${M}.${m}.0${z} <${M}.${+m + 1}.0-0`;
         } else if (pr) {
           debug("replaceTilde pr", pr);
           ret = `>=${M}.${m}.${p}-${pr} <${M}.${+m + 1}.0-0`;
@@ -29360,9 +30087,9 @@ var require_range2 = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/classes/comparator.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/classes/comparator.js
 var require_comparator = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/classes/comparator.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/classes/comparator.js"(exports, module) {
     "use strict";
     var ANY = /* @__PURE__ */ Symbol("SemVer ANY");
     var Comparator = class _Comparator {
@@ -29473,9 +30200,9 @@ var require_comparator = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/satisfies.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/satisfies.js
 var require_satisfies = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/functions/satisfies.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/functions/satisfies.js"(exports, module) {
     "use strict";
     var Range = require_range2();
     var satisfies = (version2, range, options) => {
@@ -29490,9 +30217,9 @@ var require_satisfies = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/ranges/to-comparators.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/to-comparators.js
 var require_to_comparators = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/ranges/to-comparators.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/to-comparators.js"(exports, module) {
     "use strict";
     var Range = require_range2();
     var toComparators = (range, options) => new Range(range, options).set.map((comp) => comp.map((c) => c.value).join(" ").trim().split(" "));
@@ -29500,9 +30227,9 @@ var require_to_comparators = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/ranges/max-satisfying.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/max-satisfying.js
 var require_max_satisfying = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/ranges/max-satisfying.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/max-satisfying.js"(exports, module) {
     "use strict";
     var SemVer = require_semver();
     var Range = require_range2();
@@ -29529,9 +30256,9 @@ var require_max_satisfying = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/ranges/min-satisfying.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/min-satisfying.js
 var require_min_satisfying = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/ranges/min-satisfying.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/min-satisfying.js"(exports, module) {
     "use strict";
     var SemVer = require_semver();
     var Range = require_range2();
@@ -29558,9 +30285,9 @@ var require_min_satisfying = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/ranges/min-version.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/min-version.js
 var require_min_version = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/ranges/min-version.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/min-version.js"(exports, module) {
     "use strict";
     var SemVer = require_semver();
     var Range = require_range2();
@@ -29617,9 +30344,9 @@ var require_min_version = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/ranges/valid.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/valid.js
 var require_valid2 = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/ranges/valid.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/valid.js"(exports, module) {
     "use strict";
     var Range = require_range2();
     var validRange = (range, options) => {
@@ -29633,9 +30360,9 @@ var require_valid2 = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/ranges/outside.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/outside.js
 var require_outside = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/ranges/outside.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/outside.js"(exports, module) {
     "use strict";
     var SemVer = require_semver();
     var Comparator = require_comparator();
@@ -29702,9 +30429,9 @@ var require_outside = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/ranges/gtr.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/gtr.js
 var require_gtr = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/ranges/gtr.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/gtr.js"(exports, module) {
     "use strict";
     var outside = require_outside();
     var gtr = (version2, range, options) => outside(version2, range, ">", options);
@@ -29712,9 +30439,9 @@ var require_gtr = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/ranges/ltr.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/ltr.js
 var require_ltr = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/ranges/ltr.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/ltr.js"(exports, module) {
     "use strict";
     var outside = require_outside();
     var ltr = (version2, range, options) => outside(version2, range, "<", options);
@@ -29722,9 +30449,9 @@ var require_ltr = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/ranges/intersects.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/intersects.js
 var require_intersects = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/ranges/intersects.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/intersects.js"(exports, module) {
     "use strict";
     var Range = require_range2();
     var intersects = (r1, r2, options) => {
@@ -29736,9 +30463,9 @@ var require_intersects = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/ranges/simplify.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/simplify.js
 var require_simplify = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/ranges/simplify.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/simplify.js"(exports, module) {
     "use strict";
     var satisfies = require_satisfies();
     var compare = require_compare();
@@ -29786,9 +30513,9 @@ var require_simplify = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/ranges/subset.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/subset.js
 var require_subset = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/ranges/subset.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/ranges/subset.js"(exports, module) {
     "use strict";
     var Range = require_range2();
     var Comparator = require_comparator();
@@ -29948,9 +30675,9 @@ var require_subset = __commonJS({
   }
 });
 
-// ../node_modules/.pnpm/semver@7.8.4/node_modules/semver/index.js
+// ../node_modules/.pnpm/semver@7.8.5/node_modules/semver/index.js
 var require_semver2 = __commonJS({
-  "../node_modules/.pnpm/semver@7.8.4/node_modules/semver/index.js"(exports, module) {
+  "../node_modules/.pnpm/semver@7.8.5/node_modules/semver/index.js"(exports, module) {
     "use strict";
     var internalRe = require_re();
     var constants2 = require_constants3();
@@ -35365,7 +36092,7 @@ var require_urlsafe_base64_helper = __commonJS({
 var require_vapid_helper = __commonJS({
   "../node_modules/.pnpm/web-push@3.6.7/node_modules/web-push/src/vapid-helper.js"(exports, module) {
     "use strict";
-    var crypto12 = __require("crypto");
+    var crypto13 = __require("crypto");
     var asn1 = require_asn1();
     var jws = require_jws();
     var { URL: URL2 } = __require("url");
@@ -35392,7 +36119,7 @@ var require_vapid_helper = __commonJS({
       });
     }
     function generateVAPIDKeys() {
-      const curve = crypto12.createECDH("prime256v1");
+      const curve = crypto13.createECDH("prime256v1");
       curve.generateKeys();
       let publicKeyBuffer = curve.getPublicKey();
       let privateKeyBuffer = curve.getPrivateKey();
@@ -35542,7 +36269,7 @@ var require_vapid_helper = __commonJS({
 var require_ece = __commonJS({
   "../node_modules/.pnpm/http_ece@1.2.0/node_modules/http_ece/ece.js"(exports, module) {
     "use strict";
-    var crypto12 = __require("crypto");
+    var crypto13 = __require("crypto");
     var AES_GCM = "aes-128-gcm";
     var PAD_SIZE = { "aes128gcm": 1, "aesgcm": 2 };
     var TAG_LENGTH = 16;
@@ -35569,7 +36296,7 @@ var require_ece = __commonJS({
       return b2;
     }
     function HMAC_hash(key, input) {
-      var hmac2 = crypto12.createHmac("sha256", key);
+      var hmac2 = crypto13.createHmac("sha256", key);
       hmac2.update(input);
       return hmac2.digest();
     }
@@ -35837,7 +36564,7 @@ var require_ece = __commonJS({
     function decryptRecord(key, counter, buffer2, header, last) {
       keylog("decrypt", buffer2);
       var nonce = generateNonce(key.nonce, counter);
-      var gcm = crypto12.createDecipheriv(AES_GCM, key.key, nonce);
+      var gcm = crypto13.createDecipheriv(AES_GCM, key.key, nonce);
       gcm.setAuthTag(buffer2.slice(buffer2.length - TAG_LENGTH));
       var data = gcm.update(buffer2.slice(0, buffer2.length - TAG_LENGTH));
       data = Buffer.concat([data, gcm.final()]);
@@ -35885,7 +36612,7 @@ var require_ece = __commonJS({
       keylog("encrypt", buffer2);
       pad = pad || 0;
       var nonce = generateNonce(key.nonce, counter);
-      var gcm = crypto12.createCipheriv(AES_GCM, key.key, nonce);
+      var gcm = crypto13.createCipheriv(AES_GCM, key.key, nonce);
       var ciphertext = [];
       var padSize = PAD_SIZE[header.version];
       var padding = Buffer.alloc(pad + padSize);
@@ -35928,7 +36655,7 @@ var require_ece = __commonJS({
       }
       var header = parseParams(params);
       if (!header.salt) {
-        header.salt = crypto12.randomBytes(KEY_LENGTH);
+        header.salt = crypto13.randomBytes(KEY_LENGTH);
       }
       var result;
       if (header.version === "aes128gcm") {
@@ -35993,7 +36720,7 @@ var require_ece = __commonJS({
 var require_encryption_helper = __commonJS({
   "../node_modules/.pnpm/web-push@3.6.7/node_modules/web-push/src/encryption-helper.js"(exports, module) {
     "use strict";
-    var crypto12 = __require("crypto");
+    var crypto13 = __require("crypto");
     var ece = require_ece();
     var encrypt = function(userPublicKey, userAuth, payload, contentEncoding) {
       if (!userPublicKey) {
@@ -36020,9 +36747,9 @@ var require_encryption_helper = __commonJS({
       if (typeof payload === "string" || payload instanceof String) {
         payload = Buffer.from(payload);
       }
-      const localCurve = crypto12.createECDH("prime256v1");
+      const localCurve = crypto13.createECDH("prime256v1");
       const localPublicKey = localCurve.generateKeys();
-      const salt = crypto12.randomBytes(16).toString("base64url");
+      const salt = crypto13.randomBytes(16).toString("base64url");
       const cipherText = ece.encrypt(payload, {
         version: contentEncoding,
         dh: userPublicKey,
@@ -36131,7 +36858,7 @@ var require_helpers2 = __commonJS({
 });
 
 // ../node_modules/.pnpm/agent-base@7.1.4/node_modules/agent-base/dist/index.js
-var require_dist3 = __commonJS({
+var require_dist4 = __commonJS({
   "../node_modules/.pnpm/agent-base@7.1.4/node_modules/agent-base/dist/index.js"(exports) {
     "use strict";
     var __createBinding = exports && exports.__createBinding || (Object.create ? (function(o, m, k, k2) {
@@ -36383,7 +37110,7 @@ var require_parse_proxy_response = __commonJS({
 });
 
 // ../node_modules/.pnpm/https-proxy-agent@7.0.6/node_modules/https-proxy-agent/dist/index.js
-var require_dist4 = __commonJS({
+var require_dist5 = __commonJS({
   "../node_modules/.pnpm/https-proxy-agent@7.0.6/node_modules/https-proxy-agent/dist/index.js"(exports) {
     "use strict";
     var __createBinding = exports && exports.__createBinding || (Object.create ? (function(o, m, k, k2) {
@@ -36422,7 +37149,7 @@ var require_dist4 = __commonJS({
     var tls2 = __importStar(__require("tls"));
     var assert_1 = __importDefault(__require("assert"));
     var debug_1 = __importDefault(require_src());
-    var agent_base_1 = require_dist3();
+    var agent_base_1 = require_dist4();
     var url_1 = __require("url");
     var parse_proxy_response_1 = require_parse_proxy_response();
     var debug = (0, debug_1.default)("https-proxy-agent");
@@ -36775,7 +37502,7 @@ var require_web_push_lib = __commonJS({
           httpsOptions.agent = requestDetails.agent;
         }
         if (requestDetails.proxy) {
-          const { HttpsProxyAgent } = require_dist4();
+          const { HttpsProxyAgent } = require_dist5();
           httpsOptions.agent = new HttpsProxyAgent(requestDetails.proxy);
         }
         const pushRequest = https.request(httpsOptions, function(pushResponse) {
@@ -36848,17 +37575,23 @@ var import_express21 = __toESM(require_express2(), 1);
 var import_cors = __toESM(require_lib3(), 1);
 var import_compression = __toESM(require_compression(), 1);
 
-// ../node_modules/.pnpm/express-rate-limit@8.5.2_express@5.2.1/node_modules/express-rate-limit/dist/index.mjs
+// ../node_modules/.pnpm/express-rate-limit@8.7.1_express@5.3.0/node_modules/express-rate-limit/dist/index.mjs
 var import_ip_address = __toESM(require_ip_address(), 1);
+var import_debug = __toESM(require_src(), 1);
 import { isIPv6 } from "node:net";
 import { isIPv6 as isIPv62 } from "node:net";
 import { Buffer as Buffer2 } from "node:buffer";
 import { createHash } from "node:crypto";
 import { isIP } from "node:net";
+var ipv4CompatibleSubnet = new import_ip_address.Address6("::/96");
 function ipKeyGenerator(ip, ipv6Subnet = 56) {
   if (isIPv6(ip)) {
     const address = new import_ip_address.Address6(ip);
-    if (address.is4()) return address.to4().correctForm();
+    if (address.isMapped4() || // The deprecated IPv4-compatible notation keeps its existing behavior.
+    // Its range is shared with addresses that embed no IPv4 address at all
+    // (`::`, `::1`), so here the notation is what tells them apart.
+    address.is4() && address.isInSubnet(ipv4CompatibleSubnet))
+      return address.to4().correctForm();
     if (ipv6Subnet) {
       const subnet = new import_ip_address.Address6(`${ip}/${ipv6Subnet}`);
       return subnet.networkForm();
@@ -37077,9 +37810,9 @@ var setDraft8Headers = (response, info, windowMs, name, key) => {
   response.append("RateLimit", `"${name}"; ${header}`);
   response.append("RateLimit-Policy", `"${name}"; ${policy}`);
 };
-var setRetryAfterHeader = (response, info, windowMs) => {
+var setRetryAfterHeader = (response, info, windowMs, retryAfter) => {
   if (response.headersSent) return;
-  const resetSeconds = getResetSeconds(windowMs, info.resetTime);
+  const resetSeconds = retryAfter ?? getResetSeconds(windowMs, info.resetTime);
   response.setHeader("Retry-After", resetSeconds.toString());
 };
 var omitUndefinedProperties = (passedOptions) => {
@@ -37341,6 +38074,7 @@ var validations = {
       legacyHeaders: true,
       standardHeaders: true,
       identifier: true,
+      retryAfter: true,
       requestPropertyName: true,
       skipFailedRequests: true,
       skipSuccessfulRequests: true,
@@ -37494,6 +38228,7 @@ var getValidations = (_enabled, logger2) => {
         if (!(enabled[name] ?? enabled.default)) {
           return;
         }
+        enabled[name] = false;
         try {
           ;
           validation.apply(
@@ -37506,6 +38241,9 @@ var getValidations = (_enabled, logger2) => {
         }
       };
   }
+  const inspect = /* @__PURE__ */ Symbol.for("nodejs.util.inspect.custom");
+  if (inspect)
+    wrappedValidations[inspect] = () => wrappedValidations.enabled;
   return wrappedValidations;
 };
 var isLegacyStore = (store) => (
@@ -37652,9 +38390,14 @@ var handleAsyncErrors = (fn) => async (request, response, next) => {
 var rateLimit = (passedOptions) => {
   const config = parseOptions(passedOptions ?? {});
   const options = getOptionsFromConfig(config);
+  const debug = (0, import_debug.default)("express-rate-limit");
+  debug("creating new rate limiter with %o", config.store.constructor.name);
+  for (const [key, val] of Object.entries(config))
+    debug("set %s to %o", key, val);
   config.validations.creationStack(config.store);
   config.validations.unsharedStore(config.store);
   if (typeof config.store.init === "function") {
+    debug("executing init for store");
     try {
       const storeInit = config.store.init(options);
       if (storeInit instanceof Promise) {
@@ -37677,13 +38420,18 @@ var rateLimit = (passedOptions) => {
       const closePromise = config.skipFailedRequests && new Promise((resolve) => response.once("close", resolve));
       const finishPromise = (config.skipFailedRequests || config.skipSuccessfulRequests) && new Promise((resolve) => response.once("finish", resolve));
       const errorPromise = config.skipFailedRequests && new Promise((resolve) => response.once("error", resolve));
+      debug("requested %o", request.originalUrl);
+      debug("request from ip %o", request.ip);
       const skip = await config.skip(request, response);
       if (skip) {
+        debug("skipping request");
         next();
         return;
       }
       const augmentedRequest = request;
       const key = await config.keyGenerator(request, response);
+      debug("computed key %o", key);
+      debug("incrementing count");
       let totalHits = 0;
       let resetTime;
       try {
@@ -37713,6 +38461,15 @@ var rateLimit = (passedOptions) => {
         resetTime,
         key
       };
+      if (debug.enabled) {
+        for (const [key2, val] of Object.entries(info))
+          debug(
+            "set request.%s.%s to be %o",
+            config.requestPropertyName,
+            key2,
+            val
+          );
+      }
       Object.defineProperty(info, "current", {
         configurable: false,
         enumerable: false,
@@ -37720,15 +38477,18 @@ var rateLimit = (passedOptions) => {
       });
       augmentedRequest[config.requestPropertyName] = info;
       if (config.legacyHeaders && !response.headersSent) {
+        debug("set legacy headers");
         setLegacyHeaders(response, info);
       }
       if (config.standardHeaders && !response.headersSent) {
         switch (config.standardHeaders) {
           case "draft-6": {
+            debug("set ietf draft 6 headers");
             setDraft6Headers(response, info, config.windowMs);
             break;
           }
           case "draft-7": {
+            debug("set ietf draft 7 headers");
             config.validations.headersResetTime(info.resetTime);
             setDraft7Headers(response, info, config.windowMs);
             break;
@@ -37736,6 +38496,8 @@ var rateLimit = (passedOptions) => {
           case "draft-8": {
             const retrieveName = typeof config.identifier === "function" ? config.identifier(request, response) : config.identifier;
             const name = await retrieveName;
+            debug("set ietf draft 8 headers");
+            debug("set name to %o", name);
             config.validations.headersResetTime(info.resetTime);
             setDraft8Headers(response, info, config.windowMs, name, key);
             break;
@@ -37750,6 +38512,10 @@ var rateLimit = (passedOptions) => {
         let decremented = false;
         const decrementKey = async () => {
           if (!decremented) {
+            if (resetTime && Date.now() >= resetTime.getTime()) {
+              return;
+            }
+            debug("decrementing count");
             await config.store.decrement(key);
             decremented = true;
           }
@@ -37757,8 +38523,12 @@ var rateLimit = (passedOptions) => {
         if (config.skipFailedRequests) {
           if (finishPromise) {
             void finishPromise.then(async () => {
-              if (!await config.requestWasSuccessful(request, response))
-                await decrementKey();
+              const success = await config.requestWasSuccessful(
+                request,
+                response
+              );
+              debug("computed requestWasSuccessful as %o", success);
+              if (!success) await decrementKey();
             });
           }
           if (closePromise) {
@@ -37775,16 +38545,23 @@ var rateLimit = (passedOptions) => {
         if (config.skipSuccessfulRequests) {
           if (finishPromise) {
             void finishPromise.then(async () => {
-              if (await config.requestWasSuccessful(request, response))
-                await decrementKey();
+              const success = await config.requestWasSuccessful(
+                request,
+                response
+              );
+              debug("computed requestWasSuccessful as %o", success);
+              if (success) await decrementKey();
             });
           }
         }
       }
-      config.validations.disable();
       if (totalHits > limit) {
+        debug("limit exceeded");
         if (config.legacyHeaders || config.standardHeaders) {
-          setRetryAfterHeader(response, info, config.windowMs);
+          debug("set retry-after header");
+          const retrieveRetryAfter = typeof config.retryAfter === "function" ? config.retryAfter(request, response) : config.retryAfter;
+          const retryAfter = await retrieveRetryAfter;
+          setRetryAfterHeader(response, info, config.windowMs, retryAfter);
         }
         config.handler(request, response, next, options);
         return;
@@ -37800,6 +38577,10 @@ var rateLimit = (passedOptions) => {
   return middleware;
 };
 var rate_limit_default = rateLimit;
+var SECOND = 1e3;
+var MINUTE = 60 * SECOND;
+var HOUR = 60 * MINUTE;
+var DAY = 24 * HOUR;
 
 // src/app.ts
 import pinoHttp from "pino-http";
@@ -43992,7 +44773,7 @@ function osUsername() {
   }
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/entity.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/entity.js
 var entityKind = /* @__PURE__ */ Symbol.for("drizzle:entityKind");
 function is(value, type) {
   if (!value || typeof value !== "object") {
@@ -44018,7 +44799,7 @@ function is(value, type) {
   return false;
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/logger.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/logger.js
 var ConsoleLogWriter = class {
   static [entityKind] = "ConsoleLogWriter";
   write(message2) {
@@ -44049,7 +44830,7 @@ var NoopLogger = class {
   }
 };
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/query-promise.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/query-promise.js
 var QueryPromise = class {
   static [entityKind] = "QueryPromise";
   [Symbol.toStringTag] = "QueryPromise";
@@ -44073,7 +44854,7 @@ var QueryPromise = class {
   }
 };
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/column.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/column.js
 var Column = class {
   constructor(table, config) {
     this.table = table;
@@ -44124,7 +44905,7 @@ var Column = class {
   }
 };
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/column-builder.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/column-builder.js
 var ColumnBuilder = class {
   static [entityKind] = "ColumnBuilder";
   config;
@@ -44227,10 +45008,10 @@ var ColumnBuilder = class {
   }
 };
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/table.utils.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/table.utils.js
 var TableName = /* @__PURE__ */ Symbol.for("drizzle:Name");
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/foreign-keys.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/foreign-keys.js
 var ForeignKeyBuilder = class {
   static [entityKind] = "PgForeignKeyBuilder";
   /** @internal */
@@ -44287,12 +45068,12 @@ var ForeignKey = class {
   }
 };
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/tracing-utils.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/tracing-utils.js
 function iife(fn, ...args) {
   return fn(...args);
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/unique-constraint.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/unique-constraint.js
 function uniqueKeyName(table, columns) {
   return `${table[TableName]}_${columns.join("_")}_unique`;
 }
@@ -44342,7 +45123,7 @@ var UniqueConstraint = class {
   }
 };
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/utils/array.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/utils/array.js
 function parsePgArrayValue(arrayString, startFrom, inQuotes) {
   for (let i = startFrom; i < arrayString.length; i++) {
     const char2 = arrayString[i];
@@ -44418,7 +45199,7 @@ function makePgArray(array) {
   }).join(",")}}`;
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/common.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/common.js
 var PgColumnBuilder = class extends ColumnBuilder {
   foreignKeyConfigs = [];
   static [entityKind] = "PgColumnBuilder";
@@ -44602,7 +45383,7 @@ var PgArray = class _PgArray extends PgColumn {
   }
 };
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/enum.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/enum.js
 var PgEnumObjectColumnBuilder = class extends PgColumnBuilder {
   static [entityKind] = "PgEnumObjectColumnBuilder";
   constructor(name, enumInstance) {
@@ -44660,7 +45441,7 @@ var PgEnumColumn = class extends PgColumn {
   }
 };
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/subquery.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/subquery.js
 var Subquery = class {
   static [entityKind] = "Subquery";
   constructor(sql3, fields, alias, isWith = false, usedTables = []) {
@@ -44681,10 +45462,10 @@ var WithSubquery = class extends Subquery {
   static [entityKind] = "WithSubquery";
 };
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/version.js
-var version = "0.45.2";
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/version.js
+var version = "0.45.4";
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/tracing.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/tracing.js
 var otel;
 var rawTracer;
 var tracer = {
@@ -44719,10 +45500,10 @@ var tracer = {
   }
 };
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/view-common.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/view-common.js
 var ViewBaseConfig = /* @__PURE__ */ Symbol.for("drizzle:ViewBaseConfig");
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/table.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/table.js
 var Schema = /* @__PURE__ */ Symbol.for("drizzle:Schema");
 var Columns = /* @__PURE__ */ Symbol.for("drizzle:Columns");
 var ExtraConfigColumns = /* @__PURE__ */ Symbol.for("drizzle:ExtraConfigColumns");
@@ -44784,7 +45565,7 @@ function getTableUniqueName(table) {
   return `${table[Schema] ?? "public"}.${table[TableName]}`;
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/sql/sql.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/sql/sql.js
 var FakePrimitiveParam = class {
   static [entityKind] = "FakePrimitiveParam";
 };
@@ -45178,7 +45959,7 @@ Subquery.prototype.getSQL = function() {
   return new SQL([this]);
 };
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/alias.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/alias.js
 var ColumnAliasProxyHandler = class {
   constructor(table) {
     this.table = table;
@@ -45274,7 +46055,7 @@ function mapColumnsInSQLToAlias(query, alias) {
   }));
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/selection-proxy.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/selection-proxy.js
 var SelectionProxyHandler = class _SelectionProxyHandler {
   static [entityKind] = "SelectionProxyHandler";
   config;
@@ -45342,7 +46123,7 @@ var SelectionProxyHandler = class _SelectionProxyHandler {
   }
 };
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/utils.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/utils.js
 function mapResultRow(columns, row, joinsNotNullableMap) {
   const nullifyMap = {};
   const result = columns.reduce(
@@ -45493,7 +46274,7 @@ function isConfig(data) {
 }
 var textDecoder = typeof TextDecoder === "undefined" ? null : new TextDecoder();
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/int.common.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/int.common.js
 var PgIntColumnBaseBuilder = class extends PgColumnBuilder {
   static [entityKind] = "PgIntColumnBaseBuilder";
   generatedAlwaysAsIdentity(sequence) {
@@ -45532,7 +46313,7 @@ var PgIntColumnBaseBuilder = class extends PgColumnBuilder {
   }
 };
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/bigint.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/bigint.js
 var PgBigInt53Builder = class extends PgIntColumnBaseBuilder {
   static [entityKind] = "PgBigInt53Builder";
   constructor(name) {
@@ -45586,7 +46367,7 @@ function bigint(a, b2) {
   return new PgBigInt64Builder(name);
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/bigserial.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/bigserial.js
 var PgBigSerial53Builder = class extends PgColumnBuilder {
   static [entityKind] = "PgBigSerial53Builder";
   constructor(name) {
@@ -45646,7 +46427,7 @@ function bigserial(a, b2) {
   return new PgBigSerial64Builder(name);
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/boolean.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/boolean.js
 var PgBooleanBuilder = class extends PgColumnBuilder {
   static [entityKind] = "PgBooleanBuilder";
   constructor(name) {
@@ -45667,7 +46448,7 @@ function boolean(name) {
   return new PgBooleanBuilder(name ?? "");
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/char.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/char.js
 var PgCharBuilder = class extends PgColumnBuilder {
   static [entityKind] = "PgCharBuilder";
   constructor(name, config) {
@@ -45696,7 +46477,7 @@ function char(a, b2 = {}) {
   return new PgCharBuilder(name, config);
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/cidr.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/cidr.js
 var PgCidrBuilder = class extends PgColumnBuilder {
   static [entityKind] = "PgCidrBuilder";
   constructor(name) {
@@ -45717,7 +46498,7 @@ function cidr(name) {
   return new PgCidrBuilder(name ?? "");
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/custom.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/custom.js
 var PgCustomColumnBuilder = class extends PgColumnBuilder {
   static [entityKind] = "PgCustomColumnBuilder";
   constructor(name, fieldConfig, customTypeParams) {
@@ -45761,7 +46542,7 @@ function customType(customTypeParams) {
   };
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/date.common.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/date.common.js
 var PgDateColumnBaseBuilder = class extends PgColumnBuilder {
   static [entityKind] = "PgDateColumnBaseBuilder";
   defaultNow() {
@@ -45769,7 +46550,7 @@ var PgDateColumnBaseBuilder = class extends PgColumnBuilder {
   }
 };
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/date.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/date.js
 var PgDateBuilder = class extends PgDateColumnBaseBuilder {
   static [entityKind] = "PgDateBuilder";
   constructor(name) {
@@ -45824,7 +46605,7 @@ function date(a, b2) {
   return new PgDateStringBuilder(name);
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/double-precision.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/double-precision.js
 var PgDoublePrecisionBuilder = class extends PgColumnBuilder {
   static [entityKind] = "PgDoublePrecisionBuilder";
   constructor(name) {
@@ -45854,7 +46635,7 @@ function doublePrecision(name) {
   return new PgDoublePrecisionBuilder(name ?? "");
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/inet.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/inet.js
 var PgInetBuilder = class extends PgColumnBuilder {
   static [entityKind] = "PgInetBuilder";
   constructor(name) {
@@ -45875,7 +46656,7 @@ function inet(name) {
   return new PgInetBuilder(name ?? "");
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/integer.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/integer.js
 var PgIntegerBuilder = class extends PgIntColumnBaseBuilder {
   static [entityKind] = "PgIntegerBuilder";
   constructor(name) {
@@ -45902,7 +46683,7 @@ function integer(name) {
   return new PgIntegerBuilder(name ?? "");
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/interval.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/interval.js
 var PgIntervalBuilder = class extends PgColumnBuilder {
   static [entityKind] = "PgIntervalBuilder";
   constructor(name, intervalConfig) {
@@ -45929,7 +46710,7 @@ function interval(a, b2 = {}) {
   return new PgIntervalBuilder(name, config);
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/json.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/json.js
 var PgJsonBuilder = class extends PgColumnBuilder {
   static [entityKind] = "PgJsonBuilder";
   constructor(name) {
@@ -45966,7 +46747,7 @@ function json(name) {
   return new PgJsonBuilder(name ?? "");
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/jsonb.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/jsonb.js
 var PgJsonbBuilder = class extends PgColumnBuilder {
   static [entityKind] = "PgJsonbBuilder";
   constructor(name) {
@@ -46003,7 +46784,7 @@ function jsonb(name) {
   return new PgJsonbBuilder(name ?? "");
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/line.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/line.js
 var PgLineBuilder = class extends PgColumnBuilder {
   static [entityKind] = "PgLineBuilder";
   constructor(name) {
@@ -46064,7 +46845,7 @@ function line(a, b2) {
   return new PgLineABCBuilder(name);
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/macaddr.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/macaddr.js
 var PgMacaddrBuilder = class extends PgColumnBuilder {
   static [entityKind] = "PgMacaddrBuilder";
   constructor(name) {
@@ -46085,7 +46866,7 @@ function macaddr(name) {
   return new PgMacaddrBuilder(name ?? "");
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/macaddr8.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/macaddr8.js
 var PgMacaddr8Builder = class extends PgColumnBuilder {
   static [entityKind] = "PgMacaddr8Builder";
   constructor(name) {
@@ -46106,7 +46887,7 @@ function macaddr8(name) {
   return new PgMacaddr8Builder(name ?? "");
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/numeric.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/numeric.js
 var PgNumericBuilder = class extends PgColumnBuilder {
   static [entityKind] = "PgNumericBuilder";
   constructor(name, precision, scale) {
@@ -46223,7 +47004,7 @@ function numeric(a, b2) {
   return mode === "number" ? new PgNumericNumberBuilder(name, config?.precision, config?.scale) : mode === "bigint" ? new PgNumericBigIntBuilder(name, config?.precision, config?.scale) : new PgNumericBuilder(name, config?.precision, config?.scale);
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/point.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/point.js
 var PgPointTupleBuilder = class extends PgColumnBuilder {
   static [entityKind] = "PgPointTupleBuilder";
   constructor(name) {
@@ -46290,7 +47071,7 @@ function point(a, b2) {
   return new PgPointObjectBuilder(name);
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/postgis_extension/utils.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/postgis_extension/utils.js
 function hexToBytes(hex) {
   const bytes = [];
   for (let c = 0; c < hex.length; c += 2) {
@@ -46329,7 +47110,7 @@ function parseEWKB(hex) {
   throw new Error("Unsupported geometry type");
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/postgis_extension/geometry.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/postgis_extension/geometry.js
 var PgGeometryBuilder = class extends PgColumnBuilder {
   static [entityKind] = "PgGeometryBuilder";
   constructor(name) {
@@ -46389,7 +47170,7 @@ function geometry(a, b2) {
   return new PgGeometryObjectBuilder(name);
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/real.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/real.js
 var PgRealBuilder = class extends PgColumnBuilder {
   static [entityKind] = "PgRealBuilder";
   constructor(name, length) {
@@ -46420,7 +47201,7 @@ function real(name) {
   return new PgRealBuilder(name ?? "");
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/serial.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/serial.js
 var PgSerialBuilder = class extends PgColumnBuilder {
   static [entityKind] = "PgSerialBuilder";
   constructor(name) {
@@ -46443,7 +47224,7 @@ function serial(name) {
   return new PgSerialBuilder(name ?? "");
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/smallint.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/smallint.js
 var PgSmallIntBuilder = class extends PgIntColumnBaseBuilder {
   static [entityKind] = "PgSmallIntBuilder";
   constructor(name) {
@@ -46470,7 +47251,7 @@ function smallint(name) {
   return new PgSmallIntBuilder(name ?? "");
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/smallserial.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/smallserial.js
 var PgSmallSerialBuilder = class extends PgColumnBuilder {
   static [entityKind] = "PgSmallSerialBuilder";
   constructor(name) {
@@ -46496,7 +47277,7 @@ function smallserial(name) {
   return new PgSmallSerialBuilder(name ?? "");
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/text.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/text.js
 var PgTextBuilder = class extends PgColumnBuilder {
   static [entityKind] = "PgTextBuilder";
   constructor(name, config) {
@@ -46520,7 +47301,7 @@ function text(a, b2 = {}) {
   return new PgTextBuilder(name, config);
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/time.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/time.js
 var PgTimeBuilder = class extends PgDateColumnBaseBuilder {
   constructor(name, withTimezone, precision) {
     super(name, "string", "PgTime");
@@ -46554,7 +47335,7 @@ function time(a, b2 = {}) {
   return new PgTimeBuilder(name, config.withTimezone ?? false, config.precision);
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/timestamp.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/timestamp.js
 var PgTimestampBuilder = class extends PgDateColumnBaseBuilder {
   static [entityKind] = "PgTimestampBuilder";
   constructor(name, withTimezone, precision) {
@@ -46635,7 +47416,7 @@ function timestamp(a, b2 = {}) {
   return new PgTimestampBuilder(name, config?.withTimezone ?? false, config?.precision);
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/uuid.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/uuid.js
 var PgUUIDBuilder = class extends PgColumnBuilder {
   static [entityKind] = "PgUUIDBuilder";
   constructor(name) {
@@ -46662,7 +47443,7 @@ function uuid(name) {
   return new PgUUIDBuilder(name ?? "");
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/varchar.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/varchar.js
 var PgVarcharBuilder = class extends PgColumnBuilder {
   static [entityKind] = "PgVarcharBuilder";
   constructor(name, config) {
@@ -46691,7 +47472,7 @@ function varchar(a, b2 = {}) {
   return new PgVarcharBuilder(name, config);
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/vector_extension/bit.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/vector_extension/bit.js
 var PgBinaryVectorBuilder = class extends PgColumnBuilder {
   static [entityKind] = "PgBinaryVectorBuilder";
   constructor(name, config) {
@@ -46718,7 +47499,7 @@ function bit(a, b2) {
   return new PgBinaryVectorBuilder(name, config);
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/vector_extension/halfvec.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/vector_extension/halfvec.js
 var PgHalfVectorBuilder = class extends PgColumnBuilder {
   static [entityKind] = "PgHalfVectorBuilder";
   constructor(name, config) {
@@ -46751,7 +47532,7 @@ function halfvec(a, b2) {
   return new PgHalfVectorBuilder(name, config);
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/vector_extension/sparsevec.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/vector_extension/sparsevec.js
 var PgSparseVectorBuilder = class extends PgColumnBuilder {
   static [entityKind] = "PgSparseVectorBuilder";
   constructor(name, config) {
@@ -46778,7 +47559,7 @@ function sparsevec(a, b2) {
   return new PgSparseVectorBuilder(name, config);
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/vector_extension/vector.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/vector_extension/vector.js
 var PgVectorBuilder = class extends PgColumnBuilder {
   static [entityKind] = "PgVectorBuilder";
   constructor(name, config) {
@@ -46811,7 +47592,7 @@ function vector(a, b2) {
   return new PgVectorBuilder(name, config);
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/all.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/columns/all.js
 function getPgColumnBuilders() {
   return {
     bigint,
@@ -46849,7 +47630,7 @@ function getPgColumnBuilders() {
   };
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/table.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/table.js
 var InlineForeignKeys = /* @__PURE__ */ Symbol.for("drizzle:PgInlineForeignKeys");
 var EnableRLS = /* @__PURE__ */ Symbol.for("drizzle:EnableRLS");
 var PgTable = class extends Table {
@@ -46905,7 +47686,7 @@ var pgTable = (name, columns, extraConfig) => {
   return pgTableWithSchema(name, columns, extraConfig, void 0);
 };
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/primary-keys.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/primary-keys.js
 var PrimaryKeyBuilder = class {
   static [entityKind] = "PgPrimaryKeyBuilder";
   /** @internal */
@@ -46935,7 +47716,7 @@ var PrimaryKey = class {
   }
 };
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/casing.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/casing.js
 function toSnakeCase(input) {
   const words = input.replace(/['\u2019]/g, "").match(/[\da-z]+|[A-Z]+(?![a-z])|[A-Z][\da-z]+/g) ?? [];
   return words.map((word) => word.toLowerCase()).join("_");
@@ -46987,7 +47768,7 @@ var CasingCache = class {
   }
 };
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/errors.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/errors.js
 var DrizzleError = class extends Error {
   static [entityKind] = "DrizzleError";
   constructor({ message: message2, cause }) {
@@ -47014,7 +47795,7 @@ var TransactionRollbackError = class extends DrizzleError {
   }
 };
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/sql/expressions/conditions.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/sql/expressions/conditions.js
 function bindIfParam(value, column) {
   if (isDriverValueEncoder(column) && !isSQLWrapper(value) && !is(value, Param) && !is(value, Placeholder) && !is(value, Column) && !is(value, Table) && !is(value, View)) {
     return new Param(value, column);
@@ -47129,7 +47910,7 @@ function notIlike(column, value) {
   return sql`${column} not ilike ${value}`;
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/sql/expressions/select.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/sql/expressions/select.js
 function asc(column) {
   return sql`${column} asc`;
 }
@@ -47137,7 +47918,7 @@ function desc2(column) {
   return sql`${column} desc`;
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/relations.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/relations.js
 var Relation = class {
   constructor(sourceTable, referencedTable, relationName) {
     this.sourceTable = sourceTable;
@@ -47398,17 +48179,17 @@ function mapRelationalRow(tablesConfig, tableConfig, row, buildQueryResultSelect
   return result;
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/sql/functions/aggregate.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/sql/functions/aggregate.js
 function count(expression) {
   return sql`count(${expression || sql.raw("*")})`.mapWith(Number);
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/view-base.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/view-base.js
 var PgViewBase = class extends View {
   static [entityKind] = "PgViewBase";
 };
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/dialect.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/dialect.js
 var PgDialect = class {
   static [entityKind] = "PgDialect";
   /** @internal */
@@ -48513,7 +49294,7 @@ var PgDialect = class {
   }
 };
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/query-builders/query-builder.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/query-builders/query-builder.js
 var TypedQueryBuilder = class {
   static [entityKind] = "TypedQueryBuilder";
   /** @internal */
@@ -48522,7 +49303,7 @@ var TypedQueryBuilder = class {
   }
 };
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/query-builders/select.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/query-builders/select.js
 var PgSelectBuilder = class {
   static [entityKind] = "PgSelectBuilder";
   fields;
@@ -49338,7 +50119,7 @@ var intersectAll = createSetOperator("intersect", true);
 var except = createSetOperator("except", false);
 var exceptAll = createSetOperator("except", true);
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/query-builders/query-builder.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/query-builders/query-builder.js
 var QueryBuilder = class {
   static [entityKind] = "PgQueryBuilder";
   dialect;
@@ -49425,7 +50206,7 @@ var QueryBuilder = class {
   }
 };
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/utils.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/utils.js
 function extractUsedTable(table) {
   if (is(table, PgTable)) {
     return [table[Schema] ? `${table[Schema]}.${table[Table.Symbol.BaseName]}` : table[Table.Symbol.BaseName]];
@@ -49439,7 +50220,7 @@ function extractUsedTable(table) {
   return [];
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/query-builders/delete.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/query-builders/delete.js
 var PgDeleteBase = class extends QueryPromise {
   constructor(table, session, dialect, withList) {
     super();
@@ -49535,7 +50316,7 @@ var PgDeleteBase = class extends QueryPromise {
   }
 };
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/query-builders/insert.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/query-builders/insert.js
 var PgInsertBuilder = class {
   constructor(table, session, dialect, withList, overridingSystemValue_) {
     this.table = table;
@@ -49728,7 +50509,7 @@ var PgInsertBase = class extends QueryPromise {
   }
 };
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/query-builders/refresh-materialized-view.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/query-builders/refresh-materialized-view.js
 var PgRefreshMaterializedView = class extends QueryPromise {
   constructor(view, session, dialect) {
     super();
@@ -49782,7 +50563,7 @@ var PgRefreshMaterializedView = class extends QueryPromise {
   };
 };
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/query-builders/update.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/query-builders/update.js
 var PgUpdateBuilder = class {
   constructor(table, session, dialect, withList) {
     this.table = table;
@@ -49994,7 +50775,7 @@ var PgUpdateBase = class extends QueryPromise {
   }
 };
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/query-builders/count.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/query-builders/count.js
 var PgCountBuilder = class _PgCountBuilder extends SQL {
   constructor(params) {
     super(_PgCountBuilder.buildEmbeddedCount(params.source, params.filters).queryChunks);
@@ -50045,7 +50826,7 @@ var PgCountBuilder = class _PgCountBuilder extends SQL {
   }
 };
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/query-builders/query.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/query-builders/query.js
 var RelationalQueryBuilder = class {
   constructor(fullSchema, schema, tableNamesMap, table, tableConfig, dialect, session) {
     this.fullSchema = fullSchema;
@@ -50158,7 +50939,7 @@ var PgRelationalQuery = class extends QueryPromise {
   }
 };
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/query-builders/raw.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/query-builders/raw.js
 var PgRaw = class extends QueryPromise {
   constructor(execute, sql3, query, mapBatchResult) {
     super();
@@ -50187,7 +50968,7 @@ var PgRaw = class extends QueryPromise {
   }
 };
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/db.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/db.js
 var PgDatabase = class {
   constructor(dialect, session, schema) {
     this.dialect = dialect;
@@ -50466,7 +51247,7 @@ var PgDatabase = class {
   }
 };
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/cache/core/cache.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/cache/core/cache.js
 var Cache = class {
   static [entityKind] = "Cache";
 };
@@ -50493,7 +51274,7 @@ async function hashQuery(sql3, params) {
   return hashHex;
 }
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/pg-core/session.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/pg-core/session.js
 var PgPreparedQuery = class {
   constructor(query, cache, queryMetadata, cacheConfig) {
     this.query = query;
@@ -50653,9 +51434,9 @@ var PgTransaction = class extends PgDatabase {
   }
 };
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/postgres-js/session.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/postgres-js/session.js
 var PostgresJsPreparedQuery = class extends PgPreparedQuery {
-  constructor(client2, queryString, params, logger2, cache, queryMetadata, cacheConfig, fields, _isResponseInArrayMode, customResultMapper) {
+  constructor(client2, queryString, params, logger2, cache, queryMetadata, cacheConfig, fields, _isResponseInArrayMode, prepare, customResultMapper) {
     super({ sql: queryString, params }, cache, queryMetadata, cacheConfig);
     this.client = client2;
     this.queryString = queryString;
@@ -50663,6 +51444,7 @@ var PostgresJsPreparedQuery = class extends PgPreparedQuery {
     this.logger = logger2;
     this.fields = fields;
     this._isResponseInArrayMode = _isResponseInArrayMode;
+    this.prepare = prepare;
     this.customResultMapper = customResultMapper;
   }
   static [entityKind] = "PostgresJsPreparedQuery";
@@ -50678,7 +51460,9 @@ var PostgresJsPreparedQuery = class extends PgPreparedQuery {
       if (!fields && !customResultMapper) {
         return tracer.startActiveSpan("drizzle.driver.execute", () => {
           return this.queryWithCache(query, params, async () => {
-            return await client2.unsafe(query, params);
+            return await client2.unsafe(query, params, {
+              prepare: this.prepare
+            });
           });
         });
       }
@@ -50688,7 +51472,9 @@ var PostgresJsPreparedQuery = class extends PgPreparedQuery {
           "drizzle.query.params": JSON.stringify(params)
         });
         return this.queryWithCache(query, params, async () => {
-          return await client2.unsafe(query, params).values();
+          return await client2.unsafe(query, params, {
+            prepare: this.prepare
+          }).values();
         });
       });
       return tracer.startActiveSpan("drizzle.mapResponse", () => {
@@ -50710,7 +51496,9 @@ var PostgresJsPreparedQuery = class extends PgPreparedQuery {
           "drizzle.query.params": JSON.stringify(params)
         });
         return this.queryWithCache(this.queryString, params, async () => {
-          return this.client.unsafe(this.queryString, params);
+          return this.client.unsafe(this.queryString, params, {
+            prepare: this.prepare
+          });
         });
       });
     });
@@ -50743,6 +51531,7 @@ var PostgresJsSession = class _PostgresJsSession extends PgSession {
       cacheConfig,
       fields,
       isResponseInArrayMode,
+      name !== void 0,
       customResultMapper
     );
   }
@@ -50789,7 +51578,7 @@ var PostgresJsTransaction = class _PostgresJsTransaction extends PgTransaction {
   }
 };
 
-// ../node_modules/.pnpm/drizzle-orm@0.45.2_postgres@3.4.9/node_modules/drizzle-orm/postgres-js/driver.js
+// ../node_modules/.pnpm/drizzle-orm@0.45.4_postgres@3.4.9/node_modules/drizzle-orm/postgres-js/driver.js
 var PostgresJsDatabase = class extends PgDatabase {
   static [entityKind] = "PostgresJsDatabase";
 };
@@ -50862,12 +51651,12 @@ function drizzle(...params) {
 // ../packages/db/src/index.ts
 var connectionString = process.env.DATABASE_URL;
 var client = src_default(connectionString, {
-  // Render's Starter instance and managed Postgres do not need one
-  // connection per request. A bounded pool avoids connection and memory
-  // spikes when polling or meeting traffic increases.
-  max: 10,
-  idle_timeout: 10,
-  max_lifetime: 600,
+  max: 40,
+  // was 5 — supports 500 concurrent users
+  idle_timeout: 30,
+  // keep idle connections a bit longer to avoid reconnect cost
+  max_lifetime: 1800,
+  // 30 min — prevent stale connections
   connect_timeout: 10
 });
 var db = drizzle(client);
@@ -50881,6 +51670,25 @@ var usersTable = pgTable("users", {
   memberId: integer("member_id"),
   isActive: boolean("is_active").notNull().default(true)
 });
+var passwordResetTokensTable = pgTable("password_reset_tokens", {
+  id: serial("id").primaryKey(),
+  tokenHash: text("token_hash").notNull().unique(),
+  purpose: text("purpose").notNull(),
+  targetType: text("target_type").notNull(),
+  targetId: integer("target_id").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  usedAt: timestamp("used_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
+});
+var emailVerificationTokensTable = pgTable("email_verification_tokens", {
+  id: serial("id").primaryKey(),
+  tokenHash: text("token_hash").notNull().unique(),
+  memberId: integer("member_id").notNull(),
+  email: text("email").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  usedAt: timestamp("used_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow()
+});
 var membersTable = pgTable("members", {
   id: serial("id").primaryKey(),
   membershipId: text("membership_id").notNull().unique(),
@@ -50890,6 +51698,7 @@ var membersTable = pgTable("members", {
   phone1: text("phone1"),
   phone2: text("phone2"),
   email: text("email"),
+  emailVerified: boolean("email_verified").notNull().default(false),
   occupation: text("occupation").notNull().default(""),
   residentialAddress: text("residential_address").notNull().default(""),
   emergencyContact: text("emergency_contact").notNull().default(""),
@@ -51244,14 +52053,12 @@ var pushSubscriptionsTable = pgTable("push_subscriptions", {
 
 // src/routes/auth.ts
 var import_jsonwebtoken2 = __toESM(require_jsonwebtoken(), 1);
-import crypto3 from "crypto";
+import crypto4 from "crypto";
 
 // src/middlewares/auth.ts
 var import_jsonwebtoken = __toESM(require_jsonwebtoken(), 1);
-var JWT_SECRET = process.env.SESSION_SECRET ?? process.env.JWT_SECRET;
-if (!JWT_SECRET) {
-  throw new Error("SESSION_SECRET environment variable must be set");
-}
+var JWT_SECRET = process.env.SESSION_SECRET;
+if (!JWT_SECRET) throw new Error("SESSION_SECRET environment variable must be set");
 async function authenticateToken(req, res, next) {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
@@ -51304,14 +52111,212 @@ function optionalAuth(req, res, next) {
   authenticateToken(req, res, next);
 }
 
+// src/lib/email.ts
+function getEmailConfig() {
+  const apiKey = process.env.RESEND_API_KEY?.trim();
+  const from = process.env.RESEND_FROM_EMAIL?.trim();
+  const publicAppUrl = process.env.PUBLIC_APP_URL?.trim() || "https://app.christembassykumasi1.org";
+  if (!apiKey || !from) return null;
+  try {
+    const parsedUrl = new URL(publicAppUrl);
+    if (parsedUrl.protocol !== "https:" && parsedUrl.hostname !== "localhost") return null;
+    return { apiKey, from, publicAppUrl: parsedUrl.origin };
+  } catch {
+    return null;
+  }
+}
+async function sendEmail(to, subject, text2, html, config) {
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${config.apiKey}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ from: config.from, to, subject, text: text2, html })
+  });
+  if (!response.ok) {
+    throw new Error(`Resend returned HTTP ${response.status}`);
+  }
+}
+
+// src/lib/email-verification.ts
+import crypto3 from "crypto";
+async function sendMemberEmailVerification(memberId, email) {
+  const config = getEmailConfig();
+  if (!config) return "unavailable";
+  const normalizedEmail = email.trim().toLowerCase();
+  const now = /* @__PURE__ */ new Date();
+  const recentRequests = await db.select({ id: emailVerificationTokensTable.id }).from(emailVerificationTokensTable).where(and(
+    eq(emailVerificationTokensTable.memberId, memberId),
+    gte(emailVerificationTokensTable.createdAt, new Date(now.getTime() - 15 * 60 * 1e3))
+  )).limit(3);
+  if (recentRequests.length >= 3) return "rate_limited";
+  const rawToken = crypto3.randomBytes(32).toString("base64url");
+  const tokenHash = crypto3.createHash("sha256").update(rawToken).digest("hex");
+  await db.update(emailVerificationTokensTable).set({ usedAt: now }).where(and(
+    eq(emailVerificationTokensTable.memberId, memberId),
+    isNull(emailVerificationTokensTable.usedAt)
+  ));
+  await db.insert(emailVerificationTokensTable).values({
+    tokenHash,
+    memberId,
+    email: normalizedEmail,
+    expiresAt: new Date(now.getTime() + 24 * 60 * 60 * 1e3)
+  });
+  const verifyUrl = new URL("/verify-email", config.publicAppUrl);
+  verifyUrl.searchParams.set("token", rawToken);
+  const subject = "Verify your church portal email address";
+  const text2 = [
+    "Please verify this email address for your church portal account.",
+    "",
+    `Use this link within 24 hours to verify your email: ${verifyUrl.toString()}`,
+    "",
+    "If you did not request this, you can ignore this email.",
+    "Need help? WhatsApp the admin at +233 26 182 7900 or call +233 55 372 2482."
+  ].join("\n");
+  const html = `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#25213a">
+    <h2>Verify your church portal email</h2>
+    <p>Confirm that this email address belongs to you by using the link below.</p>
+    <p><a href="${verifyUrl.toString()}" style="display:inline-block;padding:12px 18px;background:#5b21b6;color:#fff;text-decoration:none;border-radius:6px">Verify email address</a></p>
+    <p>This link expires in 24 hours. If you did not request this, ignore this email.</p>
+    <p>Need help? WhatsApp the admin at <a href="https://wa.me/233261827900">+233 26 182 7900</a> or call <a href="tel:+233553722482">+233 55 372 2482</a>.</p>
+  </div>`;
+  try {
+    await sendEmail(normalizedEmail, subject, text2, html, config);
+    return "sent";
+  } catch (err) {
+    await db.update(emailVerificationTokensTable).set({ usedAt: /* @__PURE__ */ new Date() }).where(eq(emailVerificationTokensTable.tokenHash, tokenHash));
+    console.warn("Email verification message could not be sent:", err instanceof Error ? err.message : "unknown error");
+    return "unavailable";
+  }
+}
+
 // src/routes/auth.ts
 var router2 = (0, import_express2.Router)();
-var JWT_SECRET2 = process.env.SESSION_SECRET ?? process.env.JWT_SECRET;
-if (!JWT_SECRET2) {
-  throw new Error("SESSION_SECRET environment variable must be set");
-}
+var JWT_SECRET2 = process.env.SESSION_SECRET;
+if (!JWT_SECRET2) throw new Error("SESSION_SECRET environment variable must be set");
 function hashPassword(password) {
-  return crypto3.createHash("sha256").update(password + "ce_kumasi_salt").digest("hex");
+  return crypto4.createHash("sha256").update(password + "ce_kumasi_salt").digest("hex");
+}
+function normalizeEmail(value) {
+  if (typeof value !== "string") return null;
+  const email = value.trim().toLowerCase();
+  if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null;
+  return email;
+}
+async function resolveResetTarget(email, mode, membershipId) {
+  if (mode === "password") {
+    const matchingMembers2 = await db.select({
+      id: membersTable.id,
+      email: membersTable.email,
+      emailVerified: membersTable.emailVerified
+    }).from(membersTable).where(and(
+      eq(membersTable.isArchived, false),
+      sql`lower(${membersTable.email}) = ${email}`
+    )).limit(5);
+    const accounts = [];
+    for (const member of matchingMembers2) {
+      if (!member.email) continue;
+      const admins = await db.select({ id: usersTable.id }).from(usersTable).where(and(
+        eq(usersTable.memberId, member.id),
+        eq(usersTable.isActive, true),
+        lte(usersTable.roleLevel, 4)
+      )).limit(2);
+      for (const admin of admins) {
+        accounts.push({
+          targetType: "user",
+          targetId: admin.id,
+          email: member.email,
+          emailVerified: member.emailVerified
+        });
+      }
+    }
+    return accounts.length === 1 ? accounts[0] : null;
+  }
+  if (membershipId) {
+    const memberMatches = await db.select({
+      id: membersTable.id,
+      email: membersTable.email,
+      emailVerified: membersTable.emailVerified
+    }).from(membersTable).where(and(
+      eq(membersTable.membershipId, membershipId),
+      eq(membersTable.isArchived, false),
+      sql`lower(${membersTable.email}) = ${email}`
+    )).limit(1);
+    const teenMatches = await db.select({
+      id: teensTable.id,
+      parentId: teensTable.parentId
+    }).from(teensTable).where(and(
+      eq(teensTable.membershipId, membershipId),
+      eq(teensTable.isArchived, false)
+    )).limit(1);
+    const targets = [];
+    if (memberMatches.length && memberMatches[0].email) {
+      targets.push({
+        targetType: "member",
+        targetId: memberMatches[0].id,
+        email: memberMatches[0].email,
+        emailVerified: memberMatches[0].emailVerified
+      });
+    }
+    if (teenMatches.length && teenMatches[0].parentId) {
+      const parent = await db.select({
+        email: membersTable.email,
+        emailVerified: membersTable.emailVerified
+      }).from(membersTable).where(and(
+        eq(membersTable.id, teenMatches[0].parentId),
+        eq(membersTable.isArchived, false),
+        sql`lower(${membersTable.email}) = ${email}`
+      )).limit(1);
+      if (parent.length && parent[0].email) {
+        targets.push({
+          targetType: "teen",
+          targetId: teenMatches[0].id,
+          email: parent[0].email,
+          emailVerified: parent[0].emailVerified
+        });
+      }
+    }
+    return targets.length === 1 ? targets[0] : null;
+  }
+  const matchingMembers = await db.select({
+    id: membersTable.id,
+    email: membersTable.email,
+    emailVerified: membersTable.emailVerified
+  }).from(membersTable).where(and(
+    eq(membersTable.isArchived, false),
+    sql`lower(${membersTable.email}) = ${email}`
+  )).limit(2);
+  return matchingMembers.length === 1 && matchingMembers[0].email ? {
+    targetType: "member",
+    targetId: matchingMembers[0].id,
+    email: matchingMembers[0].email,
+    emailVerified: matchingMembers[0].emailVerified
+  } : null;
+}
+async function sendPasswordResetEmail(to, mode, rawToken, config) {
+  const resetUrl = new URL("/reset-password", config.publicAppUrl);
+  resetUrl.searchParams.set("token", rawToken);
+  resetUrl.searchParams.set("mode", mode);
+  const credentialName = mode === "pin" ? "PIN" : "password";
+  const subject = `Reset your church portal ${credentialName}`;
+  const text2 = [
+    "A request was made to reset access to your church portal account.",
+    "",
+    `Use this one-time link within 30 minutes to set a new ${credentialName}:`,
+    resetUrl.toString(),
+    "",
+    "If you did not request this, you can ignore this email.",
+    "Need help? WhatsApp the admin at +233 26 182 7900 or call +233 55 372 2482."
+  ].join("\n");
+  const html = `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#25213a">
+    <h2>Reset your church portal ${credentialName}</h2>
+    <p>A request was made to reset access to your account.</p>
+    <p><a href="${resetUrl.toString()}" style="display:inline-block;padding:12px 18px;background:#5b21b6;color:#fff;text-decoration:none;border-radius:6px">Set a new ${credentialName}</a></p>
+    <p>This one-time link expires in 30 minutes. If you did not request this, ignore this email.</p>
+    <p>Need help? WhatsApp the admin at <a href="https://wa.me/233261827900">+233 26 182 7900</a> or call <a href="tel:+233553722482">+233 55 372 2482</a>.</p>
+  </div>`;
+  await sendEmail(to, subject, text2, html, config);
 }
 function generateToken(userId) {
   return import_jsonwebtoken2.default.sign({ userId }, JWT_SECRET2, { expiresIn: "7d" });
@@ -51475,6 +52480,172 @@ router2.post("/login", async (req, res) => {
     }
   });
 });
+router2.post("/email-verification/verify", async (req, res) => {
+  const token = typeof req.body?.token === "string" ? req.body.token.trim() : "";
+  if (token.length < 32 || token.length > 128) {
+    return res.status(400).json({ error: "This verification link is invalid or expired. Request a new one." });
+  }
+  const tokenHash = crypto4.createHash("sha256").update(token).digest("hex");
+  const now = /* @__PURE__ */ new Date();
+  try {
+    const verified = await db.transaction(async (tx) => {
+      const claimed = await tx.update(emailVerificationTokensTable).set({ usedAt: now }).where(and(
+        eq(emailVerificationTokensTable.tokenHash, tokenHash),
+        isNull(emailVerificationTokensTable.usedAt),
+        gt(emailVerificationTokensTable.expiresAt, now)
+      )).returning({
+        memberId: emailVerificationTokensTable.memberId,
+        email: emailVerificationTokensTable.email
+      });
+      if (!claimed.length) return false;
+      const result = await tx.update(membersTable).set({ emailVerified: true }).where(and(
+        eq(membersTable.id, claimed[0].memberId),
+        eq(membersTable.isArchived, false),
+        sql`lower(trim(${membersTable.email})) = ${claimed[0].email}`
+      )).returning({ id: membersTable.id });
+      return result.length === 1;
+    });
+    if (!verified) {
+      return res.status(400).json({ error: "This verification link is invalid, expired, or no longer matches your email." });
+    }
+    return res.json({ success: true });
+  } catch (err) {
+    console.error("Email verification failed:", err instanceof Error ? err.message : "unknown error");
+    return res.status(500).json({ error: "We could not verify this email. Please contact the admin." });
+  }
+});
+router2.post("/email-verification/request", authenticateToken, async (req, res) => {
+  const user = req.user;
+  if (!user.memberId) {
+    return res.status(400).json({ error: "Please contact the admin to verify the email linked to your account." });
+  }
+  try {
+    const members = await db.select({
+      id: membersTable.id,
+      email: membersTable.email,
+      emailVerified: membersTable.emailVerified
+    }).from(membersTable).where(and(
+      eq(membersTable.id, user.memberId),
+      eq(membersTable.isArchived, false)
+    )).limit(1);
+    if (!members.length) return res.status(404).json({ error: "Member profile not found." });
+    const member = members[0];
+    if (!member.email) {
+      return res.status(400).json({ error: "Add an email address to your profile, or contact the admin for help." });
+    }
+    if (member.emailVerified) return res.json({ success: true, alreadyVerified: true });
+    const result = await sendMemberEmailVerification(member.id, member.email);
+    if (result === "rate_limited") {
+      return res.status(429).json({ error: "Too many verification emails were requested. Please try again later." });
+    }
+    if (result !== "sent") {
+      return res.status(503).json({ error: "We could not send a verification email. Please contact the admin." });
+    }
+    return res.json({ success: true });
+  } catch (err) {
+    console.error("Email verification request failed:", err instanceof Error ? err.message : "unknown error");
+    return res.status(500).json({ error: "We could not send a verification email. Please contact the admin." });
+  }
+});
+router2.post("/password-reset/request", async (req, res) => {
+  const email = normalizeEmail(req.body?.email);
+  const mode = req.body?.mode;
+  const membershipId = typeof req.body?.membershipId === "string" ? req.body.membershipId.trim() : "";
+  if (!email || mode !== "password" && mode !== "pin" || membershipId.length > 50) {
+    return res.status(400).json({ error: "Enter a valid email address." });
+  }
+  const config = getEmailConfig();
+  if (!config) {
+    return res.status(503).json({ error: "Email reset is not configured yet. Please contact the admin." });
+  }
+  try {
+    const target = await resolveResetTarget(email, mode, membershipId || void 0);
+    if (!target) return res.json({ success: true });
+    if (!target.emailVerified) return res.json({ success: true, supportRequired: true });
+    const now = /* @__PURE__ */ new Date();
+    const recentRequests = await db.select({ id: passwordResetTokensTable.id }).from(passwordResetTokensTable).where(and(
+      eq(passwordResetTokensTable.targetType, target.targetType),
+      eq(passwordResetTokensTable.targetId, target.targetId),
+      eq(passwordResetTokensTable.purpose, mode),
+      gte(passwordResetTokensTable.createdAt, new Date(now.getTime() - 15 * 60 * 1e3))
+    )).limit(3);
+    if (recentRequests.length >= 3) return res.json({ success: true });
+    await db.delete(passwordResetTokensTable).where(lt(passwordResetTokensTable.expiresAt, now));
+    await db.update(passwordResetTokensTable).set({ usedAt: now }).where(and(
+      eq(passwordResetTokensTable.targetType, target.targetType),
+      eq(passwordResetTokensTable.targetId, target.targetId),
+      eq(passwordResetTokensTable.purpose, mode),
+      isNull(passwordResetTokensTable.usedAt)
+    ));
+    const rawToken = crypto4.randomBytes(32).toString("base64url");
+    const tokenHash = crypto4.createHash("sha256").update(rawToken).digest("hex");
+    await db.insert(passwordResetTokensTable).values({
+      tokenHash,
+      purpose: mode,
+      targetType: target.targetType,
+      targetId: target.targetId,
+      expiresAt: new Date(now.getTime() + 30 * 60 * 1e3)
+    });
+    try {
+      await sendPasswordResetEmail(target.email, mode, rawToken, config);
+    } catch (err) {
+      await db.update(passwordResetTokensTable).set({ usedAt: /* @__PURE__ */ new Date() }).where(eq(passwordResetTokensTable.tokenHash, tokenHash));
+      console.warn("Password reset email could not be sent:", err instanceof Error ? err.message : "unknown error");
+    }
+    return res.json({ success: true });
+  } catch (err) {
+    console.error("Password reset request failed:", err instanceof Error ? err.message : "unknown error");
+    return res.status(500).json({ error: "We could not process the request. Please contact the admin." });
+  }
+});
+router2.post("/password-reset/complete", async (req, res) => {
+  const token = typeof req.body?.token === "string" ? req.body.token.trim() : "";
+  const mode = req.body?.mode;
+  const newPassword = typeof req.body?.newPassword === "string" ? req.body.newPassword : "";
+  const newPin = typeof req.body?.newPin === "string" ? req.body.newPin : "";
+  if (token.length < 32 || token.length > 128 || mode !== "password" && mode !== "pin") {
+    return res.status(400).json({ error: "This reset link is invalid or expired. Request a new one." });
+  }
+  if (mode === "password" && (newPassword.length < 8 || newPassword.length > 128)) {
+    return res.status(400).json({ error: "Your new password must be at least 8 characters." });
+  }
+  if (mode === "pin" && !/^\d{4}$/.test(newPin)) {
+    return res.status(400).json({ error: "Your new PIN must contain exactly 4 digits." });
+  }
+  const tokenHash = crypto4.createHash("sha256").update(token).digest("hex");
+  const now = /* @__PURE__ */ new Date();
+  try {
+    const completed = await db.transaction(async (tx) => {
+      const claimed = await tx.update(passwordResetTokensTable).set({ usedAt: now }).where(and(
+        eq(passwordResetTokensTable.tokenHash, tokenHash),
+        eq(passwordResetTokensTable.purpose, mode),
+        isNull(passwordResetTokensTable.usedAt),
+        gt(passwordResetTokensTable.expiresAt, now)
+      )).returning({
+        targetType: passwordResetTokensTable.targetType,
+        targetId: passwordResetTokensTable.targetId
+      });
+      if (!claimed.length) return false;
+      const target = claimed[0];
+      let updated = [];
+      if (mode === "password" && target.targetType === "user") {
+        updated = await tx.update(usersTable).set({ passwordHash: hashPassword(newPassword) }).where(and(eq(usersTable.id, target.targetId), eq(usersTable.isActive, true))).returning({ id: usersTable.id });
+      } else if (mode === "pin" && target.targetType === "member") {
+        updated = await tx.update(membersTable).set({ pin: newPin }).where(and(eq(membersTable.id, target.targetId), eq(membersTable.isArchived, false))).returning({ id: membersTable.id });
+      } else if (mode === "pin" && target.targetType === "teen") {
+        updated = await tx.update(teensTable).set({ pin: newPin }).where(and(eq(teensTable.id, target.targetId), eq(teensTable.isArchived, false))).returning({ id: teensTable.id });
+      }
+      return updated.length === 1;
+    });
+    if (!completed) {
+      return res.status(400).json({ error: "This reset link is invalid, already used, or expired. Request a new one." });
+    }
+    return res.json({ success: true });
+  } catch (err) {
+    console.error("Password reset completion failed:", err instanceof Error ? err.message : "unknown error");
+    return res.status(500).json({ error: "We could not reset your sign-in details. Please contact the admin." });
+  }
+});
 router2.post("/logout", (req, res) => {
   res.json({ success: true });
 });
@@ -51547,10 +52718,10 @@ var auth_default = router2;
 
 // src/routes/public.ts
 var import_express3 = __toESM(require_express2(), 1);
-import crypto4 from "crypto";
+import crypto5 from "crypto";
 var router3 = (0, import_express3.Router)();
 function hashPassword2(password) {
-  return crypto4.createHash("sha256").update(password + "ce_kumasi_salt").digest("hex");
+  return crypto5.createHash("sha256").update(password + "ce_kumasi_salt").digest("hex");
 }
 function generatePin() {
   return String(Math.floor(1e3 + Math.random() * 9e3));
@@ -51765,6 +52936,10 @@ router3.post("/public/register/member", async (req, res) => {
     if (!firstName || !lastName || !gender || !phone1) {
       return res.status(400).json({ error: "First name, last name, gender and phone are required." });
     }
+    const normalizedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
+    if (normalizedEmail && (normalizedEmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail))) {
+      return res.status(400).json({ error: "Enter a valid email address." });
+    }
     const resolvedType = memberType === "visitor" ? "visitor" : "member";
     const selectedSpouseId = rawSpouseId ? parseInt(String(rawSpouseId), 10) : null;
     const existing = await db.select().from(membersTable).where(
@@ -51804,7 +52979,8 @@ router3.post("/public/register/member", async (req, res) => {
       gender,
       phone1,
       phone2: phone2 || null,
-      email: email || null,
+      email: normalizedEmail || null,
+      emailVerified: false,
       occupation: occupation || "",
       residentialAddress: residentialAddress || "",
       emergencyContact: emergencyContact || "",
@@ -51857,7 +53033,21 @@ router3.post("/public/register/member", async (req, res) => {
       roleLevel: 5,
       memberId: newMemberId
     });
-    res.status(201).json({ membershipId, pin, name: `${firstName} ${lastName}` });
+    let emailVerificationSent = false;
+    if (normalizedEmail) {
+      try {
+        emailVerificationSent = await sendMemberEmailVerification(newMemberId, normalizedEmail) === "sent";
+      } catch (err) {
+        console.warn("Registration email verification could not be sent:", err instanceof Error ? err.message : "unknown error");
+      }
+    }
+    res.status(201).json({
+      membershipId,
+      pin,
+      name: `${firstName} ${lastName}`,
+      emailVerificationRequired: Boolean(normalizedEmail),
+      emailVerificationSent
+    });
   } catch (err) {
     res.status(500).json({ error: err?.message ?? "Registration failed" });
   }
@@ -51978,7 +53168,7 @@ var public_default = router3;
 
 // src/routes/members.ts
 var import_express4 = __toESM(require_express2(), 1);
-import crypto5 from "crypto";
+import crypto6 from "crypto";
 var router4 = (0, import_express4.Router)();
 router4.use(authenticateToken);
 function fmt(m) {
@@ -52005,7 +53195,7 @@ function generatePin2() {
   return String(Math.floor(1e3 + Math.random() * 9e3));
 }
 function hashPassword3(password) {
-  return crypto5.createHash("sha256").update(password + "ce_kumasi_salt").digest("hex");
+  return crypto6.createHash("sha256").update(password + "ce_kumasi_salt").digest("hex");
 }
 async function getGivingRowsByMembershipId(membershipId, ministryYearId) {
   const [memberRows, childRows, teenRows] = await Promise.all([
@@ -52331,9 +53521,22 @@ router4.get("/", async (req, res) => {
   res.json({ data: enriched, total: Number(total[0].count), page: pageNum, limit: limitNum });
 });
 router4.post("/", async (req, res) => {
-  const { firstName, lastName, gender, phone1, memberType = "member", ...rest } = req.body;
+  const {
+    firstName,
+    lastName,
+    gender,
+    phone1,
+    email: requestedEmail,
+    emailVerified: _ignoredEmailVerification,
+    memberType = "member",
+    ...rest
+  } = req.body;
   if (!firstName || !lastName || !gender || !phone1) {
     return res.status(400).json({ error: "Missing required fields" });
+  }
+  const normalizedEmail = typeof requestedEmail === "string" ? requestedEmail.trim().toLowerCase() : "";
+  if (normalizedEmail && (normalizedEmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail))) {
+    return res.status(400).json({ error: "Enter a valid email address." });
   }
   const existing = await db.select().from(membersTable).where(
     and(
@@ -52365,7 +53568,9 @@ router4.post("/", async (req, res) => {
     phone1,
     memberType,
     pin,
-    ...rest
+    ...rest,
+    email: normalizedEmail || null,
+    emailVerified: false
   }).returning();
   const actor = req.user;
   await db.insert(activityLogTable).values({
@@ -52413,7 +53618,20 @@ router4.post("/", async (req, res) => {
       }
     }
   }
-  res.status(201).json({ ...created[0], leadershipRoles: [] });
+  let emailVerificationSent = false;
+  if (normalizedEmail) {
+    try {
+      emailVerificationSent = await sendMemberEmailVerification(created[0].id, normalizedEmail) === "sent";
+    } catch (err) {
+      console.warn("Member creation email verification could not be sent:", err instanceof Error ? err.message : "unknown error");
+    }
+  }
+  res.status(201).json({
+    ...created[0],
+    emailVerificationRequired: Boolean(normalizedEmail),
+    emailVerificationSent,
+    leadershipRoles: []
+  });
 });
 router4.post("/bulk", requireRole(3), async (req, res) => {
   const rawMembers = Array.isArray(req.body?.members) ? req.body.members : [];
@@ -52591,9 +53809,23 @@ router4.get("/:id", async (req, res) => {
 });
 router4.patch("/:id", async (req, res) => {
   const id = parseInt(req.params.id);
-  const { firstName, lastName, phone1, membershipId: _ignoredId, ...rest } = req.body;
+  const {
+    firstName,
+    lastName,
+    phone1,
+    membershipId: _ignoredId,
+    email: requestedEmail,
+    emailVerified: _ignoredEmailVerification,
+    ...rest
+  } = req.body;
+  const emailProvided = Object.prototype.hasOwnProperty.call(req.body, "email");
+  const normalizedEmail = typeof requestedEmail === "string" ? requestedEmail.trim().toLowerCase() : "";
+  if (emailProvided && normalizedEmail && (normalizedEmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail))) {
+    return res.status(400).json({ error: "Enter a valid email address." });
+  }
   const currentMember = await db.select().from(membersTable).where(and(eq(membersTable.id, id), eq(membersTable.isArchived, false))).limit(1);
   if (!currentMember.length) return res.status(404).json({ error: "Member not found" });
+  const emailChanged = emailProvided && normalizedEmail !== (currentMember[0].email ?? "").trim().toLowerCase();
   const currentGender = rest.gender ?? currentMember[0].gender;
   const oldSpouseId = currentMember[0].spouseId;
   const incomingSpouseId = Object.prototype.hasOwnProperty.call(rest, "spouseId") ? rest.spouseId ? parseInt(rest.spouseId) : null : void 0;
@@ -52615,7 +53847,12 @@ router4.patch("/:id", async (req, res) => {
       return res.status(409).json({ error: `This phone number is already registered to ${fmt(m)} (${m.membershipId}).` });
     }
   }
-  const updated = await db.update(membersTable).set({ firstName, lastName, phone1, ...rest }).where(eq(membersTable.id, id)).returning();
+  const updates = { firstName, lastName, phone1, ...rest };
+  if (emailProvided) {
+    updates.email = normalizedEmail || null;
+    if (emailChanged) updates.emailVerified = false;
+  }
+  const updated = await db.update(membersTable).set(updates).where(eq(membersTable.id, id)).returning();
   if (!updated.length) return res.status(404).json({ error: "Member not found" });
   const oldCellId = currentMember[0].cellId;
   const newCellId = Object.prototype.hasOwnProperty.call(rest, "cellId") ? rest.cellId ? parseInt(rest.cellId) : null : void 0;
@@ -52721,8 +53958,23 @@ router4.patch("/:id", async (req, res) => {
       }
     }
   }
+  let emailVerificationSent;
+  if (emailChanged && normalizedEmail) {
+    try {
+      emailVerificationSent = await sendMemberEmailVerification(id, normalizedEmail) === "sent";
+    } catch (err) {
+      console.warn("Updated profile email verification could not be sent:", err instanceof Error ? err.message : "unknown error");
+      emailVerificationSent = false;
+    }
+  }
   const member = await getMemberWithRoles(id);
-  res.json(member ?? updated[0]);
+  res.json({
+    ...member ?? updated[0],
+    ...emailChanged ? {
+      emailVerificationRequired: Boolean(normalizedEmail),
+      emailVerificationSent: Boolean(emailVerificationSent)
+    } : {}
+  });
 });
 router4.delete("/:id", async (req, res) => {
   const id = parseInt(req.params.id);
@@ -52968,14 +54220,14 @@ var members_default = router4;
 
 // src/routes/fellowships.ts
 var import_express5 = __toESM(require_express2(), 1);
-import crypto6 from "crypto";
+import crypto7 from "crypto";
 var router5 = (0, import_express5.Router)();
 router5.use(authenticateToken);
 function fmt2(m) {
   return m.title ? `${m.title} ${m.firstName} ${m.lastName}` : `${m.firstName} ${m.lastName}`;
 }
 function hashPassword4(password) {
-  return crypto6.createHash("sha256").update(password + "ce_kumasi_salt").digest("hex");
+  return crypto7.createHash("sha256").update(password + "ce_kumasi_salt").digest("hex");
 }
 async function ensureLeaderAccount(memberId) {
   const member = await db.select().from(membersTable).where(eq(membersTable.id, memberId)).limit(1);
@@ -53552,11 +54804,11 @@ var departments_default = router6;
 
 // src/routes/children.ts
 var import_express7 = __toESM(require_express2(), 1);
-import crypto7 from "crypto";
+import crypto8 from "crypto";
 var router7 = (0, import_express7.Router)();
 router7.use(authenticateToken);
 function hashPassword5(password) {
-  return crypto7.createHash("sha256").update(password + "ce_kumasi_salt").digest("hex");
+  return crypto8.createHash("sha256").update(password + "ce_kumasi_salt").digest("hex");
 }
 async function getRegisterIdsByMembershipId(membershipId, executor = db) {
   const [members, children, teens] = await Promise.all([
@@ -54622,28 +55874,24 @@ router8.post("/", async (req, res) => {
     teenIds = [],
     memberChildIds = []
   } = req.body;
-  const fatherIdNum = fatherId ? parseInt(String(fatherId), 10) : null;
-  const motherIdNum = motherId ? parseInt(String(motherId), 10) : null;
-  if (!fatherIdNum && !motherIdNum)
-    return res.status(400).json({ error: "At least one parent is required" });
-  if (fatherIdNum && motherIdNum && fatherIdNum === motherIdNum)
+  if (!fatherId) return res.status(400).json({ error: "Father is required" });
+  if (!motherId) return res.status(400).json({ error: "Mother is required" });
+  if (parseInt(fatherId) === parseInt(motherId))
     return res.status(400).json({ error: "Father and Mother must be different people" });
   const memberChildIdNums = memberChildIds.map(Number);
-  if (fatherIdNum && memberChildIdNums.includes(fatherIdNum) || motherIdNum && memberChildIdNums.includes(motherIdNum))
+  if (memberChildIdNums.includes(parseInt(fatherId)) || memberChildIdNums.includes(parseInt(motherId)))
     return res.status(400).json({ error: "Father or Mother cannot also be listed as a child" });
-  const [father, mother] = await Promise.all([
-    fatherIdNum ? db.select().from(membersTable).where(eq(membersTable.id, fatherIdNum)).limit(1) : Promise.resolve([]),
-    motherIdNum ? db.select().from(membersTable).where(eq(membersTable.id, motherIdNum)).limit(1) : Promise.resolve([])
-  ]);
-  if (fatherIdNum && !father.length) return res.status(404).json({ error: "Father not found" });
-  if (father.length && father[0].gender !== "male")
+  const father = await db.select().from(membersTable).where(eq(membersTable.id, parseInt(fatherId))).limit(1);
+  if (!father.length) return res.status(404).json({ error: "Father not found" });
+  if (father[0].gender !== "male")
     return res.status(400).json({ error: "Father must be a male member" });
-  if (motherIdNum && !mother.length) return res.status(404).json({ error: "Mother not found" });
-  if (mother.length && mother[0].gender !== "female")
+  const mother = await db.select().from(membersTable).where(eq(membersTable.id, parseInt(motherId))).limit(1);
+  if (!mother.length) return res.status(404).json({ error: "Mother not found" });
+  if (mother[0].gender !== "female")
     return res.status(400).json({ error: "Mother must be a female member" });
-  if (fatherIdNum && await isMemberInAnyFamily(fatherIdNum))
+  if (await isMemberInAnyFamily(parseInt(fatherId)))
     return res.status(409).json({ error: `${father[0].firstName} ${father[0].lastName} is already in another family` });
-  if (motherIdNum && await isMemberInAnyFamily(motherIdNum))
+  if (await isMemberInAnyFamily(parseInt(motherId)))
     return res.status(409).json({ error: `${mother[0].firstName} ${mother[0].lastName} is already in another family` });
   for (const cId of childIds.map(Number)) {
     const existing = await db.select().from(familyChildrenTable).where(
@@ -54663,7 +55911,7 @@ router8.post("/", async (req, res) => {
     if (await isMemberInAnyFamily(mId))
       return res.status(409).json({ error: "One or more member-children are already in another family" });
   }
-  const created = await db.insert(familiesTable).values({ headId: fatherIdNum, spouseId: motherIdNum }).returning();
+  const created = await db.insert(familiesTable).values({ headId: parseInt(fatherId), spouseId: parseInt(motherId) }).returning();
   const famId = created[0].id;
   for (const cId of childIds.map(Number))
     await db.insert(familyChildrenTable).values({ familyId: famId, childId: cId, type: "child" });
@@ -54671,10 +55919,8 @@ router8.post("/", async (req, res) => {
     await db.insert(familyChildrenTable).values({ familyId: famId, teenId: tId, type: "teen" });
   for (const mId of memberChildIdNums)
     await db.insert(familyChildrenTable).values({ familyId: famId, memberId: mId, type: "member" });
-  if (fatherIdNum && motherIdNum) {
-    await db.update(membersTable).set({ spouseId: motherIdNum, maritalStatus: "married" }).where(eq(membersTable.id, fatherIdNum));
-    await db.update(membersTable).set({ spouseId: fatherIdNum, maritalStatus: "married" }).where(eq(membersTable.id, motherIdNum));
-  }
+  await db.update(membersTable).set({ spouseId: parseInt(motherId), maritalStatus: "married" }).where(eq(membersTable.id, parseInt(fatherId)));
+  await db.update(membersTable).set({ spouseId: parseInt(fatherId), maritalStatus: "married" }).where(eq(membersTable.id, parseInt(motherId)));
   res.status(201).json(await getFamilyDetail(created[0]));
 });
 router8.patch("/:id", async (req, res) => {
@@ -55112,44 +56358,93 @@ router9.get("/services/:id/attendance", async (req, res) => {
       checkinsByCellId.set(ci.cellId, (checkinsByCellId.get(ci.cellId) ?? 0) + 1);
     }
   }
-  const allMembers = await db.select().from(membersTable).where(and(eq(membersTable.isArchived, false), eq(membersTable.memberType, "member")));
+  const allMembers = await db.select({
+    id: membersTable.id,
+    firstName: membersTable.firstName,
+    lastName: membersTable.lastName,
+    title: membersTable.title,
+    cellId: membersTable.cellId
+  }).from(membersTable).where(and(eq(membersTable.isArchived, false), eq(membersTable.memberType, "member")));
   const memberMap = new Map(allMembers.map((m) => [m.id, m]));
+  const membersByCellId = /* @__PURE__ */ new Map();
+  const noFellowshipMembers = [];
+  for (const member of allMembers) {
+    if (member.cellId == null) {
+      noFellowshipMembers.push(member);
+      continue;
+    }
+    const cellMembers = membersByCellId.get(member.cellId);
+    if (cellMembers) {
+      cellMembers.push(member);
+    } else {
+      membersByCellId.set(member.cellId, [member]);
+    }
+  }
   const firstTimers = await db.select().from(firstTimersTable).where(and(eq(firstTimersTable.serviceId, serviceId), eq(firstTimersTable.isRegistrationError, false)));
   const pcfs = await db.select().from(pcfsTable).where(eq(pcfsTable.isArchived, false));
+  const activeSeniorCells = await db.select().from(seniorCellsTable).where(eq(seniorCellsTable.isArchived, false));
+  const activeCells = await db.select().from(cellsTable).where(eq(cellsTable.isArchived, false));
+  const seniorCellsByPcfId = /* @__PURE__ */ new Map();
+  const cellsBySeniorCellId = /* @__PURE__ */ new Map();
+  const standaloneSeniorCells = [];
+  const standaloneCells = activeCells.filter((cell) => cell.seniorCellId == null);
+  for (const seniorCell of activeSeniorCells) {
+    if (seniorCell.pcfId == null) {
+      standaloneSeniorCells.push(seniorCell);
+      continue;
+    }
+    const pcfSeniorCells = seniorCellsByPcfId.get(seniorCell.pcfId);
+    if (pcfSeniorCells) {
+      pcfSeniorCells.push(seniorCell);
+    } else {
+      seniorCellsByPcfId.set(seniorCell.pcfId, [seniorCell]);
+    }
+  }
+  for (const cell of activeCells) {
+    if (cell.seniorCellId == null) continue;
+    const seniorCellCells = cellsBySeniorCellId.get(cell.seniorCellId);
+    if (seniorCellCells) {
+      seniorCellCells.push(cell);
+    } else {
+      cellsBySeniorCellId.set(cell.seniorCellId, [cell]);
+    }
+  }
   const hierarchy = [];
   const attendeeList = [];
   const processedCellIds = /* @__PURE__ */ new Set();
   for (const pcf of pcfs) {
-    const scs = await db.select().from(seniorCellsTable).where(and(eq(seniorCellsTable.pcfId, pcf.id), eq(seniorCellsTable.isArchived, false)));
+    const scs = seniorCellsByPcfId.get(pcf.id) ?? [];
     let pcfCheckedIn = 0, pcfTotal = 0;
     const scNodes = [];
     for (const sc of scs) {
-      const cells = await db.select().from(cellsTable).where(and(eq(cellsTable.seniorCellId, sc.id), eq(cellsTable.isArchived, false)));
+      const cells = cellsBySeniorCellId.get(sc.id) ?? [];
       let scCheckedIn = 0, scTotal = 0;
       const cellNodes = [];
       for (const cell of cells) {
         processedCellIds.add(cell.id);
-        const cellMembers = allMembers.filter((m) => m.cellId === cell.id);
+        const cellMembers = membersByCellId.get(cell.id) ?? [];
         const snapshotCheckedIn = checkinsByCellId.get(cell.id) ?? 0;
         scCheckedIn += snapshotCheckedIn;
         scTotal += cellMembers.length;
-        const members = cellMembers.map((m) => ({
-          memberId: m.id,
-          memberName: fmt5(m),
-          profilePhoto: m.profilePhoto,
-          checkedIn: checkedInIds.has(m.id),
-          checkInTime: checkinMap.get(m.id)?.checkInTime?.toISOString() || null,
-          isLeader: m.id === cell.leaderId
-        }));
+        const members = cellMembers.map((m) => {
+          const checkin = checkinMap.get(m.id);
+          return {
+            memberId: m.id,
+            memberName: fmt5(m),
+            checkedIn: checkedInIds.has(m.id),
+            checkInTime: checkin?.checkInTime?.toISOString() || null,
+            isLeader: m.id === cell.leaderId
+          };
+        });
         members.sort((a, b2) => (b2.isLeader ? 1 : 0) - (a.isLeader ? 1 : 0));
         cellNodes.push({ id: cell.id, name: cell.name, checkedIn: snapshotCheckedIn, total: cellMembers.length, members });
-        for (const m of cellMembers.filter((m2) => checkedInIds.has(m2.id))) {
+        for (const m of cellMembers) {
+          if (!checkedInIds.has(m.id)) continue;
           const ci = checkinMap.get(m.id);
           attendeeList.push({
             type: "member",
             memberId: m.id,
             name: fmt5(m),
-            profilePhoto: m.profilePhoto,
             fellowship: cell.name,
             scName: sc.name,
             pcfName: pcf.name,
@@ -55163,29 +56458,30 @@ router9.get("/services/:id/attendance", async (req, res) => {
     }
     hierarchy.push({ id: pcf.id, name: pcf.name, checkedIn: pcfCheckedIn, total: pcfTotal, seniorCells: scNodes });
   }
-  const standaloneCells = await db.select().from(cellsTable).where(and(eq(cellsTable.isArchived, false), sql`senior_cell_id IS NULL`));
   const standaloneNodes = [];
   for (const cell of standaloneCells) {
     if (processedCellIds.has(cell.id)) continue;
     processedCellIds.add(cell.id);
-    const cellMembers = allMembers.filter((m) => m.cellId === cell.id);
+    const cellMembers = membersByCellId.get(cell.id) ?? [];
     const snapshotCheckedIn = checkinsByCellId.get(cell.id) ?? 0;
-    const members = cellMembers.map((m) => ({
-      memberId: m.id,
-      memberName: fmt5(m),
-      profilePhoto: m.profilePhoto,
-      checkedIn: checkedInIds.has(m.id),
-      checkInTime: checkinMap.get(m.id)?.checkInTime?.toISOString() || null,
-      isLeader: m.id === cell.leaderId
-    }));
+    const members = cellMembers.map((m) => {
+      const checkin = checkinMap.get(m.id);
+      return {
+        memberId: m.id,
+        memberName: fmt5(m),
+        checkedIn: checkedInIds.has(m.id),
+        checkInTime: checkin?.checkInTime?.toISOString() || null,
+        isLeader: m.id === cell.leaderId
+      };
+    });
     standaloneNodes.push({ id: cell.id, name: cell.name, checkedIn: snapshotCheckedIn, total: cellMembers.length, members });
-    for (const m of cellMembers.filter((m2) => checkedInIds.has(m2.id))) {
+    for (const m of cellMembers) {
+      if (!checkedInIds.has(m.id)) continue;
       const ci = checkinMap.get(m.id);
       attendeeList.push({
         type: "member",
         memberId: m.id,
         name: fmt5(m),
-        profilePhoto: m.profilePhoto,
         fellowship: cell.name,
         scName: null,
         pcfName: null,
@@ -55193,35 +56489,36 @@ router9.get("/services/:id/attendance", async (req, res) => {
       });
     }
   }
-  const allStandaloneSCs = await db.select().from(seniorCellsTable).where(and(eq(seniorCellsTable.isArchived, false), sql`pcf_id IS NULL`));
   const standaloneSCNodes = [];
-  for (const sc of allStandaloneSCs) {
-    const scCells = await db.select().from(cellsTable).where(and(eq(cellsTable.seniorCellId, sc.id), eq(cellsTable.isArchived, false)));
+  for (const sc of standaloneSeniorCells) {
+    const scCells = cellsBySeniorCellId.get(sc.id) ?? [];
     let scCheckedIn = 0, scTotal = 0;
     const cellNodes = [];
     for (const cell of scCells) {
       if (processedCellIds.has(cell.id)) continue;
       processedCellIds.add(cell.id);
-      const cellMembers = allMembers.filter((m) => m.cellId === cell.id);
+      const cellMembers = membersByCellId.get(cell.id) ?? [];
       const snapshotCheckedIn = checkinsByCellId.get(cell.id) ?? 0;
       scCheckedIn += snapshotCheckedIn;
       scTotal += cellMembers.length;
-      const members = cellMembers.map((m) => ({
-        memberId: m.id,
-        memberName: fmt5(m),
-        profilePhoto: m.profilePhoto,
-        checkedIn: checkedInIds.has(m.id),
-        checkInTime: checkinMap.get(m.id)?.checkInTime?.toISOString() || null,
-        isLeader: m.id === cell.leaderId
-      }));
+      const members = cellMembers.map((m) => {
+        const checkin = checkinMap.get(m.id);
+        return {
+          memberId: m.id,
+          memberName: fmt5(m),
+          checkedIn: checkedInIds.has(m.id),
+          checkInTime: checkin?.checkInTime?.toISOString() || null,
+          isLeader: m.id === cell.leaderId
+        };
+      });
       cellNodes.push({ id: cell.id, name: cell.name, checkedIn: snapshotCheckedIn, total: cellMembers.length, members });
-      for (const m of cellMembers.filter((m2) => checkedInIds.has(m2.id))) {
+      for (const m of cellMembers) {
+        if (!checkedInIds.has(m.id)) continue;
         const ci = checkinMap.get(m.id);
         attendeeList.push({
           type: "member",
           memberId: m.id,
           name: fmt5(m),
-          profilePhoto: m.profilePhoto,
           fellowship: cell.name,
           scName: sc.name,
           pcfName: null,
@@ -55233,11 +56530,9 @@ router9.get("/services/:id/attendance", async (req, res) => {
       standaloneSCNodes.push({ id: sc.id, name: sc.name, checkedIn: scCheckedIn, total: scTotal, cells: cellNodes });
     }
   }
-  const noFellowshipMembers = allMembers.filter((m) => m.cellId == null);
   const noFellowshipMemberNodes = noFellowshipMembers.map((m) => ({
     memberId: m.id,
     memberName: fmt5(m),
-    profilePhoto: m.profilePhoto,
     checkedIn: checkedInIds.has(m.id),
     checkInTime: checkinMap.get(m.id)?.checkInTime?.toISOString() || null
   }));
@@ -55247,7 +56542,6 @@ router9.get("/services/:id/attendance", async (req, res) => {
       type: "member",
       memberId: m.id,
       name: fmt5(m),
-      profilePhoto: m.profilePhoto,
       fellowship: "No Fellowship",
       scName: null,
       pcfName: null,
@@ -55259,8 +56553,7 @@ router9.get("/services/:id/attendance", async (req, res) => {
     total: noFellowshipMembers.length,
     members: noFellowshipMemberNodes
   };
-  const allCells = await db.select().from(cellsTable).where(eq(cellsTable.isArchived, false));
-  const cellNameMap = new Map(allCells.map((c) => [c.id, c.name]));
+  const cellNameMap = new Map(activeCells.map((c) => [c.id, c.name]));
   const childInviterIds = firstTimers.map((ft) => ft.invitedByChildId).filter((id) => !!id);
   const teenInviterIds = firstTimers.map((ft) => ft.invitedByTeenId).filter((id) => !!id);
   const childInviterMap = /* @__PURE__ */ new Map();
@@ -55339,7 +56632,12 @@ router9.get("/services/:id/attendance", async (req, res) => {
       teensList.push(entry);
     }
   }
-  const visitorMembers = await db.select().from(membersTable).where(and(eq(membersTable.isArchived, false), eq(membersTable.memberType, "visitor")));
+  const visitorMembers = await db.select({
+    id: membersTable.id,
+    firstName: membersTable.firstName,
+    lastName: membersTable.lastName,
+    title: membersTable.title
+  }).from(membersTable).where(and(eq(membersTable.isArchived, false), eq(membersTable.memberType, "visitor")));
   for (const v of visitorMembers) {
     if (checkedInIds.has(v.id)) {
       const ci = checkinMap.get(v.id);
@@ -55347,7 +56645,6 @@ router9.get("/services/:id/attendance", async (req, res) => {
         type: "visitor",
         memberId: v.id,
         name: fmt5(v),
-        profilePhoto: v.profilePhoto,
         fellowship: null,
         scName: null,
         pcfName: null,
@@ -56897,11 +58194,11 @@ var archives_default = router11;
 
 // src/routes/admin.ts
 var import_express12 = __toESM(require_express2(), 1);
-import crypto8 from "crypto";
+import crypto9 from "crypto";
 var router12 = (0, import_express12.Router)();
 router12.use(authenticateToken);
 function hashPassword6(password) {
-  return crypto8.createHash("sha256").update(password + "ce_kumasi_salt").digest("hex");
+  return crypto9.createHash("sha256").update(password + "ce_kumasi_salt").digest("hex");
 }
 router12.get("/users", requireRole(1), async (req, res) => {
   const users = await db.select().from(usersTable).where(ne(usersTable.roleLevel, 5));
@@ -57153,7 +58450,7 @@ function subscribeMeeting(meetingId, fn) {
 }
 
 // src/routes/online.ts
-import crypto9 from "crypto";
+import crypto10 from "crypto";
 var router14 = (0, import_express14.Router)();
 function getYoutubeId(url) {
   const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/);
@@ -57233,6 +58530,7 @@ router14.post("/videos/:id/end-live", authenticateToken, requireRole(3), async (
 router14.delete("/videos/:id", authenticateToken, requireRole(3), async (req, res) => {
   const id = parseInt(req.params.id);
   await db.delete(videosTable).where(eq(videosTable.id, id));
+  overlayStore.delete(id);
   res.json({ success: true });
 });
 router14.get("/videos/:id/watchers", authenticateToken, async (req, res) => {
@@ -57545,7 +58843,7 @@ router14.get("/online-meetings/active", async (_req, res) => {
 router14.post("/online-meetings", authenticateToken, requireRole(3), async (req, res) => {
   const { title, description, scheduledAt, meetingType, restrictedGroups } = req.body;
   if (!title) return res.status(400).json({ error: "title is required" });
-  const roomCode = `cek1-${crypto9.randomBytes(4).toString("hex")}`;
+  const roomCode = `cek1-${crypto10.randomBytes(4).toString("hex")}`;
   const adminUser = req.user;
   const [created] = await db.insert(onlineMeetingsTable).values({
     title,
@@ -57874,10 +59172,13 @@ router14.get("/reports/online-services", authenticateToken, requireRole(1), asyn
   }
 });
 var overlayStore = /* @__PURE__ */ new Map();
-var MAX_OVERLAY_VIDEOS = 10;
 router14.get("/videos/:id/overlay", async (req, res) => {
   const videoId = parseInt(req.params.id);
   const state = overlayStore.get(videoId) ?? { images: [], active: false, updatedAt: 0 };
+  const etag = `"overlay-${state.updatedAt}"`;
+  res.setHeader("Cache-Control", "private, no-cache");
+  res.setHeader("ETag", etag);
+  if (req.headers["if-none-match"] === etag) return res.status(304).end();
   res.json(state);
 });
 router14.post("/videos/:id/overlay", authenticateToken, requireRole(3), async (req, res) => {
@@ -57895,10 +59196,6 @@ router14.post("/videos/:id/overlay", authenticateToken, requireRole(3), async (r
     }
   }
   const state = { images, active: active ?? true, updatedAt: Date.now() };
-  if (!overlayStore.has(videoId) && overlayStore.size >= MAX_OVERLAY_VIDEOS) {
-    const oldestVideoId = overlayStore.keys().next().value;
-    if (typeof oldestVideoId === "number") overlayStore.delete(oldestVideoId);
-  }
   overlayStore.set(videoId, state);
   res.json({ ok: true, updatedAt: state.updatedAt });
 });
@@ -60511,7 +61808,7 @@ var proto3 = makeProtoRuntime(
   }
 );
 
-// ../node_modules/.pnpm/@livekit+protocol@1.46.6/node_modules/@livekit/protocol/dist/index.mjs
+// ../node_modules/.pnpm/@livekit+protocol@1.51.0/node_modules/@livekit/protocol/dist/index.mjs
 var TrackSource = /* @__PURE__ */ proto3.makeEnum(
   "livekit.TrackSource",
   [
@@ -60572,9 +61869,9 @@ import * as util2 from "node:util";
 var is_key_object_default = (obj) => util2.types.isKeyObject(obj);
 
 // ../node_modules/.pnpm/jose@5.10.0/node_modules/jose/dist/node/esm/runtime/webcrypto.js
-import * as crypto10 from "node:crypto";
+import * as crypto11 from "node:crypto";
 import * as util3 from "node:util";
-var webcrypto2 = crypto10.webcrypto;
+var webcrypto2 = crypto11.webcrypto;
 var webcrypto_default = webcrypto2;
 var isCryptoKey = (key) => util3.types.isCryptoKey(key);
 
@@ -61071,7 +62368,7 @@ function keyForCrypto(alg, key) {
 }
 
 // ../node_modules/.pnpm/jose@5.10.0/node_modules/jose/dist/node/esm/runtime/sign.js
-import * as crypto11 from "node:crypto";
+import * as crypto12 from "node:crypto";
 import { promisify } from "node:util";
 
 // ../node_modules/.pnpm/jose@5.10.0/node_modules/jose/dist/node/esm/runtime/hmac_digest.js
@@ -61114,11 +62411,11 @@ function getSignVerifyKey(alg, key, usage) {
 }
 
 // ../node_modules/.pnpm/jose@5.10.0/node_modules/jose/dist/node/esm/runtime/sign.js
-var oneShotSign = promisify(crypto11.sign);
+var oneShotSign = promisify(crypto12.sign);
 var sign2 = async (alg, key, data) => {
   const k = getSignVerifyKey(alg, key, "sign");
   if (alg.startsWith("HS")) {
-    const hmac2 = crypto11.createHmac(hmacDigest(alg), k);
+    const hmac2 = crypto12.createHmac(hmacDigest(alg), k);
     hmac2.update(data);
     return hmac2.digest();
   }
@@ -61368,7 +62665,7 @@ var SignJWT = class extends ProduceJWT {
   }
 };
 
-// ../node_modules/.pnpm/livekit-server-sdk@2.15.4/node_modules/livekit-server-sdk/dist/grants.js
+// ../node_modules/.pnpm/livekit-server-sdk@2.19.2/node_modules/livekit-server-sdk/dist/grants.js
 function trackSourceToString(source) {
   switch (source) {
     case TrackSource.CAMERA:
@@ -61392,7 +62689,7 @@ function claimsToJwtPayload(grant) {
   return claim;
 }
 
-// ../node_modules/.pnpm/livekit-server-sdk@2.15.4/node_modules/livekit-server-sdk/dist/AccessToken.js
+// ../node_modules/.pnpm/livekit-server-sdk@2.19.2/node_modules/livekit-server-sdk/dist/AccessToken.js
 var defaultTTL = `6h`;
 var AccessToken = class {
   /**
@@ -61520,6 +62817,12 @@ var AccessToken = class {
     return jwt3.sign(secret);
   }
 };
+
+// ../node_modules/.pnpm/livekit-server-sdk@2.19.2/node_modules/livekit-server-sdk/dist/version.js
+var SDK_VERSION = "2.19.2";
+
+// ../node_modules/.pnpm/livekit-server-sdk@2.19.2/node_modules/livekit-server-sdk/dist/TwirpRPC.js
+var USER_AGENT = `livekit-server-sdk-node/${SDK_VERSION}`;
 
 // src/routes/conference.ts
 var router15 = (0, import_express15.Router)();
@@ -62595,16 +63898,25 @@ var __dirname = path.dirname(fileURLToPath(import.meta.url));
 var app = (0, import_express21.default)();
 app.set("trust proxy", 1);
 async function ensureTables() {
-  await db.execute(sql`SELECT 1`);
   const steps = [
     { name: "users", sql: `CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY, username TEXT NOT NULL UNIQUE,
         password_hash TEXT NOT NULL, role_level INTEGER NOT NULL DEFAULT 5,
         role_subtype TEXT, member_id INTEGER, is_active BOOLEAN NOT NULL DEFAULT TRUE)` },
+    { name: "password_reset_tokens", sql: `CREATE TABLE IF NOT EXISTS password_reset_tokens (
+        id SERIAL PRIMARY KEY, token_hash TEXT NOT NULL UNIQUE,
+        purpose TEXT NOT NULL, target_type TEXT NOT NULL, target_id INTEGER NOT NULL,
+        expires_at TIMESTAMPTZ NOT NULL, used_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())` },
+    { name: "email_verification_tokens", sql: `CREATE TABLE IF NOT EXISTS email_verification_tokens (
+        id SERIAL PRIMARY KEY, token_hash TEXT NOT NULL UNIQUE, member_id INTEGER NOT NULL,
+        email TEXT NOT NULL, expires_at TIMESTAMPTZ NOT NULL, used_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())` },
     { name: "members", sql: `CREATE TABLE IF NOT EXISTS members (
         id SERIAL PRIMARY KEY, membership_id TEXT NOT NULL UNIQUE,
         first_name TEXT NOT NULL, last_name TEXT NOT NULL, gender TEXT NOT NULL,
-        phone1 TEXT NOT NULL, phone2 TEXT, email TEXT, occupation TEXT NOT NULL DEFAULT '',
+        phone1 TEXT NOT NULL, phone2 TEXT, email TEXT, email_verified BOOLEAN NOT NULL DEFAULT FALSE,
+        occupation TEXT NOT NULL DEFAULT '',
         residential_address TEXT NOT NULL DEFAULT '', emergency_contact TEXT NOT NULL DEFAULT '',
         date_of_birth TEXT, marital_status TEXT, date_joined TEXT, foundation_school_date TEXT,
         wedding_date TEXT, is_baptized BOOLEAN NOT NULL DEFAULT FALSE, title TEXT,
@@ -62801,6 +64113,7 @@ async function ensureTables() {
     `CREATE UNIQUE INDEX IF NOT EXISTS teens_source_member_id_key ON teens(source_member_id) WHERE source_member_id IS NOT NULL AND is_archived = false`,
     `ALTER TABLE members ADD COLUMN IF NOT EXISTS transferred_from_teen_id INTEGER`,
     `ALTER TABLE members ADD COLUMN IF NOT EXISTS first_timer_id INTEGER`,
+    `ALTER TABLE members ADD COLUMN IF NOT EXISTS email_verified BOOLEAN NOT NULL DEFAULT FALSE`,
     `CREATE INDEX IF NOT EXISTS idx_members_first_timer_id ON members(first_timer_id)`
   ];
   for (const m of columnMigrations) {
@@ -62810,7 +64123,7 @@ async function ensureTables() {
     }
   }
 }
-var databaseReady = ensureTables();
+ensureTables();
 app.use((0, import_compression.default)({
   filter: (req, res) => {
     if (req.headers.accept?.includes("text/event-stream")) return false;
@@ -62835,9 +64148,8 @@ app.use((0, import_cors.default)({
   origin: process.env.CORS_ORIGIN || true,
   credentials: true
 }));
-app.use("/api/online/videos", import_express21.default.json({ limit: "10mb" }));
-app.use(import_express21.default.json({ limit: "2mb" }));
-app.use(import_express21.default.urlencoded({ limit: "1mb", extended: true }));
+app.use(import_express21.default.json({ limit: "10mb" }));
+app.use(import_express21.default.urlencoded({ limit: "10mb", extended: true }));
 function isConferencePoll(path2) {
   return /^\/conference\/\d+\/(signals|participants|messages|ping|stream)/.test(path2) || /^\/meetings\/\d+\/join-requests/.test(path2) || /^\/online-meetings/.test(path2);
 }
@@ -62860,16 +64172,26 @@ var authLimiter = rate_limit_default({
   legacyHeaders: false,
   message: { error: "Too many login attempts, please try again later." }
 });
+var passwordResetRequestLimiter = rate_limit_default({
+  windowMs: 15 * 60 * 1e3,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many reset requests. Please wait before trying again." }
+});
+var passwordResetCompleteLimiter = rate_limit_default({
+  windowMs: 15 * 60 * 1e3,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many reset attempts. Please request a new link later." }
+});
 app.use("/api/auth/login", authLimiter);
+app.use("/api/auth/password-reset/request", passwordResetRequestLimiter);
+app.use("/api/auth/password-reset/complete", passwordResetCompleteLimiter);
 app.use("/api", apiLimiter);
-app.get("/health", async (_req, res) => {
-  try {
-    await db.execute(sql`SELECT 1`);
-    res.json({ status: "ok", ts: Date.now() });
-  } catch (err) {
-    logger.error({ err }, "Health check database query failed");
-    res.status(503).json({ status: "degraded", ts: Date.now() });
-  }
+app.get("/health", (_req, res) => {
+  res.json({ status: "ok", ts: Date.now() });
 });
 app.use("/api", routes_default);
 var frontendDist = path.resolve(__dirname, "../../church-portal/dist/public");
@@ -62904,7 +64226,6 @@ var port = Number(rawPort);
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
-await databaseReady;
 var server = app_default.listen(port, (err) => {
   if (err) {
     logger.error({ err }, "Error listening on port");
@@ -62995,7 +64316,6 @@ on-finished/index.js:
    *)
 
 content-type/dist/index.js:
-content-type/index.js:
   (*!
    * content-type
    * Copyright(c) 2015 Douglas Christopher Wilson
@@ -63136,6 +64456,13 @@ router/index.js:
    * MIT Licensed
    *)
 
+negotiator/lib/accept.js:
+  (*!
+   * negotiator
+   * Copyright(c) 2026 Blake Embrey
+   * MIT Licensed
+   *)
+
 negotiator/index.js:
 negotiator/index.js:
   (*!
@@ -63170,7 +64497,7 @@ range-parser/index.js:
    * MIT Licensed
    *)
 
-content-disposition/index.js:
+content-disposition/dist/index.js:
   (*!
    * content-disposition
    * Copyright(c) 2014-2017 Douglas Christopher Wilson
@@ -63225,6 +64552,14 @@ compressible/index.js:
    * Copyright(c) 2013 Jonathan Ong
    * Copyright(c) 2014 Jeremiah Senkpiel
    * Copyright(c) 2015 Douglas Christopher Wilson
+   * MIT Licensed
+   *)
+
+destroy/index.js:
+  (*!
+   * destroy
+   * Copyright(c) 2014 Jonathan Ong
+   * Copyright(c) 2015-2022 Douglas Christopher Wilson
    * MIT Licensed
    *)
 

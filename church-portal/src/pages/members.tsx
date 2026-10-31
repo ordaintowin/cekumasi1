@@ -131,6 +131,12 @@ function MemberForm({ onSubmit, loading, cells, seniorCells, initialValues, isEd
   const set = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }));
 
   const [dupeQuery, setDupeQuery] = useState("");
+  const clearForm = () => {
+    setForm(toForm());
+    setCellError(false);
+    setDupeQuery("");
+    if (photoInputRef.current) photoInputRef.current.value = "";
+  };
   const { data: dupeMemberData } = useListMembers(
     { search: dupeQuery, page: 1, limit: 10 },
     { query: { queryKey: [...getListMembersQueryKey({ search: dupeQuery }), "dupecheck"], enabled: dupeQuery.length >= 2 && !isEdit, staleTime: 30000 } }
@@ -416,6 +422,14 @@ function MemberForm({ onSubmit, loading, cells, seniorCells, initialValues, isEd
           </>
         )}
 
+        {!isEdit && (
+          <div className="flex justify-end pt-1">
+            <button type="button" onClick={clearForm} disabled={loading}
+              className="text-xs text-purple-700 hover:text-purple-900 underline underline-offset-2 disabled:opacity-50">
+              Clear form
+            </button>
+          </div>
+        )}
         <Button type="submit" className="w-full bg-purple-700 hover:bg-purple-800 text-white mt-2" disabled={loading}>
           {loading ? "Saving..." : isEdit ? "Update Member" : isVisitor ? "Save Visitor" : "Save Member"}
         </Button>
@@ -1518,7 +1532,7 @@ export default function Members() {
                   <Upload className="w-4 h-4 mr-2" /> Bulk Names
                 </Button>
               </DialogTrigger>
-              <DialogContent className="w-[calc(100vw-1rem)] max-w-lg max-h-[calc(100vh-2rem)] overflow-y-auto p-4 sm:p-6">
+              <DialogContent className="max-w-lg">
                 <DialogHeader><DialogTitle>Bulk add member names</DialogTitle></DialogHeader>
                 <div className="space-y-4">
                   <div className="rounded-lg border border-indigo-100 bg-indigo-50 p-3 text-sm text-indigo-900">
@@ -1530,7 +1544,7 @@ export default function Members() {
                       <SelectTrigger id="bulk-fellowship">
                         <SelectValue placeholder="Choose a fellowship..." />
                       </SelectTrigger>
-                      <SelectContent className="max-h-64 w-[var(--radix-select-trigger-width)] max-w-[calc(100vw-2rem)]">
+                      <SelectContent>
                         <SelectItem value="none">No fellowship</SelectItem>
                         {bulkFellowships.map(fellowship => (
                           <SelectItem key={fellowship.id} value={String(fellowship.id)}>

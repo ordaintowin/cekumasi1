@@ -10,6 +10,7 @@ import {
 import { eq, and, ilike, or, sql, ne, gte, lte, inArray } from "drizzle-orm";
 import { authenticateToken, requireRole } from "../middlewares/auth";
 import crypto from "crypto";
+import { sendMemberEmailVerification } from "../lib/email-verification";
 
 const router = Router();
 router.use(authenticateToken);
@@ -448,9 +449,17 @@ router.get("/", async (req, res) => {
 });
 
 router.post("/", async (req, res) => {
-  const { firstName, lastName, gender, phone1, memberType = "member", ...rest } = req.body;
+  const {
+    firstName, lastName, gender, phone1, email: requestedEmail,
+    emailVerified: _ignoredEmailVerification, memberType = "member", ...rest
+  } = req.body;
   if (!firstName || !lastName || !gender || !phone1) {
     return res.status(400).json({ error: "Missing required fields" });
+  }
+  const normalizedEmail = typeof requestedEmail === "string" ? requestedEmail.trim().toLowerCase() : "";
+  if (normalizedEmail &&
+    (normalizedEmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail))) {
+    return res.status(400).json({ error: "Enter a valid email address." });
   }
 
   const existing = await db.select().from(membersTable).where(
@@ -482,6 +491,8 @@ router.post("/", async (req, res) => {
   const created = await db.insert(membersTable).values({
     membershipId: await generateMembershipId(firstName, lastName, memberType === "visitor" ? "visitor" : "member"),
     firstName, lastName, gender, phone1, memberType, pin, ...rest,
+    email: normalizedEmail || null,
+    emailVerified: false,
   }).returning();
 
   const actor = (req as any).user;
@@ -538,7 +549,21 @@ router.post("/", async (req, res) => {
     }
   }
 
-  res.status(201).json({ ...created[0], leadershipRoles: [] });
+  let emailVerificationSent = false;
+  if (normalizedEmail) {
+    try {
+      emailVerificationSent = (await sendMemberEmailVerification(created[0].id, normalizedEmail)) === "sent";
+    } catch (err) {
+      console.warn("Member creation email verification could not be sent:", err instanceof Error ? err.message : "unknown error");
+    }
+  }
+
+  res.status(201).json({
+    ...created[0],
+    emailVerificationRequired: Boolean(normalizedEmail),
+    emailVerificationSent,
+    leadershipRoles: [],
+  });
 });
 
 // Admin-only bulk name import. This intentionally creates member records with
@@ -769,11 +794,22 @@ router.get("/:id", async (req, res) => {
 router.patch("/:id", async (req, res) => {
   const id = parseInt(req.params.id);
   // Never allow membership ID to change — strip it from any incoming update
-  const { firstName, lastName, phone1, membershipId: _ignoredId, ...rest } = req.body;
+  const {
+    firstName, lastName, phone1, membershipId: _ignoredId,
+    email: requestedEmail, emailVerified: _ignoredEmailVerification, ...rest
+  } = req.body;
+  const emailProvided = Object.prototype.hasOwnProperty.call(req.body, "email");
+  const normalizedEmail = typeof requestedEmail === "string" ? requestedEmail.trim().toLowerCase() : "";
+  if (emailProvided && normalizedEmail &&
+    (normalizedEmail.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail))) {
+    return res.status(400).json({ error: "Enter a valid email address." });
+  }
 
   const currentMember = await db.select().from(membersTable)
     .where(and(eq(membersTable.id, id), eq(membersTable.isArchived, false))).limit(1);
   if (!currentMember.length) return res.status(404).json({ error: "Member not found" });
+  const emailChanged = emailProvided &&
+    normalizedEmail !== (currentMember[0].email ?? "").trim().toLowerCase();
   const currentGender = (rest.gender ?? currentMember[0].gender) as string;
   const oldSpouseId = currentMember[0].spouseId;
 
@@ -803,8 +839,13 @@ router.patch("/:id", async (req, res) => {
     }
   }
 
+  const updates: Record<string, any> = { firstName, lastName, phone1, ...rest };
+  if (emailProvided) {
+    updates.email = normalizedEmail || null;
+    if (emailChanged) updates.emailVerified = false;
+  }
   const updated = await db.update(membersTable)
-    .set({ firstName, lastName, phone1, ...rest }).where(eq(membersTable.id, id)).returning();
+    .set(updates).where(eq(membersTable.id, id)).returning();
   if (!updated.length) return res.status(404).json({ error: "Member not found" });
 
   // Rule: a leader must be a member of their cell.
@@ -956,8 +997,24 @@ router.patch("/:id", async (req, res) => {
     }
   }
 
+  let emailVerificationSent: boolean | undefined;
+  if (emailChanged && normalizedEmail) {
+    try {
+      emailVerificationSent = (await sendMemberEmailVerification(id, normalizedEmail)) === "sent";
+    } catch (err) {
+      console.warn("Updated profile email verification could not be sent:", err instanceof Error ? err.message : "unknown error");
+      emailVerificationSent = false;
+    }
+  }
+
   const member = await getMemberWithRoles(id);
-  res.json(member ?? updated[0]);
+  res.json({
+    ...(member ?? updated[0]),
+    ...(emailChanged ? {
+      emailVerificationRequired: Boolean(normalizedEmail),
+      emailVerificationSent: Boolean(emailVerificationSent),
+    } : {}),
+  });
 });
 
 router.delete("/:id", async (req, res) => {

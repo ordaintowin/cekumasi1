@@ -142,6 +142,16 @@ function ChildDialog({
 
   // Duplicate child detection
   const [dupeQuery, setDupeQuery] = useState("");
+  const clearForm = () => {
+    if (isEdit) return;
+    setForm({ firstName: "", lastName: "", dateOfBirth: "", gender: "", class: "" });
+    setParentSearch("");
+    setSelectedParent(null);
+    setUseExternalParent(false);
+    setParentExternal("");
+    setDupeQuery("");
+  };
+
   const { data: dupeData } = useListChildren(
     { search: dupeQuery, page: 1, limit: 20 },
     { query: { queryKey: [...getListChildrenQueryKey({ search: dupeQuery }), "child-dupecheck"], enabled: dupeQuery.length >= 2 && !isEdit } }
@@ -291,6 +301,14 @@ function ChildDialog({
             )}
           </div>
 
+          {!isEdit && (
+            <div className="flex justify-end pt-1">
+              <button type="button" onClick={clearForm} disabled={saving}
+                className="text-xs text-purple-700 hover:text-purple-900 underline underline-offset-2 disabled:opacity-50">
+                Clear form
+              </button>
+            </div>
+          )}
           <div className="flex gap-2 pt-1">
             <Button type="button" variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>Cancel</Button>
             <Button type="submit" className="flex-1 bg-purple-700 text-white" disabled={saving}>

@@ -31,6 +31,8 @@ import NotFound from "@/pages/not-found";
 import JoinMeeting from "@/pages/join-meeting";
 import PublicRegister from "@/pages/public-register";
 import Checkin from "@/pages/checkin";
+import ResetPassword from "@/pages/reset-password";
+import VerifyEmail from "@/pages/verify-email";
 import { Loader2 } from "lucide-react";
 import PWAInstallBanner from "@/components/PWAInstallBanner";
 import { useState, useEffect } from "react";
@@ -113,6 +115,8 @@ function Router() {
       <Route path="/login">
         {user ? <Redirect to={getHomeRoute(user)} /> : <Login />}
       </Route>
+      <Route path="/reset-password" component={ResetPassword} />
+      <Route path="/verify-email" component={VerifyEmail} />
 
       <Route path="/"            component={() => <ProtectedRoute component={Dashboard}    routePath="/" />} />
       <Route path="/home"        component={() => <ProtectedRoute component={Home}         routePath="/home" />} />
