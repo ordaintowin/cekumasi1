@@ -535,7 +535,6 @@ router.get("/services/:id/attendance", async (req, res) => {
         scCheckedIn += snapshotCheckedIn;
         scTotal += cellMembers.length;
 
-<<<<<<< HEAD
         const members = cellMembers.map(m => {
           const checkin = checkinMap.get(m.id);
           return {
@@ -546,15 +545,6 @@ router.get("/services/:id/attendance", async (req, res) => {
             isLeader: m.id === cell.leaderId,
           };
         });
-=======
-        const members = cellMembers.map(m => ({
-          memberId: m.id,
-          memberName: fmt(m),
-          checkedIn: checkedInIds.has(m.id),
-          checkInTime: checkinMap.get(m.id)?.checkInTime?.toISOString() || null,
-          isLeader: m.id === cell.leaderId,
-        }));
->>>>>>> 54a9c5a54723990b2600013ed3eb6099097e7e7b
         members.sort((a, b) => (b.isLeader ? 1 : 0) - (a.isLeader ? 1 : 0));
         cellNodes.push({ id: cell.id, name: cell.name, checkedIn: snapshotCheckedIn, total: cellMembers.length, members });
 
@@ -582,7 +572,6 @@ router.get("/services/:id/attendance", async (req, res) => {
     processedCellIds.add(cell.id);
     const cellMembers = membersByCellId.get(cell.id) ?? [];
     const snapshotCheckedIn = checkinsByCellId.get(cell.id) ?? 0;
-<<<<<<< HEAD
     const members = cellMembers.map(m => {
       const checkin = checkinMap.get(m.id);
       return {
@@ -592,14 +581,6 @@ router.get("/services/:id/attendance", async (req, res) => {
         isLeader: m.id === cell.leaderId,
       };
     });
-=======
-    const members = cellMembers.map(m => ({
-      memberId: m.id, memberName: fmt(m),
-      checkedIn: checkedInIds.has(m.id),
-      checkInTime: checkinMap.get(m.id)?.checkInTime?.toISOString() || null,
-      isLeader: m.id === cell.leaderId,
-    }));
->>>>>>> 54a9c5a54723990b2600013ed3eb6099097e7e7b
     standaloneNodes.push({ id: cell.id, name: cell.name, checkedIn: snapshotCheckedIn, total: cellMembers.length, members });
     for (const m of cellMembers) {
       if (!checkedInIds.has(m.id)) continue;
@@ -625,7 +606,6 @@ router.get("/services/:id/attendance", async (req, res) => {
       const snapshotCheckedIn = checkinsByCellId.get(cell.id) ?? 0;
       scCheckedIn += snapshotCheckedIn;
       scTotal += cellMembers.length;
-<<<<<<< HEAD
       const members = cellMembers.map(m => {
         const checkin = checkinMap.get(m.id);
         return {
@@ -635,14 +615,6 @@ router.get("/services/:id/attendance", async (req, res) => {
           isLeader: m.id === cell.leaderId,
         };
       });
-=======
-      const members = cellMembers.map(m => ({
-        memberId: m.id, memberName: fmt(m),
-        checkedIn: checkedInIds.has(m.id),
-        checkInTime: checkinMap.get(m.id)?.checkInTime?.toISOString() || null,
-        isLeader: m.id === cell.leaderId,
-      }));
->>>>>>> 54a9c5a54723990b2600013ed3eb6099097e7e7b
       cellNodes.push({ id: cell.id, name: cell.name, checkedIn: snapshotCheckedIn, total: cellMembers.length, members });
       for (const m of cellMembers) {
         if (!checkedInIds.has(m.id)) continue;
