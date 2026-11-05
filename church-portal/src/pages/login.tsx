@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, MessageCircle, MessageSquare, Phone } from "lucide-react";
+import { Loader2, MessageCircle, MessageSquare } from "lucide-react";
 
 export default function Login() {
   const { login } = useAuth();
@@ -257,19 +257,13 @@ export default function Login() {
                   rel="noreferrer"
                   className="flex items-center justify-center gap-2 rounded-md bg-green-600 px-3 py-2.5 text-sm font-medium text-white hover:bg-green-700"
                 >
-                  <MessageCircle className="w-4 h-4" /> WhatsApp +233 26 182 7900
-                </a>
-                <a
-                  href="tel:+233553722482"
-                  className="flex items-center justify-center gap-2 rounded-md border border-purple-300 px-3 py-2.5 text-sm font-medium text-purple-700 hover:bg-purple-50"
-                >
-                  <Phone className="w-4 h-4" /> Call +233 55 372 2482
+                  <MessageCircle className="w-4 h-4" /> WhatsApp
                 </a>
                 <a
                   href={`sms:+233553722482?body=${encodeURIComponent("Hello, I need help resetting my church portal login.")}`}
                   className="flex items-center justify-center gap-2 rounded-md border border-purple-200 px-3 py-2.5 text-sm font-medium text-purple-700 hover:bg-purple-50"
                 >
-                  <MessageSquare className="w-4 h-4" /> SMS +233 55 372 2482
+                  <MessageSquare className="w-4 h-4" /> SMS
                 </a>
               </div>
               <Button type="button" variant="outline" className="w-full" onClick={closeForgotDialog}>Close</Button>
@@ -321,13 +315,12 @@ export default function Login() {
                     <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
                   </a>
                   <a
-                    href="tel:+233553722482"
-                    className="flex items-center justify-center gap-1 rounded-md border border-purple-300 px-2 py-2 text-xs font-medium text-purple-700 hover:bg-purple-50"
+                    href={`sms:+233553722482?body=${encodeURIComponent("Hello, I need help resetting my church portal login.")}`}
+                    className="flex items-center justify-center gap-1 rounded-md border border-purple-200 px-2 py-2 text-xs font-medium text-purple-700 hover:bg-purple-50"
                   >
-                    <Phone className="h-3.5 w-3.5" /> Call admin
+                    <MessageSquare className="h-3.5 w-3.5" /> SMS
                   </a>
                 </div>
-                <p className="mt-1 text-center text-xs text-gray-500">WhatsApp +233 26 182 7900 · Phone/SMS +233 55 372 2482</p>
               </div>
               <button type="button" className="w-full pt-1 text-xs text-gray-400 hover:text-gray-600" onClick={closeForgotDialog}>
                 Cancel
