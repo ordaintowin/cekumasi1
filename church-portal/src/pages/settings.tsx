@@ -165,7 +165,7 @@ export default function Settings() {
         }),
       });
       if (!res.ok) throw new Error((await res.json()).error);
-      toast({ title: "Announcement sent!", description: "All members will see it on their home page." });
+      toast({ title: "Announcement sent!", description: "Members will see it on Home and Notifications." });
       setAnnounceForm({ title: "", message: "", emoji: "📢", expiresInHours: "24" });
       setAnnounceOpen(false);
       fetchAnnouncements();
@@ -542,7 +542,7 @@ export default function Settings() {
             <CardTitle className="text-base flex items-center gap-2">
               <Megaphone className="w-4 h-4 text-blue-600" /> Announcements
             </CardTitle>
-            <p className="text-xs text-gray-500 mt-1">Send church-wide announcements — members see them on their Home page with a sound alert</p>
+            <p className="text-xs text-gray-500 mt-1">Send church-wide announcements — members see them on Home and Notifications in the app</p>
           </div>
           <Dialog open={announceOpen} onOpenChange={setAnnounceOpen}>
             <DialogTrigger asChild>
